@@ -270,8 +270,8 @@ void DailyRoutineManager::buildPlan()
 
     subPhases.push_back({ "block2_audit", 2, "Block 2: Pre-Flight Analysis",
                           "Part 2: Visual Interval Audit & Ghost-Fingering", 180.0, static_cast<double>(excerpt.bpm), "audit",
-                          "Trace melodic contour across the staff. Do NOT name note letters. Silently pre-finger keys on instrument.",
-                          false, true, false, true, false, 0.0, 0, excerpt });
+                          "Trace melodic contour with interval ribbons. Silently pre-finger keys on instrument with metronome pacing.",
+                          false, false, false, true, false, 0.0, 0, excerpt });
 
     // Block 3
     subPhases.push_back({ "block3_take1", 3, "Block 3: The Cold Sight-Read",
@@ -367,6 +367,25 @@ void DailyRoutineManager::prevSubPhase()
     }
 }
 
+void DailyRoutineManager::restartCurrentSubPhase()
+{
+    subPhaseElapsedSeconds = 0.0;
+    loadSubPhase(currentSubPhaseIndex);
+    if (!isRunning)
+        startOrResume();
+}
+
+void DailyRoutineManager::finishCurrentSubPhaseEarly()
+{
+    skipSubPhase();
+}
+
+bool DailyRoutineManager::isAuditPhaseActive() const
+{
+    const auto* phase = getCurrentPhase();
+    return (phase != nullptr && phase->type == "audit");
+}
+
 void DailyRoutineManager::loadSubPhase(int index)
 {
     if (index < 0 || index >= static_cast<int>(subPhases.size())) return;
@@ -409,6 +428,8 @@ void DailyRoutineManager::loadSubPhase(int index)
         scorer.setPracticeMode(PracticeMode::Wait);
     else
         scorer.setPracticeMode(PracticeMode::Tempo);
+
+    scorer.setAuditMode(phase.type == "audit");
 
     if (phase.type == "flash")
     {

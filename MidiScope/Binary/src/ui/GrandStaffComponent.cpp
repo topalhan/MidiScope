@@ -8,6 +8,7 @@ namespace MidiSheet
 GrandStaffComponent::GrandStaffComponent()
 {
     setOpaque(false);
+    setWantsKeyboardFocus(true);
 }
 
 void GrandStaffComponent::resized()
@@ -38,16 +39,15 @@ void GrandStaffComponent::setPracticeMelody(const Melody* melody, int noteIndex,
 {
     const bool melodyChanged = (currentMelody == nullptr || melody == nullptr || currentMelody->id != melody->id);
     const bool becameFinished = (!isMelodyFinished && isFinished);
+    const bool isRestarted = (!isFinished && (isMelodyFinished || (noteIndex == 0 && (currentNoteIndex > 0 || manualScrollOffset != 0.0f || activeReviewMistakeIndex >= 0))));
 
     currentMelody = melody;
     currentNoteIndex = noteIndex;
     isMelodyFinished = isFinished;
 
-    if (melodyChanged)
+    if (melodyChanged || isRestarted)
     {
-        activeReviewMistakeIndex = -1;
-        manualScrollOffset = 0.0f;
-        clearNotes();
+        resetScoreToBeginning();
         if (currentMelody != nullptr)
             activeKeySignature = KeySignature::getByKeyName(currentMelody->key);
     }
@@ -97,7 +97,7 @@ std::vector<int> GrandStaffComponent::getMistakeNoteIndices() const
     {
         for (size_t i = 0; i < noteEvaluations->size() && i < currentMelody->notes.size(); ++i)
         {
-            if ((*noteEvaluations)[i].mistakeAttempts > 0)
+            if ((*noteEvaluations)[i].mistakeAttempts > 0 || (*noteEvaluations)[i].timing == TimingRating::Missed)
                 indices.push_back(static_cast<int>(i));
         }
     }
@@ -236,6 +236,52 @@ void GrandStaffComponent::mouseWheelMove(const juce::MouseEvent& event, const ju
     juce::ignoreUnused(event);
     const float delta = (std::abs(wheel.deltaX) > 0.001f ? wheel.deltaX : wheel.deltaY) * 60.0f;
     manualScrollOffset -= delta;
+    repaint();
+}
+
+void GrandStaffComponent::mouseDoubleClick(const juce::MouseEvent& event)
+{
+    juce::ignoreUnused(event);
+    manualScrollOffset = 0.0f;
+    repaint();
+}
+
+bool GrandStaffComponent::keyPressed(const juce::KeyPress& key)
+{
+    if (key.isKeyCode(juce::KeyPress::leftKey))
+    {
+        manualScrollOffset = std::max(-500.0f, manualScrollOffset - 80.0f);
+        repaint();
+        return true;
+    }
+    else if (key.isKeyCode(juce::KeyPress::rightKey))
+    {
+        manualScrollOffset += 80.0f;
+        repaint();
+        return true;
+    }
+    else if (key.isKeyCode(juce::KeyPress::homeKey))
+    {
+        manualScrollOffset = 0.0f;
+        repaint();
+        return true;
+    }
+    return false;
+}
+
+void GrandStaffComponent::resetScoreToBeginning()
+{
+    activeReviewMistakeIndex = -1;
+    manualScrollOffset = 0.0f;
+    isUserDragging = false;
+    clearNotes();
+    repaint();
+}
+
+void GrandStaffComponent::triggerGhostFingeringAlert(int midiNote)
+{
+    ghostFingeringAlertTimeMs = juce::Time::getMillisecondCounterHiRes();
+    ghostFingeringMidi = midiNote;
     repaint();
 }
 
@@ -391,7 +437,8 @@ void GrandStaffComponent::paint(juce::Graphics& g)
 
         if (isMelodyFinished)
         {
-            if (mistakeNotesCount == 0)
+            const bool isFlawless = (totalNotes > 0 && mistakeNotesCount == 0);
+            if (isFlawless)
             {
                 prevMistakeBtnBounds = {};
                 nextMistakeBtnBounds = {};
@@ -573,10 +620,22 @@ void GrandStaffComponent::paint(juce::Graphics& g)
     g.drawLine(scoreDividerX, trebleTopY, scoreDividerX, trebleBottomY, 1.5f);
     g.drawLine(scoreDividerX, bassTopY, scoreDividerX, bassBottomY, 1.5f);
 
-    // 9. Render Melody Note Sheet
+    // 9. Render Free Play Rhythm Score Stream or Melody Note Sheet
     const double timestampMs = juce::Time::getMillisecondCounterHiRes();
 
-    if (currentMelody != nullptr && !currentMelody->notes.empty())
+    if (freePlayStream != nullptr)
+    {
+        const float notesStartX = scoreDividerX + 28.0f;
+        drawRhythmScoreStream(g,
+                              notesStartX,
+                              staffRightX,
+                              trebleTopY,
+                              trebleBottomY,
+                              bassTopY,
+                              bassBottomY,
+                              lineSpacing);
+    }
+    else if (currentMelody != nullptr && !currentMelody->notes.empty())
     {
         const float notesStartX = scoreDividerX + 28.0f;
         const float availableWidth = staffRightX - notesStartX - 16.0f;
@@ -645,7 +704,21 @@ void GrandStaffComponent::paint(juce::Graphics& g)
             ? (noteXPositions.back() - notesStartX + 140.0f)
             : availableWidth;
 
-        float scrollX = 0.0f;
+        // Sight-reading focal anchor: keep active note comfortably positioned around 25-32% from the left,
+        // leaving ample room ahead (~65-75% of staff width) to read upcoming notes.
+        const float focalAnchorX = notesStartX + std::min(250.0f, std::max(70.0f, availableWidth * 0.28f));
+        const float lastNoteX = (!noteXPositions.empty()) ? noteXPositions.back() : notesStartX;
+        const float maxScroll = std::max(0.0f, lastNoteX - focalAnchorX + 60.0f);
+
+        // Minimum safety lookahead buffer: active note must NEVER be closer to the right staff boundary than this
+        const float minLookaheadRight = std::min(320.0f, std::max(120.0f, availableWidth * 0.38f));
+        const float maxAllowedScreenX = staffRightX - minLookaheadRight;
+
+        float targetScrollX = 0.0f;
+        const float activeTargetX = (currentNoteIndex >= 0 && currentNoteIndex < totalNotes)
+                                  ? noteXPositions[static_cast<size_t>(currentNoteIndex)]
+                                  : notesStartX;
+
         if (totalScoreWidth > availableWidth)
         {
             if (isMelodyFinished)
@@ -653,41 +726,40 @@ void GrandStaffComponent::paint(juce::Graphics& g)
                 if (activeReviewMistakeIndex >= 0 && activeReviewMistakeIndex < totalNotes)
                 {
                     const float mistakeX = noteXPositions[static_cast<size_t>(activeReviewMistakeIndex)];
-                    const float focusX = notesStartX + availableWidth * 0.40f;
-                    scrollX = std::max(0.0f, mistakeX - focusX);
-                    const float maxScroll = totalScoreWidth - availableWidth + 40.0f;
-                    scrollX = std::min(scrollX, maxScroll);
+                    const float focusX = notesStartX + 80.0f;
+                    targetScrollX = std::max(0.0f, mistakeX - focusX);
                 }
                 else
                 {
-                    scrollX = totalScoreWidth - availableWidth + 40.0f;
+                    targetScrollX = std::max(0.0f, lastNoteX - focalAnchorX);
                 }
             }
-            else if (practiceMode == PracticeMode::StrictTime || practiceMode == PracticeMode::FirstRead || practiceMode == PracticeMode::Tempo)
+            else if ((practiceMode == PracticeMode::StrictTime || practiceMode == PracticeMode::FirstRead || practiceMode == PracticeMode::Tempo)
+                     && !isCountingIn && !isSilentAnalyzing)
             {
                 const float rawPlayheadX = calculateXForBeat(currentPlayheadBeats, *currentMelody, noteXPositions, notesStartX);
-                const float focusX = notesStartX + availableWidth * 0.28f;
-                scrollX = std::max(0.0f, rawPlayheadX - focusX);
-                const float maxScroll = totalScoreWidth - availableWidth + 40.0f;
-                scrollX = std::min(scrollX, maxScroll);
+                const float leadX = std::max(rawPlayheadX, activeTargetX);
+                targetScrollX = std::max(0.0f, leadX - focalAnchorX);
             }
             else
             {
-                const float activeX = (currentNoteIndex >= 0 && currentNoteIndex < totalNotes)
-                                    ? noteXPositions[static_cast<size_t>(currentNoteIndex)]
-                                    : notesStartX;
-                const float focusX = notesStartX + availableWidth * 0.30f; // Anchor active note at ~30%
-                scrollX = std::max(0.0f, activeX - focusX);
-                const float maxScroll = totalScoreWidth - availableWidth + 40.0f;
-                scrollX = std::min(scrollX, maxScroll);
+                targetScrollX = std::max(0.0f, activeTargetX - focalAnchorX);
             }
+
+            // Right-Edge Safety Horizon: If active note would ever get too close to the right edge, scroll immediately
+            if (!isMelodyFinished && activeTargetX - targetScrollX > maxAllowedScreenX)
+            {
+                targetScrollX = std::max(targetScrollX, activeTargetX - maxAllowedScreenX);
+            }
+
+            targetScrollX = std::clamp(targetScrollX, 0.0f, maxScroll);
         }
 
         // Apply manual drag / wheel offset if user scrolled
         if (std::isnan(manualScrollOffset))
             manualScrollOffset = 0.0f;
         const float maxScrollLimit = std::max(0.0f, totalScoreWidth - availableWidth + 40.0f);
-        scrollX = std::clamp(scrollX + manualScrollOffset, 0.0f, maxScrollLimit);
+        float scrollX = std::clamp(targetScrollX + manualScrollOffset, 0.0f, maxScrollLimit);
         if (std::isnan(scrollX))
             scrollX = 0.0f;
 
@@ -919,6 +991,37 @@ void GrandStaffComponent::paint(juce::Graphics& g)
             const int displayBeat = (countInBeat > 0) ? countInBeat : 1;
             g.drawText(juce::String(displayBeat), bannerRect.getX(), bannerRect.getY() + 18.0f, bannerRect.getWidth(), 24.0f, juce::Justification::centred);
         }
+
+        // Ghost-Fingering MIDI Warning Banner
+        if (ghostFingeringAlertTimeMs > 0.0)
+        {
+            const double alertElapsed = timestampMs - ghostFingeringAlertTimeMs;
+            if (alertElapsed < 3500.0)
+            {
+                const float alpha = static_cast<float>(std::clamp(1.0 - (alertElapsed - 2800.0) / 700.0, 0.0, 1.0));
+                const float bannerW = 390.0f;
+                const float bannerH = 46.0f;
+                const float bannerX = (w - bannerW) * 0.5f;
+                const float bannerY = trebleTopY - bannerH - 8.0f;
+                const auto bannerRect = juce::Rectangle<float>(bannerX, bannerY > 8.0f ? bannerY : 8.0f, bannerW, bannerH);
+
+                g.setColour(juce::Colour::fromRGB(15, 23, 42).withAlpha(0.96f * alpha));
+                g.fillRoundedRectangle(bannerRect, 10.0f);
+                g.setColour(juce::Colour::fromRGB(245, 158, 11).withAlpha(0.90f * alpha));
+                g.drawRoundedRectangle(bannerRect, 10.0f, 1.5f);
+
+                g.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+                g.setColour(juce::Colour::fromRGB(251, 191, 36).withAlpha(alpha));
+                juce::String title = juce::String::fromUTF8("🤫 Ghost-Fingering Active: Silent Touch Only!");
+                if (ghostFingeringMidi >= 0)
+                    title += " (" + MusicTheory::getNoteInfo(ghostFingeringMidi, preferFlats).fullName + ")";
+                g.drawText(title, bannerRect.getX() + 12.0f, bannerRect.getY() + 5.0f, bannerRect.getWidth() - 24.0f, 16.0f, juce::Justification::centred);
+
+                g.setFont(juce::FontOptions(10.0f, juce::Font::plain));
+                g.setColour(juce::Colour::fromRGB(226, 232, 240).withAlpha(alpha));
+                g.drawText("Please don't strike or blow notes! Pre-touch keys to feel intervals.", bannerRect.getX() + 12.0f, bannerRect.getY() + 23.0f, bannerRect.getWidth() - 24.0f, 16.0f, juce::Justification::centred);
+            }
+        }
     }
 }
 
@@ -1039,6 +1142,8 @@ void GrandStaffComponent::drawScoreNote(juce::Graphics& g, const MelodyNote& not
     {
         if (hadMistakes)
             noteColor = juce::Colour::fromRGB(244, 63, 94); // Rose 500
+        else if (eval != nullptr && (eval->isAudited || eval->timing == TimingRating::Audit))
+            noteColor = juce::Colour::fromRGB(56, 189, 248); // Sky blue 400 for audited / ghost-fingered notes
         else if (hadTimingOffset)
             noteColor = juce::Colour::fromRGB(245, 158, 11); // Amber 500
         else
@@ -1688,6 +1793,280 @@ void GrandStaffComponent::drawDecoupledEyeCursor(juce::Graphics& g, float eyeX, 
     g.setFont(juce::FontOptions(9.5f, juce::Font::bold));
     g.setColour(juce::Colour::fromRGB(125, 211, 252)); // Sky 300
     g.drawText(juce::String::fromUTF8("👁 LOOK HERE"), badgeX, badgeY, badgeW, badgeH, juce::Justification::centred);
+}
+
+void GrandStaffComponent::setFreePlayScoreStream(const std::deque<RhythmStrokeEvaluation>* stream,
+                                                  double bpm, int beatsPerMeasure)
+{
+    freePlayStream      = stream;
+    freePlayBpm         = bpm;
+    freePlayBeatsPerBar = beatsPerMeasure;
+}
+
+//==============================================================================
+void GrandStaffComponent::drawRhythmScoreStream(juce::Graphics& g,
+                                                 float notesStartX, float staffRightX,
+                                                 float trebleTopY, float trebleBottomY,
+                                                 float bassTopY, float bassBottomY,
+                                                 float lineSpacing)
+{
+    if (freePlayStream == nullptr || freePlayStream->empty())
+    {
+        // Empty state message
+        g.setColour(juce::Colour(0xFF94A3B8).withAlpha(0.65f));
+        g.setFont(juce::FontOptions(12.0f).withStyle("SemiBold"));
+        const float midY = (trebleBottomY + bassTopY) * 0.5f;
+        const float availW = staffRightX - notesStartX;
+        g.drawText(juce::String::fromUTF8(
+                       "\xF0\x9F\x8E\xBC Play any song on the beat \xE2\x80\x94 notes will stay, scroll, and display timing (\xC2\xB1ms)"),
+                   notesStartX, midY - 10.0f, availW * 0.9f, 20.0f,
+                   juce::Justification::centredLeft);
+        return;
+    }
+
+    const auto& stream = *freePlayStream;
+    const int N = static_cast<int>(stream.size());
+    const float beatsPerBar = static_cast<float>(freePlayBeatsPerBar);
+
+    //--- 1. Pre-compute X positions and barline positions ----------------------
+    std::vector<float> strokeX(static_cast<size_t>(N));
+    std::vector<float> barlineXs;
+
+    float curX = notesStartX + 20.0f;
+    float measureBeats = 0.0f;
+
+    for (int i = 0; i < N; ++i)
+    {
+        const auto& stroke = stream[static_cast<size_t>(i)];
+        const float dur = stroke.durationBeats;
+
+        if (i > 0)
+        {
+            const float prevDur = stream[static_cast<size_t>(i - 1)].durationBeats;
+            // Duration-proportional spacing: mimics notation.js non-linear formula
+            float spacing = std::max(70.0f, 88.0f * std::pow(std::max(0.25f, prevDur), 0.55f));
+
+            // Extra clearance if the current stroke has an accidental
+            bool hasAccidental = false;
+            for (int m : stroke.midiNotes)
+            {
+                auto info = MusicTheory::getNoteInfo(m, preferFlats);
+                if (!info.accidental.isEmpty()) { hasAccidental = true; break; }
+            }
+            if (hasAccidental) spacing += 14.0f;
+
+            // Barline when accumulated beats crosses measure boundary
+            if (measureBeats + prevDur >= beatsPerBar - 0.01f)
+            {
+                barlineXs.push_back(curX + spacing * 0.48f);
+                spacing += 26.0f;
+                measureBeats = std::fmod(measureBeats + prevDur, beatsPerBar);
+            }
+            else
+            {
+                measureBeats += prevDur;
+            }
+            curX += spacing;
+        }
+        else
+        {
+            bool hasAcc = false;
+            for (int m : stroke.midiNotes)
+            {
+                auto info = MusicTheory::getNoteInfo(m, preferFlats);
+                if (!info.accidental.isEmpty()) { hasAcc = true; break; }
+            }
+            if (hasAcc) curX += 14.0f;
+        }
+
+        strokeX[static_cast<size_t>(i)] = curX;
+        juce::ignoreUnused(dur);
+    }
+
+    //--- 2. Smooth focal horizontal scroll ------------------------------------
+    const float latestX    = strokeX[static_cast<size_t>(N - 1)];
+    const float focalAnchorX = notesStartX + std::min(280.0f, (staffRightX - notesStartX) * 0.40f);
+    const float targetScroll  = std::max(0.0f, latestX - focalAnchorX);
+    rhythmScrollX += (targetScroll - rhythmScrollX) * 0.16f;
+    const float effectiveScroll = std::max(0.0f, rhythmScrollX - rhythmManualScroll);
+
+    //--- 3. Clip to notes area and translate ----------------------------------
+    g.saveState();
+    g.reduceClipRegion(juce::Rectangle<int>(
+        static_cast<int>(notesStartX - 4),
+        0,
+        static_cast<int>(staffRightX - notesStartX + 14),
+        getHeight()));
+    juce::Graphics::ScopedSaveState translateSave(g);
+    g.addTransform(juce::AffineTransform::translation(-effectiveScroll, 0.0f));
+
+    //--- 4. Draw measure barlines ---------------------------------------------
+    g.setColour(juce::Colour(0xFF94A3B8).withAlpha(0.42f));
+    for (float bx : barlineXs)
+    {
+        g.drawLine(bx, trebleTopY, bx, trebleBottomY, 1.2f);
+        g.drawLine(bx, bassTopY,   bx, bassBottomY,   1.2f);
+    }
+
+    //--- 5. Render note columns and ±ms badges --------------------------------
+    struct RibbonPoint { float x, y; int midi; };
+    std::vector<RibbonPoint> ribbonPoints;
+
+    for (int i = 0; i < N; ++i)
+    {
+        const auto& stroke = stream[static_cast<size_t>(i)];
+        const float colX = strokeX[static_cast<size_t>(i)];
+
+        // Cull off-screen columns
+        if (colX - effectiveScroll < notesStartX - 100.0f) continue;
+        if (colX - effectiveScroll > staffRightX  + 100.0f) continue;
+
+        // --- Rating color for noteheads ---
+        juce::Colour headColour;
+        switch (stroke.rating)
+        {
+            case TimingRating::Perfect:
+                headColour = juce::Colour(0xFF86EFAC); break; // Emerald 300
+            case TimingRating::Early:
+            case TimingRating::Late:
+                headColour = juce::Colour(0xFFFDE047); break; // Yellow 300
+            case TimingRating::Missed:
+                headColour = juce::Colour(0xFFFECDD3); break; // Rose 200
+            default:
+                headColour = juce::Colour(0xFFF8FAFC); break; // Neutral pearl (pending)
+        }
+
+        float highestNoteY = trebleTopY;
+
+        for (int midiNote : stroke.midiNotes)
+        {
+            const auto info = MusicTheory::getNoteInfo(midiNote, preferFlats);
+            const bool isTreble = (midiNote >= 60);
+            const float clefBottomY = isTreble ? trebleBottomY : bassBottomY;
+
+            // Diatonic step offset from middle C: positive = up on treble staff
+            const int diaStep = MusicTheory::getDiatonicOffsetFromMiddleC(midiNote, preferFlats);
+            float noteY = clefBottomY - static_cast<float>(diaStep) * (lineSpacing * 0.5f);
+
+            const float rx = lineSpacing * 0.62f;
+            const float ry = lineSpacing * 0.44f;
+
+            // Accidental symbol
+            if (!info.accidental.isEmpty())
+            {
+                g.setColour(headColour);
+                g.setFont(juce::FontOptions(lineSpacing * 0.85f));
+                g.drawText(info.accidental, colX - rx * 2.0f - 4.0f, noteY - ry, rx * 2.0f, ry * 2.0f,
+                           juce::Justification::centred);
+            }
+
+            // Ledger lines
+            drawLedgerLines(g, colX, diaStep, clefBottomY, lineSpacing, isTreble,
+                            headColour.withAlpha(0.6f), rx);
+
+            // Notehead (filled = quarter or shorter; hollow = half or longer)
+            juce::Path notehead;
+            notehead.addEllipse(colX - rx, noteY - ry, rx * 2.0f, ry * 2.0f);
+            notehead.applyTransform(juce::AffineTransform::rotation(-0.32f, colX, noteY));
+
+            if (stroke.durationBeats >= 2.0f)
+            {
+                // Hollow notehead
+                g.setColour(headColour);
+                g.strokePath(notehead, juce::PathStrokeType(lineSpacing * 0.18f));
+            }
+            else
+            {
+                g.setColour(headColour);
+                g.fillPath(notehead);
+            }
+
+            // Stem
+            const float stemX = colX + rx * 0.9f;
+            const float stemDir = isTreble ? -1.0f : 1.0f;
+            g.drawLine(stemX, noteY, stemX, noteY + stemDir * lineSpacing * 3.2f, 1.4f);
+
+            if (noteY < highestNoteY) highestNoteY = noteY;
+        }
+
+        // Highest treble note for ribbon
+        for (int midiNote : stroke.midiNotes)
+        {
+            const auto info = MusicTheory::getNoteInfo(midiNote, preferFlats);
+            juce::ignoreUnused(info);
+            if (midiNote >= 60)
+            {
+                const int diaStep = MusicTheory::getDiatonicOffsetFromMiddleC(midiNote, preferFlats);
+                float noteY = trebleBottomY - static_cast<float>(diaStep) * (lineSpacing * 0.5f);
+                ribbonPoints.push_back({ colX, noteY, midiNote });
+                break; // only need highest treble for ribbon
+            }
+        }
+
+        // --- ±ms badge (only for evaluated strokes) ---
+        if (!stroke.pending && stroke.rating != TimingRating::None)
+        {
+            const int ro = static_cast<int>(std::round(stroke.offsetMs));
+            const juce::String offStr = (ro >= 0 ? "+" : "") + juce::String(ro) + "ms";
+
+            const float absOff = std::abs(static_cast<float>(ro));
+            juce::Colour bgCol, borderCol, textCol;
+            if (stroke.rating == TimingRating::Perfect || absOff <= 45.0f)
+            {
+                bgCol    = juce::Colour(0x38229954); // emerald semi-transparent
+                borderCol = juce::Colour(0xCC22C55E);
+                textCol   = juce::Colour(0xFF86EFAC);
+            }
+            else if (stroke.rating == TimingRating::Early || stroke.rating == TimingRating::Late || absOff <= 120.0f)
+            {
+                bgCol    = juce::Colour(0x38F59E0B);
+                borderCol = juce::Colour(0xDAF59E0B);
+                textCol   = juce::Colour(0xFFFDE047);
+            }
+            else
+            {
+                bgCol    = juce::Colour(0x38F43F5E);
+                borderCol = juce::Colour(0xDAF43F5E);
+                textCol   = juce::Colour(0xFFFECDD3);
+            }
+
+            g.setFont(juce::FontOptions(9.0f).withStyle("Bold"));
+            const float textW = g.getCurrentFont().getStringWidthFloat(offStr);
+            const float badgeW = textW + 8.0f;
+            const float badgeH = 13.0f;
+            const float badgeX = colX - badgeW * 0.5f;
+            const float badgeY = std::min(trebleTopY - lineSpacing * 1.1f,
+                                          highestNoteY - lineSpacing * 1.3f) - badgeH;
+
+            // Badge background
+            g.setColour(juce::Colour::fromRGB(15, 23, 42));
+            g.fillRoundedRectangle(badgeX, badgeY, badgeW, badgeH, 3.0f);
+            g.setColour(bgCol);
+            g.fillRoundedRectangle(badgeX, badgeY, badgeW, badgeH, 3.0f);
+            g.setColour(borderCol);
+            g.drawRoundedRectangle(badgeX, badgeY, badgeW, badgeH, 3.0f, 1.0f);
+
+            // Badge text
+            g.setColour(textCol);
+            g.drawText(offStr, badgeX, badgeY, badgeW, badgeH, juce::Justification::centred);
+        }
+    }
+
+    //--- 6. Melodic interval ribbons between consecutive treble strokes -------
+    if (intervalContourEnabled && (int)ribbonPoints.size() >= 2)
+    {
+        for (int k = 0; k < (int)ribbonPoints.size() - 1; ++k)
+        {
+            const auto& a = ribbonPoints[static_cast<size_t>(k)];
+            const auto& b = ribbonPoints[static_cast<size_t>(k + 1)];
+            drawIntervalRibbon(g,
+                               { a.x, a.y }, a.midi,
+                               { b.x, b.y }, b.midi,
+                               0.75f, false);
+        }
+    }
+
+    g.restoreState(); // undo clip
 }
 
 } // namespace MidiSheet

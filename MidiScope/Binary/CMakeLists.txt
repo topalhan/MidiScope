@@ -59,6 +59,8 @@ target_sources(MidiSheet
         src/core/MelodyScorer.h
         src/core/DailyRoutineManager.cpp
         src/core/DailyRoutineManager.h
+        src/core/FreePlayRhythmScorer.cpp
+        src/core/FreePlayRhythmScorer.h
         src/ui/GrandStaffComponent.cpp
         src/ui/GrandStaffComponent.h
         src/ui/ScoreboardComponent.cpp

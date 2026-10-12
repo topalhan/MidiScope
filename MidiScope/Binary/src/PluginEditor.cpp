@@ -50,6 +50,20 @@ MidiSheetAudioProcessorEditor::MidiSheetAudioProcessorEditor(MidiSheetAudioProce
     };
     scoreboard.onModeChanged = [this](PracticeMode mode) {
         audioProcessor.getScorer().setPracticeMode(mode);
+        const auto& scorer = audioProcessor.getScorer();
+        grandStaff.setPracticeState(&scorer.getCurrentMelody(),
+                                     scorer.getCurrentNoteIndex(),
+                                     scorer.isFinished(),
+                                     scorer.getPracticeMode(),
+                                     scorer.getCurrentPlayheadBeats(),
+                                     scorer.getIsCountingIn(),
+                                     scorer.isSilentAnalyzing(),
+                                     scorer.getAnalysisSecondsRemaining(),
+                                     scorer.getCountInBeat(),
+                                     scorer.getCountInTotal());
+        grandStaff.setNoteEvaluations(&scorer.getNoteEvaluations());
+        if (auto* target = scorer.getCurrentTargetNote())
+            virtualPiano.setTargetNote(target->midi);
     };
     scoreboard.onDisrupterModeChanged = [this](VisualDisrupterMode mode) {
         grandStaff.setVisualDisrupterMode(mode);
@@ -69,6 +83,27 @@ MidiSheetAudioProcessorEditor::MidiSheetAudioProcessorEditor(MidiSheetAudioProce
         dailyRoutine.setVisible(true);
         audioProcessor.getRoutineManager().startOrResume();
         resized();
+    };
+    scoreboard.onFreePlayToggled = [this](bool enabled) {
+        isFreePlayMode = enabled;
+        audioProcessor.setFreePlayMode(enabled);
+        if (enabled)
+        {
+            audioProcessor.getFreePlayScorer().resetSession();
+            audioProcessor.getFreePlayScorer().startMetronome();
+            grandStaff.setFreePlayScoreStream(&audioProcessor.getFreePlayScorer().getScoreStream(),
+                                              audioProcessor.getFreePlayScorer().getBpm(),
+                                              audioProcessor.getFreePlayScorer().getBeatsPerMeasure());
+            virtualPiano.setTargetNote(-1);
+        }
+        else
+        {
+            audioProcessor.getFreePlayScorer().stopMetronome();
+            grandStaff.setFreePlayScoreStream(nullptr, 108.0, 4);
+            const auto& scorer = audioProcessor.getScorer();
+            if (auto* target = scorer.getCurrentTargetNote())
+                virtualPiano.setTargetNote(target->midi);
+        }
     };
     addAndMakeVisible(scoreboard);
 
@@ -211,13 +246,9 @@ void MidiSheetAudioProcessorEditor::paint(juce::Graphics& g)
 void MidiSheetAudioProcessorEditor::timerCallback()
 {
     const double nowSec = juce::Time::getMillisecondCounterHiRes() * 0.001;
-    const bool isStandalone = (audioProcessor.wrapperType == juce::AudioProcessor::wrapperType_Standalone);
-    if (isStandalone || audioProcessor.getScorer().isSilentAnalyzing())
+    if ((nowSec - audioProcessor.getLastProcessBlockTimeSec()) > 0.100)
     {
-        if ((nowSec - audioProcessor.getLastProcessBlockTimeSec()) > 0.100)
-        {
-            audioProcessor.getScorer().processTime(-1.0, nowSec);
-        }
+        audioProcessor.getScorer().processTime(-1.0, nowSec);
     }
 
     // Drain all incoming MIDI events from the lock-free FIFO queue
@@ -231,23 +262,44 @@ void MidiSheetAudioProcessorEditor::timerCallback()
         handleMidiEvent(ev);
     }
 
+    // Tick Free Play Rhythm Scorer (drives chord-debounce flush + beat callbacks)
+    if (isFreePlayMode)
+    {
+        audioProcessor.getFreePlayScorer().tick(nowSec);
+        grandStaff.setFreePlayScoreStream(&audioProcessor.getFreePlayScorer().getScoreStream(),
+                                          audioProcessor.getFreePlayScorer().getBpm(),
+                                          audioProcessor.getFreePlayScorer().getBeatsPerMeasure());
+    }
+    else
+    {
+        grandStaff.setFreePlayScoreStream(nullptr, 108.0, 4);
+    }
+
     // Query host transport
     const auto transport = audioProcessor.getTransportState();
     const auto chord = MusicTheory::detectChord(activeMidiNotes, preferFlats);
-
     const auto& scorer = audioProcessor.getScorer();
-    grandStaff.setPracticeState(&scorer.getCurrentMelody(),
-                                scorer.getCurrentNoteIndex(),
-                                scorer.isFinished(),
-                                scorer.getPracticeMode(),
-                                scorer.getCurrentPlayheadBeats(),
-                                scorer.getIsCountingIn(),
-                                scorer.isSilentAnalyzing(),
-                                scorer.getAnalysisSecondsRemaining(),
-                                scorer.getCountInBeat(),
-                                scorer.getCountInTotal());
-    grandStaff.setNoteEvaluations(&scorer.getNoteEvaluations());
-    scoreboard.updateState(scorer, chord, transport.bpm, transport.isPlaying, activeMidiNotes, preferFlats, grandStaff.getActiveReviewMistakeIndex());
+
+    if (isFreePlayMode)
+    {
+        const auto& fps = audioProcessor.getFreePlayScorer();
+        scoreboard.updateFreePlayState(fps.getStats(), fps.getBpm(), fps.getBeatsPerMeasure(), fps.isMetronomeRunning(), activeMidiNotes, preferFlats);
+    }
+    else
+    {
+        grandStaff.setPracticeState(&scorer.getCurrentMelody(),
+                                    scorer.getCurrentNoteIndex(),
+                                    scorer.isFinished(),
+                                    scorer.getPracticeMode(),
+                                    scorer.getCurrentPlayheadBeats(),
+                                    scorer.getIsCountingIn(),
+                                    scorer.isSilentAnalyzing(),
+                                    scorer.getAnalysisSecondsRemaining(),
+                                    scorer.getCountInBeat(),
+                                    scorer.getCountInTotal());
+        grandStaff.setNoteEvaluations(&scorer.getNoteEvaluations());
+        scoreboard.updateState(scorer, chord, transport.bpm, transport.isPlaying, activeMidiNotes, preferFlats, grandStaff.getActiveReviewMistakeIndex());
+    }
 
     // Record FirstRead result if just completed
     if (scorer.isFinished() && scorer.getPracticeMode() == PracticeMode::FirstRead)
@@ -303,44 +355,66 @@ void MidiSheetAudioProcessorEditor::handleMidiEvent(const MidiEvent& ev)
         grandStaff.noteOn(midi, ev.velocity);
         virtualPiano.noteOn(midi);
 
-        // Evaluate note against practice melody with high-precision timestamp
-        auto& scorer = audioProcessor.getScorer();
-        const auto transport = audioProcessor.getTransportState();
-        const double hostPpq = (transport.isPlaying && transport.ppqPosition >= 0.0) ? transport.ppqPosition : -1.0;
         const double noteTimestamp = (ev.timestampSeconds > 0.0)
             ? ev.timestampSeconds
             : (juce::Time::getMillisecondCounterHiRes() * 0.001);
 
-        const bool hit = scorer.evaluateNote(midi, ev.velocity, noteTimestamp, hostPpq);
-
-        grandStaff.setPracticeState(&scorer.getCurrentMelody(),
-                                    scorer.getCurrentNoteIndex(),
-                                    scorer.isFinished(),
-                                    scorer.getPracticeMode(),
-                                    scorer.getCurrentPlayheadBeats(),
-                                    scorer.getIsCountingIn(),
-                                    scorer.isSilentAnalyzing(),
-                                    scorer.getAnalysisSecondsRemaining());
-        if (!hit)
+        // Forward to Free Play Rhythm Scorer
+        if (isFreePlayMode)
         {
-            grandStaff.triggerMistakeFlash();
+            audioProcessor.getFreePlayScorer().noteOn(midi, ev.velocity, noteTimestamp);
         }
 
-        // Check if downbeat tempo recovery occurred
-        const auto& evals = scorer.getNoteEvaluations();
-        const int prevIdx = scorer.getCurrentNoteIndex() - 1;
-        if (prevIdx >= 0 && prevIdx < static_cast<int>(evals.size()) && evals[static_cast<size_t>(prevIdx)].isRecovered)
+        if (isFreePlayMode)
         {
-            grandStaff.triggerRecoveryFlash();
+            const auto& fps = audioProcessor.getFreePlayScorer();
+            scoreboard.updateFreePlayState(fps.getStats(), fps.getBpm(), fps.getBeatsPerMeasure(), fps.isMetronomeRunning(), activeMidiNotes, preferFlats);
         }
-
-        if (auto* target = scorer.getCurrentTargetNote())
-            virtualPiano.setTargetNote(target->midi);
         else
-            virtualPiano.setTargetNote(-1);
+        {
+            // If in daily routine mode and in audit phase (Block 2 Part 2), trigger ghost-fingering reminder alert!
+            if (audioProcessor.isRoutineMode() && audioProcessor.getRoutineManager().isAuditPhaseActive())
+            {
+                grandStaff.triggerGhostFingeringAlert(midi);
+            }
 
-        // Immediate HUD update for instantaneous timing feedback
-        scoreboard.updateState(scorer, MusicTheory::detectChord(activeMidiNotes, preferFlats), transport.bpm, transport.isPlaying, activeMidiNotes, preferFlats, grandStaff.getActiveReviewMistakeIndex());
+            // Evaluate note against practice melody with high-precision timestamp
+            auto& scorer = audioProcessor.getScorer();
+            const auto transport = audioProcessor.getTransportState();
+            const double hostPpq = (transport.isPlaying && transport.ppqPosition >= 0.0) ? transport.ppqPosition : -1.0;
+            const bool hit = scorer.evaluateNote(midi, ev.velocity, noteTimestamp, hostPpq);
+
+            grandStaff.setPracticeState(&scorer.getCurrentMelody(),
+                                        scorer.getCurrentNoteIndex(),
+                                        scorer.isFinished(),
+                                        scorer.getPracticeMode(),
+                                        scorer.getCurrentPlayheadBeats(),
+                                        scorer.getIsCountingIn(),
+                                        scorer.isSilentAnalyzing(),
+                                        scorer.getAnalysisSecondsRemaining(),
+                                        scorer.getCountInBeat(),
+                                        scorer.getCountInTotal());
+            if (!hit)
+            {
+                grandStaff.triggerMistakeFlash();
+            }
+
+            // Check if downbeat tempo recovery occurred
+            const auto& evals = scorer.getNoteEvaluations();
+            const int prevIdx = scorer.getCurrentNoteIndex() - 1;
+            if (prevIdx >= 0 && prevIdx < static_cast<int>(evals.size()) && evals[static_cast<size_t>(prevIdx)].isRecovered)
+            {
+                grandStaff.triggerRecoveryFlash();
+            }
+
+            if (auto* target = scorer.getCurrentTargetNote())
+                virtualPiano.setTargetNote(target->midi);
+            else
+                virtualPiano.setTargetNote(-1);
+
+            // Immediate HUD update for instantaneous timing feedback
+            scoreboard.updateState(scorer, MusicTheory::detectChord(activeMidiNotes, preferFlats), transport.bpm, transport.isPlaying, activeMidiNotes, preferFlats, grandStaff.getActiveReviewMistakeIndex());
+        }
     }
     else if (ev.type == MidiEventType::NoteOff)
     {
@@ -353,9 +427,19 @@ void MidiSheetAudioProcessorEditor::handleMidiEvent(const MidiEvent& ev)
         grandStaff.noteOff(midi);
         virtualPiano.noteOff(midi);
 
-        auto& scorer = audioProcessor.getScorer();
-        const auto transport = audioProcessor.getTransportState();
-        scoreboard.updateState(scorer, MusicTheory::detectChord(activeMidiNotes, preferFlats), transport.bpm, transport.isPlaying, activeMidiNotes, preferFlats, grandStaff.getActiveReviewMistakeIndex());
+        // Forward to Free Play Rhythm Scorer for duration locking
+        if (isFreePlayMode)
+        {
+            audioProcessor.getFreePlayScorer().noteOff(midi, juce::Time::getMillisecondCounterHiRes() * 0.001);
+            const auto& fps = audioProcessor.getFreePlayScorer();
+            scoreboard.updateFreePlayState(fps.getStats(), fps.getBpm(), fps.getBeatsPerMeasure(), fps.isMetronomeRunning(), activeMidiNotes, preferFlats);
+        }
+        else
+        {
+            auto& scorer = audioProcessor.getScorer();
+            const auto transport = audioProcessor.getTransportState();
+            scoreboard.updateState(scorer, MusicTheory::detectChord(activeMidiNotes, preferFlats), transport.bpm, transport.isPlaying, activeMidiNotes, preferFlats, grandStaff.getActiveReviewMistakeIndex());
+        }
     }
 }
 

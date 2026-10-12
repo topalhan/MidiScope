@@ -72,10 +72,13 @@ public:
     void reset();
     void skipSubPhase();
     void prevSubPhase();
+    void restartCurrentSubPhase();
+    void finishCurrentSubPhaseEarly();
     void advanceTime(double deltaSeconds);
 
     RoutineProgress getProgress() const;
     const RoutineSubPhase* getCurrentPhase() const;
+    bool isAuditPhaseActive() const;
 
     TimingFeedback registerRhythmTap(double nowSec);
     void onMelodyCompleted(const PracticeScorecard& scorecard);

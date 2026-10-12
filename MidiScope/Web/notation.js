@@ -29,6 +29,9 @@ export class NotationRenderer {
       keySignature: 'C Major',  // Active key signature for diatonic vs deviation reference
       disrupterMode: 'none',     // 'none', 'vanishing_bar', 'advance_curtain'
       decoupledEyeCursor: false, // true = display decoupled eye cursor 1 measure ahead
+      bpm: 108,                 // Metronome tempo for duration calculation
+      rhythmTrainerActive: false, // Free Play scrolling rhythm score with timing badges
+      beatsPerMeasure: 4,       // Time signature metric for barlines
       ...options
     };
 
@@ -38,6 +41,9 @@ export class NotationRenderer {
     this.noteHistory = []; // { midi, velocity, startTime, endTime, active }
     // Melodic phrase buffer for live Free Play contour & broken thirds
     this.recentPhrase = [];
+    // Free Play Rhythm Trainer scrolling stream: array of stroke columns with millisecond accuracy
+    this.rhythmStream = [];
+    this.rhythmScrollX = 0;
 
     // Fading notes cache for smooth visual release
     this.fadingNotes = new Map();
@@ -154,7 +160,7 @@ export class NotationRenderer {
       }
 
       // 4. Score horizontal drag panning
-      if (this.options.mode === 'practice' || this.practiceData) {
+      if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
         this.isUserDragging = true;
         this.dragStartX = pos.x;
         this.dragStartScroll = this.manualScrollOffset;
@@ -168,14 +174,14 @@ export class NotationRenderer {
         const pos = getPos(e);
         const deltaX = pos.x - this.dragStartX;
         this.manualScrollOffset = this.dragStartScroll - deltaX;
-      } else if (this.options.mode === 'practice' || this.practiceData) {
+      } else if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
         this.canvas.style.cursor = 'grab';
       }
     });
 
     const endDrag = (e) => {
       this.isUserDragging = false;
-      if (this.options.mode === 'practice' || this.practiceData) {
+      if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
         this.canvas.style.cursor = 'grab';
       } else {
         this.canvas.style.cursor = 'default';
@@ -190,7 +196,7 @@ export class NotationRenderer {
 
     // Mouse wheel / trackpad horizontal scrolling
     this.canvas.addEventListener('wheel', (e) => {
-      if (this.options.mode === 'practice' || this.practiceData) {
+      if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
         e.preventDefault();
         const delta = (Math.abs(e.deltaX) > 0.001 ? e.deltaX : e.deltaY) * 0.8;
         this.manualScrollOffset += delta;
@@ -199,7 +205,7 @@ export class NotationRenderer {
 
     // Double click to reset / re-center score
     this.canvas.addEventListener('dblclick', (e) => {
-      if (this.options.mode === 'practice' || this.practiceData) {
+      if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
         e.preventDefault();
         this.manualScrollOffset = 0;
       }
@@ -208,7 +214,7 @@ export class NotationRenderer {
     // Keyboard Arrow navigation for inspecting score
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-      if (this.options.mode === 'practice' || this.practiceData) {
+      if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
         if (e.code === 'ArrowLeft') {
           this.manualScrollOffset = Math.max(0, this.manualScrollOffset - 80);
           e.preventDefault();
@@ -311,6 +317,43 @@ export class NotationRenderer {
       active: true
     });
 
+    // In Rhythm Trainer mode, add immediately to scrolling score stream (0ms input latency)
+    if (this.options.rhythmTrainerActive || this.options.mode === 'rhythm_trainer') {
+      const existingPending = this.rhythmStream[this.rhythmStream.length - 1];
+      if (existingPending && existingPending.pending && (now - existingPending.timestamp) < 35) {
+        if (!existingPending.notes.some(n => n.midi === midi)) {
+          existingPending.notes.push({
+            midi,
+            velocity: noteData.velocity,
+            active: true,
+            startTime: now,
+            releasedTime: null,
+            duration: 1.0
+          });
+        }
+      } else {
+        this.rhythmStream.push({
+          id: Date.now() + Math.random(),
+          timestamp: now,
+          pending: true,
+          rating: null,
+          offsetMs: null,
+          duration: 1.0,
+          notes: [{
+            midi,
+            velocity: noteData.velocity,
+            active: true,
+            startTime: now,
+            releasedTime: null,
+            duration: 1.0
+          }]
+        });
+        if (this.rhythmStream.length > 500) {
+          this.rhythmStream.shift();
+        }
+      }
+    }
+
     // Limit history memory
     if (this.noteHistory.length > 500) {
       this.noteHistory.shift();
@@ -329,27 +372,204 @@ export class NotationRenderer {
     if (existing) {
       existing.active = false;
       existing.releasedTime = now;
+      existing.duration = this.computeNoteDuration(existing, now);
       this.fadingNotes.set(midi, { ...existing });
       this.activeNotes.delete(midi);
     }
 
-    // Update history note end time
+    // In Rhythm Trainer mode, mark note released and lock duration
+    if (this.options.rhythmTrainerActive || this.options.mode === 'rhythm_trainer') {
+      for (let i = this.rhythmStream.length - 1; i >= 0; i--) {
+        const stroke = this.rhythmStream[i];
+        const note = stroke.notes.find(n => n.midi === midi && n.active);
+        if (note) {
+          note.active = false;
+          note.releasedTime = now;
+          note.duration = this.computeNoteDuration(note, now);
+          stroke.duration = Math.max(...stroke.notes.map(n => n.duration || 1.0));
+          break;
+        }
+      }
+    }
+
+    // Update history note end time and lock duration
     for (let i = this.noteHistory.length - 1; i >= 0; i--) {
       if (this.noteHistory[i].midi === midi && this.noteHistory[i].active) {
         this.noteHistory[i].active = false;
         this.noteHistory[i].endTime = now;
+        this.noteHistory[i].duration = this.computeNoteDuration(this.noteHistory[i], now);
         break;
       }
     }
 
-    // Update phrase note end time
+    // Update phrase note end time and lock duration
     for (let i = this.recentPhrase.length - 1; i >= 0; i--) {
       if (this.recentPhrase[i].midi === midi && this.recentPhrase[i].active) {
         this.recentPhrase[i].active = false;
         this.recentPhrase[i].endTime = now;
+        this.recentPhrase[i].duration = this.computeNoteDuration(this.recentPhrase[i], now);
         break;
       }
     }
+  }
+
+  /**
+   * Record rhythm stroke evaluation into scrolling stream
+   */
+  recordRhythmStroke(result) {
+    if (!result) return;
+    const now = performance.now();
+    let stroke = null;
+    for (let i = this.rhythmStream.length - 1; i >= 0; i--) {
+      const s = this.rhythmStream[i];
+      if (s.pending || (now - s.timestamp) < 120) {
+        stroke = s;
+        break;
+      }
+    }
+
+    if (stroke) {
+      stroke.pending = false;
+      stroke.offsetMs = result.offsetMs;
+      stroke.rating = result.rating;
+      stroke.subdivision = result.subdivision;
+      stroke.metricLabel = result.metricLabel;
+      stroke.notes.forEach(n => {
+        n.offsetMs = result.offsetMs;
+        n.timingRating = result.rating;
+      });
+    } else {
+      stroke = {
+        id: Date.now() + Math.random(),
+        timestamp: now,
+        pending: false,
+        offsetMs: result.offsetMs,
+        rating: result.rating,
+        subdivision: result.subdivision,
+        metricLabel: result.metricLabel,
+        duration: 1.0,
+        notes: (result.notes || []).map(n => ({
+          midi: n.midi,
+          velocity: n.velocity || 100,
+          active: true,
+          startTime: now,
+          releasedTime: null,
+          duration: 1.0,
+          offsetMs: result.offsetMs,
+          timingRating: result.rating
+        }))
+      };
+      this.rhythmStream.push(stroke);
+      if (this.rhythmStream.length > 500) {
+        this.rhythmStream.shift();
+      }
+    }
+  }
+
+  /**
+   * Update duration for note in rhythm stream upon release
+   */
+  updateRhythmNoteDuration(midi, durationInfo) {
+    if (!durationInfo) return;
+    const now = performance.now();
+    for (let i = this.rhythmStream.length - 1; i >= 0; i--) {
+      const stroke = this.rhythmStream[i];
+      const note = stroke.notes.find(n => n.midi === midi);
+      if (note) {
+        note.active = false;
+        note.releasedTime = now;
+        note.duration = durationInfo.standardBeats;
+        stroke.duration = Math.max(...stroke.notes.map(n => n.duration || 1.0));
+        break;
+      }
+    }
+  }
+
+  /**
+   * Clear recorded rhythm stream (for fresh song run)
+   */
+  clearRhythmStream() {
+    this.rhythmStream = [];
+    this.rhythmScrollX = 0;
+    this.manualScrollOffset = 0;
+  }
+
+  /**
+   * Attach timing assessment result to live sounding notes (for Free Play Rhythm Trainer)
+   */
+  setNoteTiming(midi, timingInfo) {
+    if (!timingInfo || !timingInfo.rating || timingInfo.rating === 'unscored') return;
+    const note = this.activeNotes.get(midi);
+    if (note) {
+      note.timingRating = timingInfo.rating;
+      note.offsetMs = timingInfo.offsetMs;
+    }
+    const recent = this.recentPhrase.find(n => n.midi === midi && n.active);
+    if (recent) {
+      recent.timingRating = timingInfo.rating;
+      recent.offsetMs = timingInfo.offsetMs;
+    }
+    const hist = this.noteHistory.find(n => n.midi === midi && n.active);
+    if (hist) {
+      hist.timingRating = timingInfo.rating;
+      hist.offsetMs = timingInfo.offsetMs;
+    }
+  }
+
+  /**
+   * Dynamically detect musical duration (beats) from held/released time & active BPM
+   */
+  computeNoteDuration(note, timestamp) {
+    if (note.duration !== undefined && typeof note.duration === 'number') {
+      return note.duration;
+    }
+
+    const bpm = this.options.bpm || 108;
+    const beatMs = 60000.0 / bpm;
+
+    let elapsedMs = 0;
+    if (note.active) {
+      elapsedMs = Math.max(0, (timestamp || performance.now()) - (note.startTime || timestamp));
+    } else if (note.releasedTime || note.endTime) {
+      const end = note.releasedTime || note.endTime;
+      elapsedMs = Math.max(0, end - (note.startTime || end));
+    } else {
+      return 1.0; // default quarter note
+    }
+
+    const rawBeats = elapsedMs / beatMs;
+
+    // While note is actively sounding:
+    // Starts as quarter note, and as held longer, transitions to half and whole note
+    if (note.active) {
+      if (rawBeats >= 3.25) return 4.0; // Whole Note
+      if (rawBeats >= 2.4) return 3.0;  // Dotted Half Note
+      if (rawBeats >= 1.45) return 2.0; // Half Note
+      return 1.0; // Quarter Note
+    }
+
+    // Once key is released, quantize into nearest standard musical duration
+    if (rawBeats >= 3.25) return 4.0; // Whole note (4 beats)
+    if (rawBeats >= 2.4) return 3.0;  // Dotted half note (3 beats)
+    if (rawBeats >= 1.45) return 2.0; // Half note (2 beats)
+    if (rawBeats >= 1.2) return 1.5;  // Dotted quarter note (1.5 beats)
+    if (rawBeats >= 0.65) return 1.0; // Quarter note (1 beat)
+    if (rawBeats >= 0.35) return 0.5; // Eighth note (0.5 beat)
+    return 0.25;                      // Sixteenth note (0.25 beat)
+  }
+
+  /**
+   * Get human-readable name, Unicode note glyph, and beats for a duration
+   */
+  getDurationInfo(durationBeats) {
+    const d = typeof durationBeats === 'number' ? durationBeats : 1.0;
+    if (d >= 3.5) return { name: 'Whole Note', symbol: '𝅝', beats: 4, isHollow: true, isWhole: true };
+    if (d >= 2.4) return { name: 'Dotted Half Note', symbol: '𝅗𝅥.', beats: 3, isHollow: true, isWhole: false, isDotted: true };
+    if (d >= 1.45) return { name: 'Half Note', symbol: '𝅗𝅥', beats: 2, isHollow: true, isWhole: false };
+    if (d >= 1.2) return { name: 'Dotted Quarter', symbol: '♩.', beats: 1.5, isHollow: false, isWhole: false, isDotted: true };
+    if (d >= 0.65) return { name: 'Quarter Note', symbol: '♩', beats: 1, isHollow: false, isWhole: false };
+    if (d >= 0.35) return { name: 'Eighth Note', symbol: '♪', beats: 0.5, isHollow: false, isWhole: false, flagCount: 1 };
+    return { name: 'Sixteenth Note', symbol: '♬', beats: 0.25, isHollow: false, isWhole: false, flagCount: 2 };
   }
 
   clearNotes() {
@@ -425,7 +645,9 @@ export class NotationRenderer {
     // Draw Grand Staff infrastructure
     this.drawGrandStaffLines(ctx, marginX, staffWidth, trebleTopY, bassTopY, lineSpacing, staffLineColor, staffBarColor);
 
-    if (this.options.mode !== 'practice') {
+    const isRhythmTrainer = this.options.rhythmTrainerActive || this.options.mode === 'rhythm_trainer';
+
+    if (this.options.mode !== 'practice' && !isRhythmTrainer) {
       this.drawClefs(ctx, marginX + (isMobile ? 14 : 20), trebleTopY, bassTopY, lineSpacing, clefColor);
     }
 
@@ -438,6 +660,8 @@ export class NotationRenderer {
 
     if (this.options.mode === 'practice') {
       this.renderPracticeMode(ctx, marginX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp);
+    } else if (isRhythmTrainer) {
+      this.renderRhythmTrainerMode(ctx, marginX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp);
     } else if (this.options.mode === 'live') {
       this.renderLiveMode(ctx, marginX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp);
     } else {
@@ -752,8 +976,11 @@ export class NotationRenderer {
       this.drawLedgerLines(ctx, note.x, note.staffPos, bottomLineY, lineSpacing);
     });
 
-    // 2. Draw Unified Chord Stem
-    this.drawChordStem(ctx, notes, stemDirection, lineSpacing);
+    // 2. Draw Unified Chord Stem (skip if all notes are whole notes!)
+    const maxDur = Math.max(...notes.map(n => this.computeNoteDuration(n, timestamp)));
+    if (maxDur < 3.25) {
+      this.drawChordStem(ctx, notes, stemDirection, lineSpacing, maxDur);
+    }
 
     // 3. Draw Noteheads, Glows, Accidentals & Labels
     notes.forEach(note => {
@@ -784,8 +1011,6 @@ export class NotationRenderer {
 
     // Notes below bottom line (staffPos <= -2)
     if (staffPos <= -2) {
-      // If staffPos is even (on a line: -2, -4, -6), lowest line is staffPos.
-      // If staffPos is odd (in a space: -3, -5), lowest line is staffPos + 1 (-3 -> -2, -5 -> -4).
       const lowestLine = (staffPos % 2 === 0) ? staffPos : staffPos + 1;
       for (let pos = -2; pos >= lowestLine; pos -= 2) {
         const y = bottomLineY - pos * (spacing / 2);
@@ -798,10 +1023,8 @@ export class NotationRenderer {
 
     // Notes above top line (staffPos >= 10)
     if (staffPos >= 10) {
-      // If staffPos is even (on a line: 10, 12, 14), highest line is staffPos.
-      // If staffPos is odd (in a space: 11, 13), highest line is staffPos - 1 (11 -> 10, 13 -> 12).
       const highestLine = (staffPos % 2 === 0) ? staffPos : staffPos - 1;
-      for (let pos = 10; pos <= highestLine; pos += 2) {
+      for (let pos = 10; pos <= highestLine; pos -= 2) {
         const y = bottomLineY - pos * (spacing / 2);
         ctx.beginPath();
         ctx.moveTo(x - ledgerWidth / 2, y);
@@ -814,9 +1037,9 @@ export class NotationRenderer {
   }
 
   /**
-   * Draw note stem connecting chord notes
+   * Draw note stem connecting chord notes, with curved flags for eighth/sixteenth notes
    */
-  drawChordStem(ctx, notes, direction, spacing) {
+  drawChordStem(ctx, notes, direction, spacing, duration = 1.0) {
     if (notes.length === 0) return;
 
     ctx.save();
@@ -830,26 +1053,105 @@ export class NotationRenderer {
     const maxY = Math.max(...notes.map(n => n.y));
     const stemLength = spacing * 3.4;
 
+    let stemX, startY, endY;
     if (direction === 'up') {
       // Stem on right edge of notehead
-      const stemX = notes[0].x + rx * 0.88;
-      const startY = maxY;
-      const endY = minY - stemLength;
+      stemX = notes[0].x + rx * 0.88;
+      startY = maxY;
+      endY = minY - stemLength;
 
       ctx.beginPath();
       ctx.moveTo(stemX, startY);
       ctx.lineTo(stemX, endY);
       ctx.stroke();
+
+      // Flags for Eighth Note (<= 0.55) & Sixteenth Note (<= 0.28)
+      if (duration <= 0.55) {
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.beginPath();
+        ctx.moveTo(stemX, endY);
+        ctx.bezierCurveTo(
+          stemX + spacing * 1.1, endY + spacing * 0.8,
+          stemX + spacing * 0.9, endY + spacing * 2.0,
+          stemX, endY + spacing * 2.2
+        );
+        ctx.lineTo(stemX, endY + spacing * 1.7);
+        ctx.bezierCurveTo(
+          stemX + spacing * 0.6, endY + spacing * 1.4,
+          stemX + spacing * 0.7, endY + spacing * 0.7,
+          stemX, endY + spacing * 0.5
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        if (duration <= 0.28) {
+          const f2Y = endY + spacing * 0.75;
+          ctx.beginPath();
+          ctx.moveTo(stemX, f2Y);
+          ctx.bezierCurveTo(
+            stemX + spacing * 1.1, f2Y + spacing * 0.8,
+            stemX + spacing * 0.9, f2Y + spacing * 2.0,
+            stemX, f2Y + spacing * 2.2
+          );
+          ctx.lineTo(stemX, f2Y + spacing * 1.7);
+          ctx.bezierCurveTo(
+            stemX + spacing * 0.6, f2Y + spacing * 1.4,
+            stemX + spacing * 0.7, f2Y + spacing * 0.7,
+            stemX, f2Y + spacing * 0.5
+          );
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
     } else {
       // Stem on left edge of notehead
-      const stemX = notes[0].x - rx * 0.88;
-      const startY = minY;
-      const endY = maxY + stemLength;
+      stemX = notes[0].x - rx * 0.88;
+      startY = minY;
+      endY = maxY + stemLength;
 
       ctx.beginPath();
       ctx.moveTo(stemX, startY);
       ctx.lineTo(stemX, endY);
       ctx.stroke();
+
+      // Flags for downward stem
+      if (duration <= 0.55) {
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.beginPath();
+        ctx.moveTo(stemX, endY);
+        ctx.bezierCurveTo(
+          stemX + spacing * 1.1, endY - spacing * 0.8,
+          stemX + spacing * 0.9, endY - spacing * 2.0,
+          stemX, endY - spacing * 2.2
+        );
+        ctx.lineTo(stemX, endY - spacing * 1.7);
+        ctx.bezierCurveTo(
+          stemX + spacing * 0.6, endY - spacing * 1.4,
+          stemX + spacing * 0.7, endY - spacing * 0.7,
+          stemX, endY - spacing * 0.5
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        if (duration <= 0.28) {
+          const f2Y = endY - spacing * 0.75;
+          ctx.beginPath();
+          ctx.moveTo(stemX, f2Y);
+          ctx.bezierCurveTo(
+            stemX + spacing * 1.1, f2Y - spacing * 0.8,
+            stemX + spacing * 0.9, f2Y - spacing * 2.0,
+            stemX, f2Y - spacing * 2.2
+          );
+          ctx.lineTo(stemX, f2Y - spacing * 1.7);
+          ctx.bezierCurveTo(
+            stemX + spacing * 0.6, f2Y - spacing * 1.4,
+            stemX + spacing * 0.7, f2Y - spacing * 0.7,
+            stemX, f2Y - spacing * 0.5
+          );
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
     }
 
     ctx.restore();
@@ -1011,34 +1313,72 @@ export class NotationRenderer {
       // Notehead glow
       ctx.shadowColor = glowColor;
       ctx.shadowBlur = isAlert ? 22 : (14 + 10 * velNorm);
+
+      // Free Play Rhythm Trainer timing halo
+      if (note.timingRating) {
+        ctx.save();
+        const ringColor = note.timingRating === 'perfect' ? '#10b981' :
+                          note.timingRating === 'early' ? '#f59e0b' :
+                          note.timingRating === 'late' ? '#38bdf8' : '#f43f5e';
+        ctx.shadowColor = ringColor;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(note.x, note.y, rx + 5, 0, Math.PI * 2);
+        ctx.strokeStyle = ringColor;
+        ctx.lineWidth = 2.0;
+        ctx.stroke();
+        ctx.restore();
+      }
     }
+
+    // Compute musical duration (Whole, Dotted Half, Half, Quarter, Eighth, Sixteenth)
+    const dur = note.duration || this.computeNoteDuration(note, timestamp);
+    const isHollow = dur >= 1.45; // Half note (2 beats) or Whole note (4 beats)
+    const isDotted = (dur >= 2.4 && dur < 3.25) || (dur >= 1.2 && dur < 1.45);
 
     // Main notehead body
     ctx.beginPath();
     ctx.ellipse(note.x, note.y, rx, ry, rot, 0, Math.PI * 2);
 
+    let headColor;
     if (note.active) {
-      if (isAlert) {
-        ctx.fillStyle = '#fbbf24'; // Luminous Warning Amber
-      } else {
-        ctx.fillStyle = note.clef === 'treble' ? '#38bdf8' : '#c084fc';
-      }
+      headColor = isAlert ? '#fbbf24' : (note.clef === 'treble' ? '#38bdf8' : '#c084fc');
     } else {
-      if (isAlert) {
-        ctx.fillStyle = this.options.theme === 'dark' ? '#fbbf24' : '#d97706';
-      } else {
-        // Diatonic notehead remains clean, crisp, neutral
-        ctx.fillStyle = this.options.theme === 'dark' ? '#f8fafc' : '#0f172a';
-      }
+      headColor = isAlert ? (this.options.theme === 'dark' ? '#fbbf24' : '#d97706')
+                          : (this.options.theme === 'dark' ? '#f8fafc' : '#0f172a');
     }
-    ctx.fill();
 
-    // Subtle inner 3D highlight
-    ctx.shadowBlur = 0;
-    ctx.beginPath();
-    ctx.ellipse(note.x - rx * 0.2, note.y - ry * 0.2, rx * 0.55, ry * 0.35, rot, 0, Math.PI * 2);
-    ctx.fillStyle = isAlert ? 'rgba(255, 255, 255, 0.65)' : 'rgba(255, 255, 255, 0.45)';
-    ctx.fill();
+    if (isHollow) {
+      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = headColor;
+      ctx.fillStyle = this.options.theme === 'dark' ? '#0b1120' : '#fcfbf9';
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = headColor;
+      ctx.fill();
+
+      // Subtle inner 3D highlight (for solid noteheads)
+      ctx.shadowBlur = 0;
+      ctx.beginPath();
+      ctx.ellipse(note.x - rx * 0.2, note.y - ry * 0.2, rx * 0.55, ry * 0.35, rot, 0, Math.PI * 2);
+      ctx.fillStyle = isAlert ? 'rgba(255, 255, 255, 0.65)' : 'rgba(255, 255, 255, 0.45)';
+      ctx.fill();
+    }
+
+    // Augmentation Dot if dotted note
+    if (isDotted) {
+      ctx.save();
+      const dotRadius = spacing * 0.20;
+      const dotX = note.x + rx * 1.55;
+      const isLine = Math.abs(note.staffPos % 2) === 0;
+      const dotY = isLine ? note.y - spacing * 0.28 : note.y;
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+      ctx.fillStyle = headColor;
+      ctx.fill();
+      ctx.restore();
+    }
 
     ctx.restore();
   }
@@ -1308,6 +1648,257 @@ export class NotationRenderer {
         const n1 = sortedTimeline[k];
         const n2 = sortedTimeline[k + 1];
         this.drawIntervalRibbon(ctx, n1, n2, lineSpacing, 0.65, false);
+      }
+    }
+
+    ctx.restore();
+  }
+
+  /**
+   * Render Free Play Rhythm Trainer Mode:
+   * A continuous scrolling sheet music score where played notes remain permanently,
+   * measure barlines are drawn by time signature, notes scroll smoothly,
+   * and each stroke displays its exact timing accuracy in milliseconds (±ms)
+   */
+  renderRhythmTrainerMode(ctx, staffX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp) {
+    const isDark = this.options.theme === 'dark';
+    const preferFlats = this.options.preferFlats;
+    const isMobile = this.width < 640;
+
+    const trebleTopY = trebleBottomY - lineSpacing * 4;
+    const bassTopY = bassBottomY - lineSpacing * 4;
+    const staffRightX = staffX + staffWidth;
+
+    const beatsPerMeasure = this.options.beatsPerMeasure || 4;
+    const timeSig = [beatsPerMeasure, 4];
+
+    // 1. Clefs, Time Signature & Divider
+    const clefX = staffX + (isMobile ? 14 : 20);
+    this.drawClefs(ctx, clefX, trebleTopY, bassTopY, lineSpacing, isDark ? '#e2e8f0' : '#1e293b');
+
+    const timeSigX = staffX + (isMobile ? 42 : 54);
+    this.drawTimeSignature(ctx, timeSigX, trebleBottomY, bassBottomY, lineSpacing, timeSig);
+
+    const clefDividerX = staffX + (isMobile ? 66 : 82);
+    ctx.save();
+    ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.4)' : 'rgba(15, 23, 42, 0.35)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(clefDividerX, trebleTopY);
+    ctx.lineTo(clefDividerX, trebleBottomY);
+    ctx.moveTo(clefDividerX, bassTopY);
+    ctx.lineTo(clefDividerX, bassBottomY);
+    ctx.stroke();
+    ctx.restore();
+
+    const notesStartX = clefDividerX + (isMobile ? 18 : 26);
+    const availableWidth = staffRightX - notesStartX;
+
+    // 2. Empty State Message
+    if (this.rhythmStream.length === 0) {
+      ctx.save();
+      ctx.font = '600 12px "Inter", sans-serif';
+      ctx.fillStyle = isDark ? 'rgba(148, 163, 184, 0.65)' : 'rgba(100, 116, 139, 0.75)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const midY = (trebleBottomY + bassTopY) / 2;
+      ctx.fillText('🎼 Play any song on the beat — notes will stay, scroll, and display timing (±ms)', notesStartX + availableWidth * 0.45, midY);
+      ctx.restore();
+      return;
+    }
+
+    // 3. Precompute Non-Linear Duration Spacing & Measure Barlines
+    const strokeXPositions = [];
+    const barlineXPositions = [];
+    let curX = notesStartX + 20;
+    let currentMeasureBeats = 0;
+
+    this.rhythmStream.forEach((stroke, i) => {
+      // Dynamic duration if note currently held
+      stroke.notes.forEach(n => {
+        if (n.active) {
+          n.duration = this.computeNoteDuration(n, timestamp);
+        }
+      });
+      const strokeDur = Math.max(...stroke.notes.map(n => n.duration || 1.0));
+      stroke.duration = strokeDur;
+
+      if (i > 0) {
+        const prevStroke = this.rhythmStream[i - 1];
+        const prevDur = prevStroke.duration || 1.0;
+        let spacing = Math.max(isMobile ? 54 : 70, (isMobile ? 70 : 88) * Math.pow(Math.max(0.25, prevDur), 0.55));
+
+        // Accidental clearance
+        const hasAccidental = stroke.notes.some(n => {
+          const info = MusicTheory.getNoteInfo(n.midi, preferFlats);
+          return info.accidental;
+        });
+        if (hasAccidental) spacing += 14;
+
+        if (currentMeasureBeats + prevDur >= beatsPerMeasure - 0.01) {
+          const barX = curX + spacing * 0.48;
+          barlineXPositions.push(barX);
+          spacing += 26;
+          currentMeasureBeats = (currentMeasureBeats + prevDur) % beatsPerMeasure;
+        } else {
+          currentMeasureBeats += prevDur;
+        }
+
+        curX += spacing;
+      } else {
+        const hasAccidental = stroke.notes.some(n => {
+          const info = MusicTheory.getNoteInfo(n.midi, preferFlats);
+          return info.accidental;
+        });
+        if (hasAccidental) curX += 14;
+      }
+
+      strokeXPositions.push(curX);
+    });
+
+    // 4. Smooth Horizontal Focal Scrolling
+    const latestX = strokeXPositions[strokeXPositions.length - 1];
+    const focalAnchorX = notesStartX + Math.min(isMobile ? 140 : 280, availableWidth * 0.40);
+    const targetScrollX = Math.max(0, latestX - focalAnchorX);
+
+    this.rhythmScrollX = this.rhythmScrollX || 0;
+    this.rhythmScrollX += (targetScrollX - this.rhythmScrollX) * 0.16;
+
+    const maxScroll = Math.max(0, latestX - focalAnchorX);
+    this.manualScrollOffset = Math.max(-120, Math.min(maxScroll + 300, this.manualScrollOffset || 0));
+    const effectiveScrollX = Math.max(0, this.rhythmScrollX - this.manualScrollOffset);
+
+    // 5. Clip & Translate Notes Area
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(notesStartX - 4, 0, staffRightX - notesStartX + 10, this.height);
+    ctx.clip();
+    ctx.translate(-effectiveScrollX, 0);
+
+    // 6. Draw Measure Barlines
+    ctx.save();
+    ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.42)' : 'rgba(15, 23, 42, 0.35)';
+    ctx.lineWidth = 1.2;
+    barlineXPositions.forEach(bx => {
+      ctx.beginPath();
+      ctx.moveTo(bx, trebleTopY);
+      ctx.lineTo(bx, trebleBottomY);
+      ctx.moveTo(bx, bassTopY);
+      ctx.lineTo(bx, bassBottomY);
+      ctx.stroke();
+    });
+    ctx.restore();
+
+    // 7. Render Each Note Column & Timing Accuracy Badges
+    const visibleNotesForRibbon = [];
+
+    this.rhythmStream.forEach((stroke, idx) => {
+      const colX = strokeXPositions[idx];
+
+      // Cull strokes outside visible canvas
+      if (colX - effectiveScrollX < notesStartX - 100 || colX - effectiveScrollX > staffRightX + 100) {
+        return;
+      }
+
+      // Prepare notes with clef and staff positions
+      stroke.notes.forEach(note => {
+        const info = MusicTheory.getNoteInfo(note.midi, preferFlats);
+        const clef = note.midi >= this.options.splitPoint ? 'treble' : 'bass';
+        const staffPos = MusicTheory.getStaffPosition(info.diatonicStep, clef);
+
+        note.info = info;
+        note.clef = clef;
+        note.staffPos = staffPos;
+        note.timingRating = note.timingRating || stroke.rating;
+        note.offsetMs = (note.offsetMs !== undefined && note.offsetMs !== null) ? note.offsetMs : stroke.offsetMs;
+      });
+
+      // Split into treble & bass
+      const trebleNotes = stroke.notes.filter(n => n.clef === 'treble').sort((a, b) => a.midi - b.midi);
+      const bassNotes = stroke.notes.filter(n => n.clef === 'bass').sort((a, b) => a.midi - b.midi);
+
+      if (trebleNotes.length > 0) {
+        this.renderStaffChord(ctx, trebleNotes, colX, trebleBottomY, 'treble', lineSpacing, timestamp);
+      }
+      if (bassNotes.length > 0) {
+        this.renderStaffChord(ctx, bassNotes, colX, bassBottomY, 'bass', lineSpacing, timestamp);
+      }
+
+      // Collect highest note for melodic contour ribbon
+      const leadNote = [...stroke.notes].sort((a, b) => b.midi - a.midi)[0];
+      if (leadNote) {
+        visibleNotesForRibbon.push({
+          x: colX,
+          y: leadNote.y,
+          alpha: 1.0,
+          midi: leadNote.midi
+        });
+      }
+
+      // 8. Millisecond Accuracy Badge Over Note
+      if (stroke.offsetMs !== undefined && stroke.offsetMs !== null && stroke.rating && stroke.rating !== 'unscored') {
+        ctx.save();
+        const ro = stroke.offsetMs;
+        const offStr = (ro >= 0 ? '+' : '') + ro + 'ms';
+
+        // Position badge above treble staff or above highest notehead
+        let highestY = trebleTopY;
+        if (trebleNotes.length > 0) {
+          highestY = Math.min(...trebleNotes.map(n => n.y));
+        }
+        const badgeY = Math.min(trebleTopY - lineSpacing * 1.1, highestY - lineSpacing * 1.3);
+
+        ctx.font = '700 9px "Inter", sans-serif';
+        const textW = ctx.measureText(offStr).width;
+        const badgeW = textW + 8;
+        const badgeH = 13;
+        const badgeX = colX - badgeW / 2;
+
+        const absOff = Math.abs(ro);
+        let bgCol, borderCol, textCol;
+        if (stroke.rating === 'perfect' || absOff <= 45) {
+          bgCol = 'rgba(34, 197, 94, 0.22)';
+          borderCol = 'rgba(34, 197, 94, 0.8)';
+          textCol = '#86efac';
+        } else if (stroke.rating === 'early' || stroke.rating === 'late' || absOff <= 120) {
+          bgCol = 'rgba(245, 158, 11, 0.22)';
+          borderCol = 'rgba(245, 158, 11, 0.85)';
+          textCol = '#fde047';
+        } else {
+          bgCol = 'rgba(244, 63, 94, 0.22)';
+          borderCol = 'rgba(244, 63, 94, 0.85)';
+          textCol = '#fecdd3';
+        }
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(badgeX, badgeY - badgeH, badgeW, badgeH);
+        ctx.fillStyle = bgCol;
+        ctx.strokeStyle = borderCol;
+        ctx.lineWidth = 1;
+        if (ctx.roundRect) {
+          ctx.beginPath();
+          ctx.roundRect(badgeX, badgeY - badgeH, badgeW, badgeH, 3);
+          ctx.fill();
+          ctx.stroke();
+        } else {
+          ctx.fillRect(badgeX, badgeY - badgeH, badgeW, badgeH);
+          ctx.strokeRect(badgeX, badgeY - badgeH, badgeW, badgeH);
+        }
+
+        ctx.fillStyle = textCol;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(offStr, colX, badgeY - badgeH / 2);
+        ctx.restore();
+      }
+    });
+
+    // Melodic interval ribbons between consecutive strokes
+    if (this.options.showIntervalContour && visibleNotesForRibbon.length >= 2) {
+      for (let k = 0; k < visibleNotesForRibbon.length - 1; k++) {
+        const a = visibleNotesForRibbon[k];
+        const b = visibleNotesForRibbon[k + 1];
+        this.drawIntervalRibbon(ctx, a, b, lineSpacing, 0.75, false);
       }
     }
 

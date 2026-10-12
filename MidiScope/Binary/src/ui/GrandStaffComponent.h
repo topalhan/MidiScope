@@ -4,7 +4,9 @@
 #include "../core/MusicTheory.h"
 #include "../core/MelodyDatabase.h"
 #include "../core/MelodyScorer.h"
+#include "../core/FreePlayRhythmScorer.h"
 #include <set>
+#include <deque>
 #include <vector>
 
 namespace MidiSheet
@@ -32,6 +34,11 @@ public:
     void triggerMistakeFlash();
     void triggerRecoveryFlash();
 
+    // Free Play Rhythm Trainer stream
+    void setFreePlayScoreStream(const std::deque<RhythmStrokeEvaluation>* stream,
+                                double bpm, int beatsPerMeasure);
+    bool isFreePlayStreamActive() const noexcept { return freePlayStream != nullptr; }
+
     void setPreferFlats(bool prefer) { preferFlats = prefer; repaint(); }
     void setShowLabels(bool show) { showLabels = show; repaint(); }
     void setAccidentalAlertEnabled(bool enabled) { accidentalAlertEnabled = enabled; repaint(); }
@@ -46,6 +53,8 @@ public:
     void nextMistake();
     void previousMistake();
     int getActiveReviewMistakeIndex() const { return activeReviewMistakeIndex; }
+    void resetScoreToBeginning();
+    void triggerGhostFingeringAlert(int midiNote = -1);
 
     std::function<void(int noteIndex, int targetMidi, int wrongMidi)> onReviewNoteChanged;
     std::function<void()> onSkipSilentAnalysisClicked;
@@ -53,7 +62,9 @@ public:
     void mouseDown(const juce::MouseEvent& event) override;
     void mouseDrag(const juce::MouseEvent& event) override;
     void mouseUp(const juce::MouseEvent& event) override;
+    void mouseDoubleClick(const juce::MouseEvent& event) override;
     void mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) override;
+    bool keyPressed(const juce::KeyPress& key) override;
 
 private:
     void drawStaffLines(juce::Graphics& g, float xLeft, float width, float trebleTopY, float bassTopY, float lineSpacing);
@@ -68,6 +79,9 @@ private:
     void drawVanishingBarMask(juce::Graphics& g, const std::vector<float>& barlineXs, float scrollX, float notesStartX, float staffRightX, float trebleTopY, float bassBottomY, float beatsPerMeasure);
     void drawAdvanceCurtain(juce::Graphics& g, float curtainX, float notesStartX, float trebleTopY, float bassBottomY);
     void drawDecoupledEyeCursor(juce::Graphics& g, float eyeX, float trebleTopY, float bassBottomY);
+    void drawRhythmScoreStream(juce::Graphics& g, float notesStartX, float staffRightX,
+                               float trebleTopY, float trebleBottomY,
+                               float bassTopY, float bassBottomY, float lineSpacing);
 
     std::vector<int> getMistakeNoteIndices() const;
     void notifyReviewNoteChanged();
@@ -100,12 +114,21 @@ private:
     bool showLabels = true;
 
     double lastMistakeTimeMs = 0.0;
+    double ghostFingeringAlertTimeMs = 0.0;
+    int ghostFingeringMidi = -1;
 
     int activeReviewMistakeIndex = -1;
     float manualScrollOffset = 0.0f;
     bool isUserDragging = false;
     float dragStartX = 0.0f;
     float dragStartScroll = 0.0f;
+
+    // Free Play score stream (not owned; points into FreePlayRhythmScorer)
+    const std::deque<RhythmStrokeEvaluation>* freePlayStream = nullptr;
+    double freePlayBpm          = 108.0;
+    int    freePlayBeatsPerBar  = 4;
+    float  rhythmScrollX        = 0.0f;
+    float  rhythmManualScroll   = 0.0f;
 
     juce::Rectangle<float> prevMistakeBtnBounds;
     juce::Rectangle<float> nextMistakeBtnBounds;

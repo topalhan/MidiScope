@@ -27,6 +27,8 @@ private:
     juce::TextButton prevButton;
     juce::TextButton skipButton;
     juce::TextButton resetButton;
+    juce::TextButton restartButton;
+    juce::TextButton finishButton;
     juce::TextButton tapButton;
     juce::TextButton exitButton;
 

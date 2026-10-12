@@ -5,6 +5,7 @@
 #include "core/MelodyScorer.h"
 #include "core/MusicTheory.h"
 #include "core/DailyRoutineManager.h"
+#include "core/FreePlayRhythmScorer.h"
 
 namespace MidiSheet
 {
@@ -64,6 +65,10 @@ public:
     bool isRoutineMode() const noexcept { return routineModeActive; }
     void setRoutineMode(bool active) noexcept { routineModeActive = active; }
 
+    FreePlayRhythmScorer& getFreePlayScorer() { return freePlayScorer; }
+    bool isFreePlayMode() const noexcept { return freePlayModeActive; }
+    void setFreePlayMode(bool active) noexcept { freePlayModeActive = active; }
+
     struct MetronomeClickSynth
     {
         float sampleRate = 44100.0f;
@@ -107,6 +112,8 @@ private:
     MelodyScorer scorer;
     DailyRoutineManager routineManager;
     bool routineModeActive = false;
+    FreePlayRhythmScorer freePlayScorer;
+    bool freePlayModeActive = false;
     std::map<juce::String, FirstReadRecord> firstReadRecords;
     VisualDisrupterMode disrupterMode = VisualDisrupterMode::None;
     bool decoupledEyeCursorEnabled = false;

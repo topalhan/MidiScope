@@ -18,10 +18,13 @@ public:
     void resized() override;
 
     void updateState(const MelodyScorer& scorer, const DetectedChord& chord, double bpm, bool hostPlaying, const std::vector<int>& activeNotes = {}, bool preferFlats = false, int reviewMistakeIndex = -1);
+    void updateFreePlayState(const FreePlayRhythmStats& stats, double bpm, int beatsPerMeasure, bool isMetronomeRunning, const std::vector<int>& activeNotes = {}, bool preferFlats = false);
 
     void setDisrupterMode(VisualDisrupterMode mode);
     void setEyeCursorEnabled(bool enabled);
     void setMetronomeEnabled(bool enabled);
+    void setFreePlayActive(bool active);
+    bool isFreePlayActive() const noexcept { return freePlayActive; }
 
     std::function<void()> onSelectMelodyClicked;
     std::function<void()> onRestartClicked;
@@ -30,17 +33,24 @@ public:
     std::function<void(bool)> onEyeCursorToggled;
     std::function<void(bool)> onMetronomeToggled;
     std::function<void()> onRoutineClicked;
+    std::function<void(bool)> onFreePlayToggled;
 
 private:
     juce::TextButton selectMelodyButton;
     juce::TextButton restartButton;
     juce::TextButton routineButton;
+    juce::TextButton freePlayButton;
     juce::TextButton metronomeButton;
     bool metronomeActive = true;
+    bool freePlayActive = false;
     juce::ComboBox modeSelector;
     juce::ComboBox disrupterSelector;
     juce::TextButton eyeCursorButton;
     bool eyeCursorActive = false;
+
+    FreePlayRhythmStats freePlayStats;
+    int freePlayBeatsPerMeasure = 4;
+    bool freePlayMetronomeRunning = false;
 
     juce::String melodyTitle = "Ode to Joy";
     juce::String composer = "L. van Beethoven";

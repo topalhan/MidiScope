@@ -38,6 +38,7 @@ private:
 
     bool isMelodySelectorOpen = false;
     bool isRoutineMode = false;
+    bool isFreePlayMode = false;
     bool preferFlats = false;
     std::vector<int> activeMidiNotes;
 

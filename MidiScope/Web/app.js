@@ -13,6 +13,7 @@ import { MelodyTrainer } from './trainer.js?v=20260915.2115';
 import { MELODIES } from './melodies.js';
 import { parseMidiFile, inspectMidiChannels } from './midiparser.js';
 import { DailyRoutineController } from './routine.js?v=20260915.2115';
+import { FreePlayRhythmTrainer } from './rhythm_trainer.js?v=20260915.2115';
 
 class App {
   constructor() {
@@ -69,9 +70,60 @@ class App {
     this.btnModalCalibPlus = document.getElementById('btn-modal-calib-plus');
 
     // App Mode Tabs & Practice HUD elements
+    // Universal Master Metronome in Header
+    this.btnMasterMetronome = document.getElementById('btn-master-metronome');
+    this.masterMetronomeIcon = document.getElementById('master-metronome-icon');
+    this.masterMetronomeStatus = document.getElementById('master-metronome-status');
+    this.btnMasterBpmMinus = document.getElementById('btn-master-bpm-minus');
+    this.btnMasterBpmPlus = document.getElementById('btn-master-bpm-plus');
+    this.masterBpmDisplay = document.getElementById('master-bpm-display');
+    this.btnMasterTapTempo = document.getElementById('btn-master-tap-tempo');
+    this.btnMasterClickToggle = document.getElementById('btn-master-click-toggle');
+    this.masterClickIcon = document.getElementById('master-click-icon');
+    this.masterBeatDots = document.getElementById('master-beat-dots');
+
     this.tabFreePlay = document.getElementById('tab-free-play');
     this.tabPractice = document.getElementById('tab-practice');
     this.freeplayHud = document.getElementById('freeplay-hud');
+
+    // Free Play Rhythm Trainer DOM & Engine
+    this.freePlayRhythmTrainer = new FreePlayRhythmTrainer(this.audio);
+    this.btnToggleFreeplayRhythm = document.getElementById('btn-toggle-freeplay-rhythm');
+    this.freeplayRhythmBadge = document.getElementById('freeplay-rhythm-badge');
+    this.freeplayRhythmPanel = document.getElementById('freeplay-rhythm-panel');
+    this.btnFreeplayMetronome = document.getElementById('btn-freeplay-metronome');
+    this.freeplayMetronomeIcon = document.getElementById('freeplay-metronome-icon');
+    this.freeplayMetronomeText = document.getElementById('freeplay-metronome-text');
+    this.freeplayBpmDisplay = document.getElementById('freeplay-bpm-display');
+    this.btnFreeplayBpmMinus5 = document.getElementById('btn-freeplay-bpm-minus5');
+    this.btnFreeplayBpmMinus = document.getElementById('btn-freeplay-bpm-minus');
+    this.btnFreeplayBpmPlus = document.getElementById('btn-freeplay-bpm-plus');
+    this.btnFreeplayBpmPlus5 = document.getElementById('btn-freeplay-bpm-plus5');
+    this.btnFreeplayTapTempo = document.getElementById('btn-freeplay-tap-tempo');
+    this.selectFreeplayTimesig = document.getElementById('select-freeplay-timesig');
+    this.selectFreeplayGrid = document.getElementById('select-freeplay-grid');
+    this.selectFreeplayTolerance = document.getElementById('select-freeplay-tolerance');
+    this.btnFreeplayClickToggle = document.getElementById('btn-freeplay-click-toggle');
+    this.freeplayClickIcon = document.getElementById('freeplay-click-icon');
+    this.freeplayClickText = document.getElementById('freeplay-click-text');
+    this.freeplayBeatLabel = document.getElementById('freeplay-beat-label');
+    this.freeplayBeatDots = document.getElementById('freeplay-beat-dots');
+    this.freeplayPhaseBar = document.getElementById('freeplay-phase-bar');
+    this.pocketNeedle = document.getElementById('pocket-needle');
+    this.freeplayLiveHitPill = document.getElementById('freeplay-live-hit-pill');
+    this.freeplaySubdivisionBadge = document.getElementById('freeplay-subdivision-badge');
+    this.freeplayChordSyncText = document.getElementById('freeplay-chord-sync-text');
+    this.freeplayAccuracyDisplay = document.getElementById('freeplay-accuracy-display');
+    this.freeplayStreakCount = document.getElementById('freeplay-streak-count');
+    this.freeplayBestStreak = document.getElementById('freeplay-best-streak');
+    this.freeplayTendencyDisplay = document.getElementById('freeplay-tendency-display');
+    this.freeplayCountPerfect = document.getElementById('freeplay-count-perfect');
+    this.freeplayCountEarly = document.getElementById('freeplay-count-early');
+    this.freeplayCountLate = document.getElementById('freeplay-count-late');
+    this.freeplayCountOff = document.getElementById('freeplay-count-off');
+    this.freeplayRecentHits = document.getElementById('freeplay-recent-hits');
+    this.btnFreeplayResetStats = document.getElementById('btn-freeplay-reset-stats');
+
     this.practiceHud = document.getElementById('practice-hud');
     this.practiceMelodyTitle = document.getElementById('practice-melody-title');
     this.practiceComposer = document.getElementById('practice-composer');
@@ -247,6 +299,8 @@ class App {
     this.setupMidiEvents();
     this.setupTrainerEvents();
     this.setupRoutineEvents();
+    this.setupFreePlayRhythmTrainer();
+    this.setupUniversalMetronome();
     this.setupUIEventListeners();
     this.setupMidiFileLoader();
     this.populateMelodyModal();
@@ -526,6 +580,9 @@ class App {
         this.audio.playMetronomeClick(isDownbeat);
       }
 
+      // Animate Master Beat Dots in Header
+      this.animateMasterBeatDot(beatIndex, isDownbeat);
+
       // 2. Animate Visual Beat Indicator Dots
       if (this.visualBeatContainer) {
         const dots = this.visualBeatContainer.querySelectorAll('.beat-dot');
@@ -597,6 +654,445 @@ class App {
       }
     };
   }
+
+  /**
+   * Setup Free Play Rhythm Trainer HUD, Callbacks, and User Controls
+   */
+  setupFreePlayRhythmTrainer() {
+    const trainer = this.freePlayRhythmTrainer;
+    if (!trainer) return;
+
+    // 1. Beat Pulse Tick Callback
+    trainer.onBeatTick = (beatIndex, isDownbeat) => {
+      this.animateMasterBeatDot(beatIndex, isDownbeat);
+      if (this.freeplayBeatDots) {
+        const dots = this.freeplayBeatDots.querySelectorAll('.beat-dot');
+        dots.forEach((dot, idx) => {
+          if (idx === beatIndex) {
+            dot.classList.add('active');
+            setTimeout(() => dot.classList.remove('active'), 140);
+          } else {
+            dot.classList.remove('active');
+          }
+        });
+      }
+
+      if (this.freeplayBeatLabel) {
+        this.freeplayBeatLabel.innerText = isDownbeat ? 'Downbeat (1)' : `Beat ${beatIndex + 1}`;
+        this.freeplayBeatLabel.className = isDownbeat
+          ? 'text-xs font-mono font-black text-emerald-400'
+          : 'text-xs font-mono font-bold text-sky-400';
+      }
+    };
+
+    // 2. Smooth Continuous Beat Phase Progress Sweep (60fps)
+    trainer.onPhaseUpdate = (phaseRatio) => {
+      if (this.freeplayPhaseBar) {
+        this.freeplayPhaseBar.style.width = `${Math.round(phaseRatio * 100)}%`;
+      }
+    };
+
+    // 3. Stroke Evaluated Feedback
+    trainer.onStrokeEvaluated = (result, stats) => {
+      if (!result) return;
+
+      if (result.rating === 'unscored') {
+        if (this.freeplayLiveHitPill) {
+          this.freeplayLiveHitPill.innerText = 'Start Metronome to score rhythm';
+          this.freeplayLiveHitPill.className = 'text-xs font-bold px-3 py-1 rounded-full bg-slate-900 text-slate-400 border border-slate-800 transition-all flex items-center gap-1.5 shadow-sm';
+        }
+        return;
+      }
+
+      // Animate Pocket Needle
+      if (this.pocketNeedle) {
+        // Clamp offset between -150ms and +150ms
+        const clampedOffset = Math.max(-150, Math.min(150, result.offsetMs));
+        const needlePercent = 50 + (clampedOffset / 150) * 45; // 5% to 95%
+        this.pocketNeedle.style.left = `${needlePercent}%`;
+      }
+
+      // Live hit feedback pill with flash animation
+      if (this.freeplayLiveHitPill) {
+        let pillColorClass = 'bg-slate-900 text-slate-400 border-slate-800';
+        if (result.rating === 'perfect') {
+          pillColorClass = 'bg-emerald-500/25 text-emerald-300 border-emerald-500/50 hit-pulse-flash shadow-emerald-500/20 shadow-md';
+        } else if (result.rating === 'early') {
+          pillColorClass = 'bg-amber-500/25 text-amber-300 border-amber-500/50 hit-pulse-flash shadow-amber-500/20 shadow-md';
+        } else if (result.rating === 'late') {
+          pillColorClass = 'bg-sky-500/25 text-sky-300 border-sky-500/50 hit-pulse-flash shadow-sky-500/20 shadow-md';
+        } else if (result.rating === 'off_beat') {
+          pillColorClass = 'bg-rose-500/25 text-rose-300 border-rose-500/50 hit-pulse-flash shadow-rose-500/20 shadow-md';
+        }
+        this.freeplayLiveHitPill.className = `text-xs font-black px-3.5 py-1 rounded-full border transition-all flex items-center gap-1.5 ${pillColorClass}`;
+        this.freeplayLiveHitPill.innerText = result.text;
+      }
+
+      // Subdivision Metric label
+      if (this.freeplaySubdivisionBadge) {
+        this.freeplaySubdivisionBadge.innerText = `🎯 Metric: ${result.metricLabel} (${result.subdivision})`;
+      }
+
+      // Forward timing info to notation notes & record in scrolling stream
+      if (this.notation) {
+        if (Array.isArray(result.notes)) {
+          result.notes.forEach(n => {
+            this.notation.setNoteTiming(n.midi, result);
+          });
+        }
+        this.notation.recordRhythmStroke(result);
+      }
+
+      // Synchronize with detected chord display
+      if (this.chordNameEl && this.activeNotes.size > 0) {
+        const chordName = this.chordNameEl.innerText.split(' — ')[0];
+        const offsetSign = result.offsetMs >= 0 ? '+' : '';
+        this.chordNameEl.innerText = `${chordName} — ${result.rating.toUpperCase()} (${offsetSign}${result.offsetMs}ms)`;
+      }
+    };
+
+    // 4. Statistics Updated
+    trainer.onStatsUpdated = (stats) => {
+      if (this.freeplayAccuracyDisplay) {
+        this.freeplayAccuracyDisplay.innerText = `${stats.accuracy}%`;
+        if (stats.accuracy >= 90) {
+          this.freeplayAccuracyDisplay.className = 'text-base font-black text-emerald-400';
+        } else if (stats.accuracy >= 70) {
+          this.freeplayAccuracyDisplay.className = 'text-base font-black text-amber-400';
+        } else {
+          this.freeplayAccuracyDisplay.className = 'text-base font-black text-rose-400';
+        }
+      }
+
+      if (this.freeplayStreakCount) this.freeplayStreakCount.innerText = stats.streak;
+      if (this.freeplayBestStreak) this.freeplayBestStreak.innerText = stats.bestStreak;
+
+      if (this.freeplayCountPerfect) this.freeplayCountPerfect.innerText = stats.perfectCount;
+      if (this.freeplayCountEarly) this.freeplayCountEarly.innerText = stats.earlyCount;
+      if (this.freeplayCountLate) this.freeplayCountLate.innerText = stats.lateCount;
+      if (this.freeplayCountOff) this.freeplayCountOff.innerText = stats.offBeatCount;
+
+      if (this.freeplayTendencyDisplay) {
+        if (stats.tendency === 'rushing') {
+          this.freeplayTendencyDisplay.innerHTML = `<span>⚡</span> <span>Rushing (${stats.avgOffsetMs}ms avg)</span>`;
+          this.freeplayTendencyDisplay.className = 'text-xs font-bold text-amber-400 flex items-center gap-1 mt-0.5';
+        } else if (stats.tendency === 'dragging') {
+          this.freeplayTendencyDisplay.innerHTML = `<span>⏳</span> <span>Dragging (+${stats.avgOffsetMs}ms avg)</span>`;
+          this.freeplayTendencyDisplay.className = 'text-xs font-bold text-sky-400 flex items-center gap-1 mt-0.5';
+        } else {
+          this.freeplayTendencyDisplay.innerHTML = `<span>🎯</span> <span>Locked in Pocket (${stats.avgOffsetMs >= 0 ? '+' : ''}${stats.avgOffsetMs}ms)</span>`;
+          this.freeplayTendencyDisplay.className = 'text-xs font-bold text-emerald-400 flex items-center gap-1 mt-0.5';
+        }
+      }
+
+      // Populate recent hits mini-strip
+      if (this.freeplayRecentHits && Array.isArray(stats.recentHits)) {
+        this.freeplayRecentHits.innerHTML = stats.recentHits.slice(0, 8).map(h => {
+          const color = h.rating === 'perfect' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                        h.rating === 'early' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                        h.rating === 'late' ? 'bg-sky-500/20 text-sky-300 border-sky-500/30' :
+                        'bg-rose-500/20 text-rose-300 border-rose-500/30';
+          const sign = h.offsetMs >= 0 ? '+' : '';
+          return `<span class="rhythm-recent-pill text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${color}">${sign}${h.offsetMs}ms</span>`;
+        }).join('');
+      }
+    };
+
+    // 5. Metronome state toggle
+    trainer.onMetronomeToggle = (isRunning) => {
+      if (this.btnFreeplayMetronome) {
+        if (isRunning) {
+          this.btnFreeplayMetronome.className = 'px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-600 hover:from-rose-400 hover:to-amber-500 text-white font-black text-xs shadow-lg shadow-rose-500/30 active:scale-95 transition-all flex items-center gap-2';
+          if (this.freeplayMetronomeIcon) this.freeplayMetronomeIcon.innerText = '⏹️';
+          if (this.freeplayMetronomeText) this.freeplayMetronomeText.innerText = 'Stop Metronome';
+        } else {
+          this.btnFreeplayMetronome.className = 'px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-sky-500/30 active:scale-95 transition-all flex items-center gap-2';
+          if (this.freeplayMetronomeIcon) this.freeplayMetronomeIcon.innerText = '▶️';
+          if (this.freeplayMetronomeText) this.freeplayMetronomeText.innerText = 'Start Metronome';
+          if (this.freeplayBeatLabel) this.freeplayBeatLabel.innerText = 'Stopped';
+          if (this.freeplayPhaseBar) this.freeplayPhaseBar.style.width = '0%';
+        }
+      }
+      this.updateMasterMetronomeUi();
+    };
+
+    // 6. Note Duration Detected Callback (Whole, Half, Quarter, 8th, 16th)
+    trainer.onDurationDetected = (midi, info) => {
+      if (this.freeplayChordSyncText) {
+        this.freeplayChordSyncText.innerHTML = `<span class="text-sky-400 font-bold">${info.symbol} ${info.name}</span> <span class="text-slate-400 font-mono">(${info.standardBeats} beat${info.standardBeats === 1 ? '' : 's'} • ${info.durationMs}ms)</span>`;
+      }
+      if (this.notation) {
+        this.notation.updateRhythmNoteDuration(midi, info);
+      }
+    };
+
+    // Ensure NotationRenderer is synchronized with trainer BPM and time signature
+    if (this.notation) {
+      this.notation.setOption('bpm', trainer.bpm);
+      this.notation.setOption('beatsPerMeasure', trainer.beatsPerMeasure || 4);
+    }
+
+    // Wire UI Controls
+    this.btnToggleFreeplayRhythm?.addEventListener('click', () => {
+      const active = !trainer.isActive;
+      trainer.isActive = active;
+      const modeSelect = document.getElementById('select-view-mode');
+      if (active) {
+        this.freeplayRhythmPanel?.classList.remove('hidden');
+        if (this.freeplayRhythmBadge) {
+          this.freeplayRhythmBadge.innerText = 'ON';
+          this.freeplayRhythmBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-500/30 text-emerald-200 border border-emerald-500/50';
+        }
+        if (modeSelect) modeSelect.value = 'rhythm_trainer';
+        if (this.notation) {
+          this.notation.setOption('rhythmTrainerActive', true);
+          this.notation.setOption('beatsPerMeasure', trainer.beatsPerMeasure || 4);
+          this.notation.setOption('bpm', trainer.bpm || 108);
+        }
+        this.showToast('🎯 Free Play Rhythm Trainer Active! Notes will stay, scroll, and show ±ms precision.', 'info');
+      } else {
+        trainer.stopMetronome();
+        this.freeplayRhythmPanel?.classList.add('hidden');
+        if (this.freeplayRhythmBadge) {
+          this.freeplayRhythmBadge.innerText = 'OFF';
+          this.freeplayRhythmBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-slate-800 text-slate-400 border border-slate-700';
+        }
+        if (modeSelect && modeSelect.value === 'rhythm_trainer') modeSelect.value = 'live';
+        if (this.notation) {
+          this.notation.setOption('rhythmTrainerActive', false);
+        }
+      }
+    });
+
+    this.btnFreeplayMetronome?.addEventListener('click', () => {
+      trainer.toggleMetronome();
+    });
+
+    const updateBpmUi = (val) => {
+      if (this.freeplayBpmDisplay) this.freeplayBpmDisplay.innerText = `${val} BPM`;
+      if (this.notation) this.notation.setOption('bpm', val);
+    };
+
+    this.btnFreeplayBpmMinus?.addEventListener('click', () => updateBpmUi(trainer.setBpm(trainer.bpm - 1)));
+    this.btnFreeplayBpmPlus?.addEventListener('click', () => updateBpmUi(trainer.setBpm(trainer.bpm + 1)));
+    this.btnFreeplayBpmMinus5?.addEventListener('click', () => updateBpmUi(trainer.setBpm(trainer.bpm - 5)));
+    this.btnFreeplayBpmPlus5?.addEventListener('click', () => updateBpmUi(trainer.setBpm(trainer.bpm + 5)));
+
+    this.btnFreeplayTapTempo?.addEventListener('click', () => {
+      const newBpm = trainer.registerTap();
+      updateBpmUi(newBpm);
+    });
+
+    document.querySelectorAll('.freeplay-tempo-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const bpm = parseInt(btn.dataset.bpm, 10);
+        if (bpm) updateBpmUi(trainer.setBpm(bpm));
+      });
+    });
+
+    this.selectFreeplayTimesig?.addEventListener('change', (e) => {
+      const beats = parseInt(e.target.value, 10) || 4;
+      trainer.setBeatsPerMeasure(beats);
+      if (this.notation) this.notation.setOption('beatsPerMeasure', beats);
+      if (this.freeplayBeatDots) {
+        this.freeplayBeatDots.innerHTML = Array.from({ length: beats }, (_, i) => 
+          `<div class="beat-dot ${i === 0 ? 'downbeat' : ''}" data-beat="${i}"></div>`
+        ).join('');
+      }
+    });
+
+    this.selectFreeplayGrid?.addEventListener('change', (e) => {
+      trainer.setGridMode(e.target.value);
+    });
+
+    this.selectFreeplayTolerance?.addEventListener('change', (e) => {
+      trainer.setToleranceMode(e.target.value);
+    });
+
+    this.btnFreeplayClickToggle?.addEventListener('click', () => {
+      trainer.setSoundEnabled(!trainer.metronomeSoundEnabled);
+      if (this.freeplayClickIcon && this.freeplayClickText) {
+        if (trainer.metronomeSoundEnabled) {
+          this.freeplayClickIcon.innerText = '🔊';
+          this.freeplayClickText.innerText = 'Sound ON';
+          this.btnFreeplayClickToggle.className = 'px-2.5 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-semibold flex items-center gap-1 transition-colors';
+        } else {
+          this.freeplayClickIcon.innerText = '🔇';
+          this.freeplayClickText.innerText = 'Muted';
+          this.btnFreeplayClickToggle.className = 'px-2.5 py-1 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 border border-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors';
+        }
+      }
+    });
+
+    this.btnFreeplayResetStats?.addEventListener('click', () => {
+      trainer.resetStats();
+      if (this.notation) this.notation.clearRhythmStream();
+      if (this.pocketNeedle) this.pocketNeedle.style.left = '50%';
+      if (this.freeplayLiveHitPill) {
+        this.freeplayLiveHitPill.innerText = 'Stats Reset • Ready';
+        this.freeplayLiveHitPill.className = 'text-xs font-black px-2.5 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-800 transition-all flex items-center gap-1.5';
+      }
+      this.showToast('🔄 Rhythm stats & score reset for a fresh run!', 'info');
+    });
+  }
+
+  /**
+   * Set up Universal Header Metronome & Transport Controls
+   */
+  setupUniversalMetronome() {
+    this.btnMasterMetronome?.addEventListener('click', () => {
+      this.toggleMasterMetronome();
+    });
+
+    this.btnMasterBpmMinus?.addEventListener('click', () => {
+      this.adjustMasterBpm(-1);
+    });
+
+    this.btnMasterBpmPlus?.addEventListener('click', () => {
+      this.adjustMasterBpm(+1);
+    });
+
+    this.btnMasterTapTempo?.addEventListener('click', () => {
+      this.registerMasterTapTempo();
+    });
+
+    this.btnMasterClickToggle?.addEventListener('click', () => {
+      this.toggleMasterClickSound();
+    });
+
+    this.updateMasterMetronomeUi();
+  }
+
+  toggleMasterMetronome() {
+    if (this.appMode === 'freeplay') {
+      const isRunning = this.freePlayRhythmTrainer.toggleMetronome();
+      this.showToast(isRunning ? '⏱️ Metronome Started' : '⏹️ Metronome Stopped', 'info');
+    } else if (this.appMode === 'practice') {
+      const isRunning = this.trainer.toggleMetronome();
+      if (this.metronomeStatusText) {
+        this.metronomeStatusText.innerText = isRunning ? 'Metronome ON' : 'Metronome OFF';
+      }
+      if (this.btnToggleMetronome) {
+        this.btnToggleMetronome.className = isRunning
+          ? 'px-2.5 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-semibold flex items-center gap-1 transition-colors'
+          : 'px-2.5 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 border border-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors';
+      }
+      this.showToast(isRunning ? '⏱️ Practice Metronome ON' : '⏹️ Practice Metronome OFF', 'info');
+    } else if (this.appMode === 'routine') {
+      this.routine?.togglePlay();
+      this.showToast(this.routine?.isRunning ? '▶️ Daily Routine Resumed' : '⏸️ Daily Routine Paused', 'info');
+    }
+    this.updateMasterMetronomeUi();
+  }
+
+  adjustMasterBpm(delta) {
+    let currentBpm = 108;
+    if (this.appMode === 'freeplay') {
+      currentBpm = this.freePlayRhythmTrainer?.bpm || 108;
+    } else if (this.appMode === 'practice') {
+      currentBpm = this.trainer?.bpm || 108;
+    } else if (this.appMode === 'routine') {
+      currentBpm = this.routine?.getCurrentBpm?.() || 60;
+    }
+    this.setMasterBpm(currentBpm + delta);
+  }
+
+  setMasterBpm(newBpm) {
+    const clamped = Math.max(30, Math.min(280, Math.round(newBpm)));
+    if (this.appMode === 'freeplay') {
+      this.freePlayRhythmTrainer.setBpm(clamped);
+    } else if (this.appMode === 'practice') {
+      this.trainer.setBpm(clamped);
+    } else if (this.appMode === 'routine') {
+      this.routine?.setBpm?.(clamped);
+    }
+    if (this.notation) this.notation.setOption('bpm', clamped);
+    this.updateMasterMetronomeUi();
+    return clamped;
+  }
+
+  registerMasterTapTempo() {
+    const newBpm = this.freePlayRhythmTrainer.registerTap();
+    this.setMasterBpm(newBpm);
+    this.showToast(`🥁 Tap Tempo: ${newBpm} BPM`, 'info');
+  }
+
+  toggleMasterClickSound() {
+    if (this.appMode === 'freeplay') {
+      const next = !this.freePlayRhythmTrainer.metronomeSoundEnabled;
+      this.freePlayRhythmTrainer.setSoundEnabled(next);
+      if (this.freeplayClickIcon && this.freeplayClickText) {
+        this.freeplayClickIcon.innerText = next ? '🔊' : '🔇';
+        this.freeplayClickText.innerText = next ? 'Sound ON' : 'Muted';
+      }
+      this.showToast(next ? '🔊 Metronome Click Audible' : '🔇 Metronome Click Muted', 'info');
+    } else {
+      this.trainer.metronomeEnabled = !this.trainer.metronomeEnabled;
+      this.showToast(this.trainer.metronomeEnabled ? '🔊 Metronome Sound ON' : '🔇 Metronome Sound Muted', 'info');
+    }
+    this.updateMasterMetronomeUi();
+  }
+
+  updateMasterMetronomeUi() {
+    let isRunning = false;
+    let bpm = 108;
+    let soundEnabled = true;
+
+    if (this.appMode === 'freeplay') {
+      isRunning = !!this.freePlayRhythmTrainer?.isMetronomeRunning;
+      bpm = this.freePlayRhythmTrainer?.bpm || 108;
+      soundEnabled = !!this.freePlayRhythmTrainer?.metronomeSoundEnabled;
+    } else if (this.appMode === 'practice') {
+      isRunning = !!this.trainer?.metronomeEnabled;
+      bpm = this.trainer?.bpm || 108;
+      soundEnabled = !!this.trainer?.metronomeEnabled;
+    } else if (this.appMode === 'routine') {
+      isRunning = !!this.routine?.isRunning;
+      bpm = this.routine?.getCurrentBpm?.() || 60;
+      soundEnabled = true;
+    }
+
+    if (this.masterBpmDisplay) {
+      this.masterBpmDisplay.innerText = `${bpm} BPM`;
+    }
+    if (this.freeplayBpmDisplay) {
+      this.freeplayBpmDisplay.innerText = `${bpm} BPM`;
+    }
+    if (this.practiceBpmDisplay) {
+      this.practiceBpmDisplay.innerText = `${bpm} BPM`;
+    }
+
+    if (this.btnMasterMetronome && this.masterMetronomeStatus) {
+      this.masterMetronomeStatus.innerText = isRunning ? 'ON' : 'OFF';
+      if (isRunning) {
+        this.masterMetronomeStatus.className = 'px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-500/30 text-emerald-300 border border-emerald-500/50 animate-pulse';
+        this.btnMasterMetronome.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/20';
+        if (this.masterMetronomeIcon) this.masterMetronomeIcon.innerText = '⏹️';
+      } else {
+        this.masterMetronomeStatus.className = 'px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-slate-800 text-slate-400 border border-slate-700';
+        this.btnMasterMetronome.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 bg-slate-900/90 hover:bg-slate-700 text-slate-300 border border-slate-700/80';
+        if (this.masterMetronomeIcon) this.masterMetronomeIcon.innerText = '⏱️';
+      }
+    }
+
+    if (this.masterClickIcon) {
+      this.masterClickIcon.innerText = soundEnabled ? '🔊' : '🔇';
+    }
+  }
+
+  animateMasterBeatDot(beatIndex, isDownbeat) {
+    if (!this.masterBeatDots) return;
+    const dots = this.masterBeatDots.querySelectorAll('.beat-dot');
+    dots.forEach((dot, idx) => {
+      if (idx === beatIndex) {
+        dot.classList.add('active');
+        setTimeout(() => dot.classList.remove('active'), 140);
+      } else {
+        dot.classList.remove('active');
+      }
+    });
+  }
+
 
   /**
    * Display floating pill badge for real-time beat timing accuracy
@@ -713,7 +1209,10 @@ class App {
       // In practice or routine mode, evaluate played note against expected melody note
       this.trainer.onNotePlayed(midi, velocity);
     } else {
-      // Free play mode: update chord recognition
+      // Free play mode: track stroke & duration in rhythm trainer, then update chord recognition
+      if (this.freePlayRhythmTrainer) {
+        this.freePlayRhythmTrainer.onNotePlayed(midi, velocity);
+      }
       this.updateChordDisplay();
     }
   }
@@ -751,6 +1250,10 @@ class App {
     if (this.appMode === 'practice' || this.appMode === 'routine') {
       this.trainer.onNoteReleased(midi);
     } else {
+      // Free play mode: notify rhythm trainer to compute held duration
+      if (this.freePlayRhythmTrainer) {
+        this.freePlayRhythmTrainer.onNoteReleased(midi);
+      }
       this.updateChordDisplay();
     }
   }
@@ -781,9 +1284,11 @@ class App {
       this.tabPractice?.classList.remove('active');
       this.tabRoutine?.classList.add('active');
       this.freeplayHud?.classList.add('hidden');
+      this.freeplayRhythmPanel?.classList.add('hidden');
       this.practiceHud?.classList.add('hidden');
       this.routineHud?.classList.remove('hidden');
 
+      this.freePlayRhythmTrainer?.stopMetronome();
       this.clearReviewPianoKeys();
       this.routine?.startOrResume();
 
@@ -804,9 +1309,12 @@ class App {
       this.tabRoutine?.classList.remove('active');
       this.tabPractice?.classList.add('active');
       this.freeplayHud?.classList.add('hidden');
+      this.freeplayRhythmPanel?.classList.add('hidden');
       this.routineHud?.classList.add('hidden');
       this.practiceHud?.classList.remove('hidden');
 
+      this.freePlayRhythmTrainer?.stopMetronome();
+      this.notation.setOption('rhythmTrainerActive', false);
       this.routine?.pause();
       this.clearReviewPianoKeys();
       // Update Notation Renderer to practice mode
@@ -827,6 +1335,14 @@ class App {
       this.practiceHud?.classList.add('hidden');
       this.routineHud?.classList.add('hidden');
       this.freeplayHud?.classList.remove('hidden');
+      if (this.freePlayRhythmTrainer?.isActive) {
+        this.freeplayRhythmPanel?.classList.remove('hidden');
+        this.notation.setOption('rhythmTrainerActive', true);
+        this.notation.setOption('beatsPerMeasure', this.freePlayRhythmTrainer.beatsPerMeasure || 4);
+      } else {
+        this.freeplayRhythmPanel?.classList.add('hidden');
+        this.notation.setOption('rhythmTrainerActive', false);
+      }
 
       this.routine?.pause();
       this.clearReviewPianoKeys();
@@ -838,6 +1354,7 @@ class App {
       this.notation.setOption('mode', currentViewMode);
       this.updateChordDisplay();
     }
+    this.updateMasterMetronomeUi();
   }
 
   /**
@@ -1531,13 +2048,14 @@ class App {
       feedbackMsgEl.innerText = '💪 Good effort! Follow the metronome pulse and highlighted keys to build rhythm speed.';
     }
 
-    // Review Mistakes on Sheet button (VST3 Parity)
+    // Review Mistakes / Missed on Sheet button (VST3 Parity)
+    const totalReviewIssues = (summary.mistakeCount || 0) + (summary.missedNotes || 0);
     if (this.btnScoreReview) {
-      if (summary.mistakeCount > 0) {
+      if (totalReviewIssues > 0) {
         this.btnScoreReview.classList.remove('hidden');
         this.btnScoreReview.onclick = () => {
           const firstMistake = this.trainer.getFirstMistakeIndex();
-          if (firstMistake != null) {
+          if (firstMistake != null && firstMistake >= 0) {
             this.closeScorecard();
             this.jumpToReviewMistake(firstMistake);
           }
@@ -1547,34 +2065,36 @@ class App {
       }
     }
 
-    // Render Mistakes Review List if there were mistakes
+    // Render Mistakes & Missed Review List if there were issues
     const mistakesSection = document.getElementById('score-mistakes-section');
     const mistakesCountBadge = document.getElementById('score-mistakes-count-badge');
     const mistakesList = document.getElementById('score-mistakes-list');
 
     if (mistakesSection && mistakesList) {
       mistakesList.innerHTML = '';
-      if (summary.mistakeCount > 0 && Array.isArray(summary.noteResults)) {
+      if (totalReviewIssues > 0 && Array.isArray(summary.noteResults)) {
         mistakesSection.classList.remove('hidden');
         if (mistakesCountBadge) {
-          mistakesCountBadge.innerText = `${summary.mistakeCount} ${summary.mistakeCount === 1 ? 'Mistake' : 'Mistakes'}`;
+          mistakesCountBadge.innerText = `${totalReviewIssues} ${totalReviewIssues === 1 ? 'Issue' : 'Issues'}`;
         }
 
         summary.noteResults.forEach((res, idx) => {
-          if (res && res.mistakes > 0 && summary.melody.notes[idx]) {
+          const isMistake = res && res.mistakes > 0;
+          const isMissed = res && res.status === 'missed';
+          if ((isMistake || isMissed) && summary.melody.notes[idx]) {
             const targetNote = summary.melody.notes[idx];
             const targetInfo = MusicTheory.getNoteInfo(targetNote.midi, this.preferFlats);
-            const wrongInfo = res.lastWrongMidi ? MusicTheory.getNoteInfo(res.lastWrongMidi, this.preferFlats) : null;
-            const wrongName = wrongInfo ? wrongInfo.fullName : 'Wrong pitch';
+            const wrongInfo = (isMistake && res.lastWrongMidi != null) ? MusicTheory.getNoteInfo(res.lastWrongMidi, this.preferFlats) : null;
+            const wrongName = wrongInfo ? wrongInfo.fullName : (isMissed ? 'Time Expired (Not Played)' : 'Wrong pitch');
 
             const item = document.createElement('div');
             item.className = 'flex items-center justify-between p-2 rounded-lg bg-slate-900/80 hover:bg-slate-800/80 border border-rose-900/30 text-xs cursor-pointer transition-colors group';
             item.innerHTML = `
               <div class="flex items-center gap-2">
-                <span class="w-5 h-5 rounded-full bg-rose-500/20 text-rose-400 font-bold flex items-center justify-center text-[10px]">#${idx + 1}</span>
+                <span class="w-5 h-5 rounded-full ${isMissed ? 'bg-amber-500/20 text-amber-400' : 'bg-rose-500/20 text-rose-400'} font-bold flex items-center justify-center text-[10px]">#${idx + 1}</span>
                 <div>
-                  <div class="font-semibold text-slate-200">Expected <span class="text-emerald-400 font-mono font-bold">${targetInfo.fullName}</span> • Played <span class="text-rose-400 font-mono font-bold">${wrongName}</span></div>
-                  <div class="text-[10px] text-slate-400">${targetNote.duration >= 4 ? 'Whole note' : targetNote.duration >= 2 ? 'Half note' : targetNote.duration >= 1 ? 'Quarter note' : 'Eighth note'} (${res.mistakes}x wrong attempt${res.mistakes > 1 ? 's' : ''})</div>
+                  <div class="font-semibold text-slate-200">Expected <span class="text-emerald-400 font-mono font-bold">${targetInfo.fullName}</span> • ${isMissed ? '<span class="text-amber-400 font-mono font-bold">Missed</span>' : `Played <span class="text-rose-400 font-mono font-bold">${wrongName}</span>`}</div>
+                  <div class="text-[10px] text-slate-400">${targetNote.duration >= 4 ? 'Whole note' : targetNote.duration >= 2 ? 'Half note' : targetNote.duration >= 1 ? 'Quarter note' : 'Eighth note'}${isMistake ? ` (${res.mistakes}x wrong attempt${res.mistakes > 1 ? 's' : ''})` : ' (Not struck in tempo)'}</div>
                 </div>
               </div>
               <button class="btn-inspect-mistake px-2.5 py-1 rounded bg-rose-500/20 group-hover:bg-rose-500/30 text-rose-300 text-[10px] font-semibold transition-colors pointer-events-none" data-note-idx="${idx}">
@@ -1598,6 +2118,13 @@ class App {
     this.modalScorecard.classList.add('open');
   }
 
+  jumpToReviewMistake(idx) {
+    if (this.trainer && this.trainer.currentMelody) {
+      this.trainer.noteIndex = idx;
+      this.trainer.notifyState();
+    }
+  }
+
   closeScorecard() {
     this.modalScorecard.classList.remove('open');
   }
@@ -1611,7 +2138,12 @@ class App {
     if (activeMidis.length === 0) {
       this.chordNameEl.innerText = 'Play a chord or note';
       this.chordNameEl.className = 'text-2xl md:text-3xl font-bold text-slate-400 dark:text-slate-500 transition-colors';
-      this.chordQualityEl.innerText = 'Ready';
+      if (this.freePlayRhythmTrainer?.lastDetectedDuration) {
+        const d = this.freePlayRhythmTrainer.lastDetectedDuration;
+        this.chordQualityEl.innerHTML = `Last Note: <span class="text-sky-400 font-bold">${d.symbol} ${d.name}</span> <span class="text-slate-400 font-mono">(${d.standardBeats} beat${d.standardBeats === 1 ? '' : 's'} • ${d.durationMs}ms)</span>`;
+      } else {
+        this.chordQualityEl.innerText = 'Ready';
+      }
       this.activeNotesListEl.innerHTML = '<span class="text-xs text-slate-400 dark:text-slate-500 italic">No notes held</span>';
       return;
     }
@@ -1621,7 +2153,22 @@ class App {
     if (chord) {
       this.chordNameEl.innerText = chord.name;
       this.chordNameEl.className = 'text-3xl md:text-4xl font-extrabold text-sky-500 dark:text-sky-400 drop-shadow-sm transition-all';
-      this.chordQualityEl.innerText = chord.quality || chord.type || 'Chord';
+      let qualityText = chord.quality || chord.type || 'Chord';
+      if (this.freePlayRhythmTrainer?.lastDetectedDuration) {
+        const d = this.freePlayRhythmTrainer.lastDetectedDuration;
+        qualityText += ` • ${d.symbol} ${d.name}`;
+      }
+      this.chordQualityEl.innerText = qualityText;
+    } else if (activeMidis.length === 1) {
+      const info = MusicTheory.getNoteInfo(activeMidis[0], this.preferFlats);
+      this.chordNameEl.innerText = info.fullName;
+      this.chordNameEl.className = 'text-3xl md:text-4xl font-extrabold text-sky-500 dark:text-sky-400 drop-shadow-sm transition-all';
+      let qualityText = 'Single Note';
+      if (this.freePlayRhythmTrainer?.lastDetectedDuration) {
+        const d = this.freePlayRhythmTrainer.lastDetectedDuration;
+        qualityText += ` • ${d.symbol} ${d.name}`;
+      }
+      this.chordQualityEl.innerText = qualityText;
     }
 
     // Render active note badges
@@ -2512,6 +3059,17 @@ class App {
           }
         }
       }
+
+      // Universal Master Metronome shortcuts (M: Metronome toggle, T: Tap Tempo) across ALL modes
+      if (!isInput) {
+        if (e.key === 'm' || e.key === 'M') {
+          e.preventDefault();
+          this.toggleMasterMetronome();
+        } else if (e.key === 't' || e.key === 'T') {
+          e.preventDefault();
+          this.registerMasterTapTempo();
+        }
+      }
     });
 
     // Exercise Guide Modal Triggers
@@ -2699,12 +3257,19 @@ class App {
       await this.midi.requestAccess();
     });
 
-    // Mode Toggle (Live vs Scrolling in Free Play)
+    // Mode Toggle (Live vs Scrolling vs Rhythm Trainer in Free Play)
     const modeSelect = document.getElementById('select-view-mode');
     if (modeSelect) {
       modeSelect.addEventListener('change', (e) => {
         if (this.appMode === 'freeplay') {
-          this.notation.setOption('mode', e.target.value);
+          const val = e.target.value;
+          this.notation.setOption('mode', val);
+          if (val === 'rhythm_trainer') {
+            this.notation.setOption('rhythmTrainerActive', true);
+            if (!this.freePlayRhythmTrainer?.isActive) {
+              this.btnToggleFreeplayRhythm?.click();
+            }
+          }
         }
       });
     }

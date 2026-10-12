@@ -37,6 +37,17 @@ DailyRoutineComponent::DailyRoutineComponent(DailyRoutineManager& manager)
     resetButton.onClick = [this]() { routineManager.reset(); };
     addAndMakeVisible(resetButton);
 
+    // In-exercise restart & finish early controls
+    restartButton.setButtonText(juce::String::fromUTF8("↺ Restart"));
+    restartButton.setTooltip("Restart this exercise from note 1");
+    restartButton.onClick = [this]() { routineManager.restartCurrentSubPhase(); };
+    addAndMakeVisible(restartButton);
+
+    finishButton.setButtonText(juce::String::fromUTF8("✓ Finish"));
+    finishButton.setTooltip("Finish exercise early and review score");
+    finishButton.onClick = [this]() { routineManager.finishCurrentSubPhaseEarly(); };
+    addAndMakeVisible(finishButton);
+
     // Tap rhythm button for Block 2A
     tapButton.setButtonText("Tap (Space)");
     tapButton.onClick = [this]() {
@@ -174,7 +185,7 @@ void DailyRoutineComponent::paint(juce::Graphics& g)
 
     g.setFont(juce::FontOptions(10.0f, juce::Font::plain));
     g.setColour(juce::Colour::fromRGB(203, 213, 225));
-    g.drawText(phaseInstructionsStr, 22, static_cast<int>(cardY + 20.0f), getWidth() - 180, 26, juce::Justification::topLeft, true);
+    g.drawText(phaseInstructionsStr, 22, static_cast<int>(cardY + 20.0f), getWidth() - 300, 26, juce::Justification::topLeft, true);
 
     // Rhythm Tap Feedback text or Flash scan banner
     if (p.currentPhase != nullptr && p.currentPhase->type == "rhythm_tap" && tapFeedbackStr.isNotEmpty())
@@ -205,8 +216,10 @@ void DailyRoutineComponent::resized()
     // Key selector
     keySelector.setBounds(255, 8, 85, 22);
 
-    // Tap button inside card
-    tapButton.setBounds(getWidth() - 120, 60, 95, 22);
+    // In-exercise action buttons inside card
+    finishButton.setBounds(getWidth() - 95, 60, 76, 22);
+    restartButton.setBounds(getWidth() - 177, 60, 76, 22);
+    tapButton.setBounds(getWidth() - 280, 60, 95, 22);
 }
 
 } // namespace MidiSheet

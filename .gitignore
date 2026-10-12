@@ -30,3 +30,8 @@ Desktop.ini
 *.code-workspace
 .vscode/
 
+# Nested standalone projects
+MidiGlide/
+physical_modeling/
+midi-processor/
+

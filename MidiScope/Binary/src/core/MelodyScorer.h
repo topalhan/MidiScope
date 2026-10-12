@@ -22,7 +22,8 @@ enum class TimingRating
     Perfect,   // <= 65ms
     Early,     // 65ms to 150ms early
     Late,      // 65ms to 150ms late
-    Missed     // > 150ms or expired
+    Missed,    // > 150ms or expired
+    Audit      // Ghost-fingered / audited in Block 2 Part 2
 };
 
 struct TimingFeedback
@@ -42,6 +43,7 @@ struct NoteEvaluation
     double offsetMs = 0.0;
     bool completed = false;
     bool isRecovered = false; // Downbeat tempo recovery
+    bool isAudited = false;   // Ghost-fingered
 };
 
 struct FirstReadRecord
@@ -128,6 +130,10 @@ public:
     bool isRhythmTapMode() const noexcept { return rhythmTapMode; }
     int getExpectedTapMidi() const noexcept { return expectedTapMidi; }
 
+    // Audit / Ghost-Fingering Mode (Block 2 Part 2)
+    void setAuditMode(bool enabled) noexcept { isAuditMode = enabled; }
+    bool getIsAuditMode() const noexcept { return isAuditMode; }
+
     // Silent Analysis phase (First-Read mode)
     void startSilentAnalysis(double durationSeconds = 30.0);
     void updateSilentAnalysis(double elapsedSeconds);
@@ -164,7 +170,7 @@ public:
         std::vector<int> indices;
         for (size_t i = 0; i < noteEvaluations.size(); ++i)
         {
-            if (noteEvaluations[i].mistakeAttempts > 0)
+            if (noteEvaluations[i].mistakeAttempts > 0 || noteEvaluations[i].timing == TimingRating::Missed)
                 indices.push_back(static_cast<int>(i));
         }
         return indices;
@@ -174,7 +180,7 @@ public:
     {
         for (size_t i = 0; i < noteEvaluations.size(); ++i)
         {
-            if (noteEvaluations[i].mistakeAttempts > 0)
+            if (noteEvaluations[i].mistakeAttempts > 0 || noteEvaluations[i].timing == TimingRating::Missed)
                 return static_cast<int>(i);
         }
         return -1;
@@ -225,6 +231,9 @@ private:
     // Rhythm Tap state
     bool rhythmTapMode = false;
     int expectedTapMidi = -1;
+
+    // Audit / Ghost-Fingering state
+    bool isAuditMode = false;
 
     int currentStreak = 0;
     int maxStreak = 0;

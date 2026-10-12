@@ -145,36 +145,43 @@ void MidiSheetAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juc
     {
         lastMetronomeBeat = -1;
         internalBeatAccumulator = 0.0;
+        if (scorer.isTimeDrivenMode())
+        {
+            scorer.restart();
+        }
     }
 
     prevHostPlaying = isPlaying;
     prevHostPpq = transportState.ppqPosition;
 
-    // Drive continuous multi-note expiration in StrictTime and FirstRead (and Tempo)
-    const bool isStandaloneApp = (wrapperType == wrapperType_Standalone);
+    // Drive continuous multi-note expiration and count-in in StrictTime, FirstRead, and Tempo
     if (isPlaying && transportState.ppqPosition >= 0.0)
     {
         scorer.processTime(transportState.ppqPosition, monotonicNowSec);
     }
-    else if (isStandaloneApp || scorer.isSilentAnalyzing())
+    else
     {
         scorer.processTime(-1.0, monotonicNowSec);
     }
 
     // Built-in Sample-Accurate Audio Metronome Click Generator
+    const bool isFreePlayClick = freePlayModeActive && freePlayScorer.isMetronomeRunning() && freePlayScorer.isSoundEnabled();
     const bool metronomeActive = metronomeEnabled.load(std::memory_order_relaxed)
-                              && !scorer.isFinished()
-                              && !scorer.isSilentAnalyzing()
-                              && (scorer.getIsCountingIn() || scorer.isTimeDrivenMode());
+                              && (isFreePlayClick
+                                  || (!scorer.isFinished()
+                                      && !scorer.isSilentAnalyzing()
+                                      && (scorer.getIsCountingIn() || scorer.isTimeDrivenMode())));
 
     const int numSamples = buffer.getNumSamples();
     const int numChannels = buffer.getNumChannels();
 
     if (metronomeActive && numSamples > 0)
     {
-        const int timeSigNum = (transportState.timeSigNumerator > 0)
-            ? transportState.timeSigNumerator
-            : ((scorer.getCurrentMelody().timeSignature.numerator > 0) ? scorer.getCurrentMelody().timeSignature.numerator : 4);
+        const int timeSigNum = isFreePlayClick
+            ? freePlayScorer.getBeatsPerMeasure()
+            : ((transportState.timeSigNumerator > 0)
+                ? transportState.timeSigNumerator
+                : ((scorer.getCurrentMelody().timeSignature.numerator > 0) ? scorer.getCurrentMelody().timeSignature.numerator : 4));
 
         if (isPlaying && transportState.ppqPosition >= 0.0)
         {
@@ -216,7 +223,9 @@ void MidiSheetAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juc
         else
         {
             // Standalone or stopped host internal clock metronome
-            const double bpm = (scorer.getCurrentMelody().bpm > 0) ? scorer.getCurrentMelody().bpm : scorer.getBpm();
+            const double bpm = isFreePlayClick
+                ? freePlayScorer.getBpm()
+                : ((scorer.getCurrentMelody().bpm > 0) ? scorer.getCurrentMelody().bpm : scorer.getBpm());
             const double beatInc = (bpm / 60.0) * invSampleRate;
 
             for (int s = 0; s < numSamples; ++s)

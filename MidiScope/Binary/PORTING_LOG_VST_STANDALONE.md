@@ -667,21 +667,25 @@ In `GrandStaffComponent.cpp`:
 
 ## 9. Summary Checklist for Porting to C++
 
-- [ ] **Enums**: Add `PracticeMode::StrictTime` and `PracticeMode::FirstRead` to `MelodyScorer.h`.
-- [ ] **Unified Mode Helper**: Implement `isTimeDrivenMode()` for `InTempo`, `StrictTime`, and `FirstRead`.
-- [ ] **Count-In Handoff**: Transition from count-in to Measure 1 Beat 1 on downbeat tick with exact zero-offset `songStartTimeMs`.
-- [ ] **Note 0 Anchoring**: Prevent Note 0 strike from overwriting `songStartTimeMs` in time-driven modes.
-- [ ] **Relentless Advancement**: Advance `currentNoteIndex` on pitch mistake in all time-driven modes.
-- [ ] **Multi-Note Expiration**: Use `while` loop with `min(140ms, duration * 0.35)` grace period to eliminate cascading catch-up lag.
-- [ ] **Playhead Cursor**: Draw glowing line and arrow caps in `GrandStaffComponent::paint` across all time-driven modes.
-- [ ] **Auto-Scroll**: Implement playhead-following horizontal scroll interpolation for `isTimeDrivenMode()`.
-- [ ] **Downbeat Recovery**: Track `hadRecentMissOrMistake` and award +35 bonus points on downbeat strike with good timing.
-- [ ] **Scoring Formula**: Implement composite sight-reading metric ($60\%\text{ rhythm} + 40\%\text{ pitch} + \text{recovery bonus}$).
-- [ ] **Silent Analysis**: Implement 30s timer with audio synth mute in `processBlock`.
-- [ ] **Lockout File**: Store completed First-Read records using JUCE `PropertiesFile`.
-- [ ] **Interval Classification**: Implement `MusicTheory::classifyInterval` with green steps, orange skips, and purple leaps.
+- [x] **Enums**: Add `PracticeMode::StrictTime` and `PracticeMode::FirstRead` to `MelodyScorer.h`.
+- [x] **Unified Mode Helper**: Implement `isTimeDrivenMode()` for `InTempo`, `StrictTime`, and `FirstRead`.
+- [x] **Count-In Handoff**: Transition from count-in to Measure 1 Beat 1 on downbeat tick with exact zero-offset `songStartTimeMs`.
+- [x] **Note 0 Anchoring**: Prevent Note 0 strike from overwriting `songStartTimeMs` in time-driven modes.
+- [x] **Relentless Advancement**: Advance `currentNoteIndex` on pitch mistake in all time-driven modes.
+- [x] **Multi-Note Expiration**: Use `while` loop with `min(140ms, duration * 0.35)` grace period to eliminate cascading catch-up lag.
+- [x] **Playhead Cursor**: Draw glowing line and arrow caps in `GrandStaffComponent::paint` across all time-driven modes.
+- [x] **Auto-Scroll**: Implement playhead-following horizontal scroll interpolation for `isTimeDrivenMode()`.
+- [x] **Downbeat Recovery**: Track `hadRecentMissOrMistake` and award +35 bonus points on downbeat strike with good timing.
+- [x] **Scoring Formula**: Implement composite sight-reading metric ($60\%\text{ rhythm} + 40\%\text{ pitch} + \text{recovery bonus}$).
+- [x] **Silent Analysis**: Implement 30s timer with audio synth mute in `processBlock`.
+- [x] **Lockout File**: Store completed First-Read records using JUCE `PropertiesFile`.
+- [x] **Interval Classification**: Implement `MusicTheory::classifyInterval` with green steps, orange skips, and purple leaps.
 - [x] **Interval Ribbon Rendering**: Build `juce::Path` with cubic bezier curves and centered interval badges.
 - [x] **Accidental Alert Engine**: Implement `KeySignature::isDiatonic` bitmask lookup and amber halo rendering.
+- [x] **Eye-Ahead Disrupters**: Implement Vanishing Bar mask, Advance Curtain, and Decoupled Eye Cursor (+1 bar look-ahead).
+- [x] **Daily 20-Min Routine**: Port complete 8-phase structured sight-reading routine with awkward pairs, rhythm tap, and flash reading.
+- [x] **Free Play Rhythm Trainer**: Port blind in-tempo assessment, pocket needle ([-150ms, +150ms]), chord debouncing (25ms), and subdivision snap.
+- [x] **Scrolling Rhythm Score Stream**: Port persistent Grand Staff notehead stream with quantized note lengths and color-coded $\pm\text{ms}$ badges.
 
 ---
 
@@ -710,4 +714,112 @@ Most music and sight-reading software pins a visual cursor directly over the cur
 ### 10.3 State Persistence & UI Integration
 * **PluginProcessor**: Serializes `disrupter` mode (`none`, `vanishing`, `curtain`) and `eyeCursor` boolean flag in `getStateInformation` / `setStateInformation` XML trees.
 * **ScoreboardComponent**: Houses a dark-themed `ComboBox` selector and an `eyeCursorButton` toggle button with dynamic styling matching the Web HUD.
+
+---
+
+## 11. Free Play Rhythm Trainer (Blind In-Tempo Metronome Assessment)
+
+### 11.1 Problem Statement & Educational Purpose
+Practicing with a metronome is standard for musicians, but standard software requires pre-programmed MIDI scores or sheet music. When a musician practices arbitrary repertoire, improvisations, or scales slow or fast, there is no pre-existing target note list. The **Free Play Rhythm Trainer** bridges this gap: it runs an isochronous audio-thread metronome and continuously evaluates the incoming MIDI stream to assess whether the player's rhythmic strokes fall on the beat and within the musical pocket.
+
+### 11.2 Core C++ Data Structures & Enums
+
+In `vst3-plugin/src/core/FreePlayRhythmScorer.h`:
+
+```cpp
+enum class RhythmGridMode
+{
+    Smart,      // Adaptive: selects closest standard subdivision (Quarter, 8th, 16th, Triplet)
+    Quarter,    // Strict main beats (1, 2, 3, 4)
+    Eighth,     // 8th note grid
+    Sixteenth,  // 16th note grid
+    Triplet     // Triplet grid
+};
+
+enum class RhythmToleranceMode
+{
+    Normal,     // ±45ms Perfect, ±120ms Good
+    Strict,     // ±30ms Perfect, ±80ms Good
+    Relaxed     // ±70ms Perfect, ±180ms Good
+};
+
+struct RhythmStrokeEvaluation
+{
+    TimingRating rating = TimingRating::None;
+    double offsetMs = 0.0;
+    juce::String subdivision;
+    juce::String metricLabel;
+    juce::String text;
+    int points = 0;
+    std::vector<int> midiNotes;
+    int64_t timestamp = 0;
+};
+
+struct FreePlayRhythmStats
+{
+    int totalStrokes = 0;
+    int totalNotes = 0;
+    int perfectHits = 0;
+    int earlyHits = 0;
+    int lateHits = 0;
+    int offBeatHits = 0;
+    int streak = 0;
+    int bestStreak = 0;
+    int rhythmScore = 100;
+    int accuracy = 100;
+    double avgOffsetMs = 0.0;
+    juce::String tendency = "pocket"; // "pocket", "rushing", "dragging"
+    std::deque<RhythmStrokeEvaluation> recentHits;
+};
+```
+
+### 11.3 Audio-Thread Metronome & MIDI Stroke Evaluation
+1. **High-Precision Clocking**:
+   - The standalone audio clock (`sampleRate` based counter) or DAW host PPQ timestamp provides sample-accurate beat boundaries.
+   - At audio block intervals, whenever a MIDI note-on message is read from `juce::MidiBuffer`, the sample offset within the block determines the exact event time:
+     $$\text{hitSec} = \text{blockStartSec} + \left(\frac{\text{sampleOffset}}{\text{sampleRate}}\right)$$
+2. **Chord Debouncing (25ms window)**:
+   - Notes arriving within a 25ms window are clustered into a single `RhythmStrokeEvaluation` so multi-finger chord drops are scored together.
+3. **Subdivision Snap Algorithm**:
+   - For elapsed beat position $B = (t_{\text{hit}} - t_{\text{start}}) / T_{\text{beat}}$:
+     - Compare candidate offsets against $k_1 = \text{round}(B)$, $k_2 = \text{round}(2B)/2$, $k_4 = \text{round}(4B)/4$, and $k_3 = \text{round}(3B)/3$.
+     - Compute $\Delta t_{\text{ms}} = (B - k_{\text{cand}}) \times T_{\text{beat}} \times 1000.0$.
+     - In `Smart` mode, pick the candidate minimizing $|\Delta t_{\text{ms}}|$.
+4. **Hardware-Style Pocket Needle & Tendency Analysis**:
+   - Running average of the last 20 hit offsets computes tendency:
+     - $\text{avgOffset} < -18\text{ms} \rightarrow \text{Rushing}$
+     - $\text{avgOffset} > +18\text{ms} \rightarrow \text{Dragging}$
+     - $|\text{avgOffset}| \le 18\text{ms} \rightarrow \text{In The Pocket}$
+   - Real-time animated needle smoothly renders offset on a $[-150\text{ms}, +150\text{ms}]$ horizontal track in `ScoreboardComponent`.
+
+### 11.4 Scrolling Rhythm Score Stream & Per-Note Millisecond Badges (`GrandStaffComponent`)
+To allow musicians to review their performance across an entire song without notes fading away, the Grand Staff switches to a persistent scrolling score stream:
+
+```cpp
+struct RhythmScoreStroke
+{
+    juce::uint32 id;
+    int64_t timestampMs;
+    double offsetMs = 0.0;
+    TimingRating rating = TimingRating::None;
+    float durationBeats = 1.0f; // Quantized note length (0.25 to 4.0 beats)
+    std::vector<NoteItem> notes; // Active/fading note items with clef & staff positions
+};
+```
+
+1. **Persistent Note Stream**:
+   - Notes are never deleted upon key release; instead, `stroke.durationBeats` is locked to the quantized duration (whole, half, quarter, 8th, 16th).
+2. **Measure Barlines by Time Signature**:
+   - Accumulated beats are tracked across strokes; whenever accumulated beats cross measure boundaries (e.g. 4 beats in 4/4), a clean vertical barline connects the top of the treble staff to the bottom of the bass staff.
+3. **Smooth Horizontal Auto-Scroll with Manual Drag / Wheel Override**:
+   - Target scroll positions anchor the most recent stroke around 35–40% across the staff width.
+   - Panning with mouse drag or trackpad wheel allows scrolling back to inspect earlier measures.
+4. **Per-Stroke Millisecond Accuracy Badges**:
+   - For every scored stroke, a pill badge displaying `(ro >= 0 ? "+" : "") + String(ro) + "ms"` is rendered directly above the treble staff at `badgeY = std::min(trebleTopY - lineSpacing * 1.1f, highestNoteY - lineSpacing * 1.3f)`.
+   - Badges are color-coded:
+     - **Emerald ($\le 45\text{ms}$)**: `#86efac` text, `rgba(34, 197, 94, 0.22)` background, `rgba(34, 197, 94, 0.8)` border.
+     - **Amber ($45\text{ms} - 120\text{ms}$)**: `#fde047` text, `rgba(245, 158, 11, 0.22)` background, `rgba(245, 158, 11, 0.85)` border.
+     - **Rose ($> 120\text{ms}$)**: `#fecdd3` text, `rgba(244, 63, 94, 0.22)` background, `rgba(244, 63, 94, 0.85)` border.
+
+
 

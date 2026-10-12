@@ -1012,10 +1012,18 @@ export class MelodyTrainer {
       this.stats.sightReadingScore = 100;
       return;
     }
+    // Zero correct notes upon completion should yield 0% score
+    if (this.isFinished && this.stats.correctNotes === 0) {
+      this.stats.accuracy = 0;
+      this.stats.rhythmAccuracy = 0;
+      this.stats.sightReadingScore = 0;
+      return;
+    }
+
     // Pitch Accuracy: (correct / total attempts + missed)
     const pitchDenominator = this.stats.correctNotes + this.stats.mistakeCount + this.stats.missedNotes;
     if (pitchDenominator === 0) {
-      this.stats.accuracy = 100;
+      this.stats.accuracy = this.isFinished ? 0 : 100;
     } else {
       this.stats.accuracy = Math.max(0, Math.round((this.stats.correctNotes / pitchDenominator) * 100));
     }

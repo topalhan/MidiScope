@@ -45,26 +45,53 @@ export class AudioEngine {
     }
 
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    // Request lowest possible buffer from OS audio subsystem (WASAPI on Windows / CoreAudio on macOS)
-    // latencyHint: 0 requests the minimum hardware buffer size supported (~2.6ms - 5ms)
-    try {
-      this.ctx = new AudioContextClass({ latencyHint: 0 });
-    } catch (e) {
+    const targetDevice = (this.selectedDeviceId && this.selectedDeviceId !== 'default')
+      ? this.selectedDeviceId : null;
+
+    // Construct AudioContext with sinkId in constructor options (Chrome 110+).
+    // This is CRITICAL for external USB interfaces (Focusrite, MOTU, etc.):
+    // passing sinkId at construction time lets Chrome negotiate { latencyHint: 0 }
+    // directly with the target device's WASAPI driver. If sinkId is applied later
+    // via setSinkId(), Chrome has already locked the buffer for the default device.
+    let ctxCreated = false;
+
+    if (targetDevice) {
+      // Strategy 1: sinkId in constructor (optimal — Chrome 110+)
       try {
-        this.ctx = new AudioContextClass({ latencyHint: 'interactive' });
-      } catch (e2) {
-        this.ctx = new AudioContextClass();
+        this.ctx = new AudioContextClass({ latencyHint: 0, sinkId: targetDevice });
+        ctxCreated = true;
+      } catch (e) {
+        console.warn('[AudioEngine] sinkId in constructor not supported, falling back:', e.message);
       }
     }
 
-    // Restore selected sound card if setSinkId is supported
-    if (this.selectedDeviceId && this.selectedDeviceId !== 'default' && typeof this.ctx.setSinkId === 'function') {
+    if (!ctxCreated) {
       try {
-        await this.ctx.setSinkId(this.selectedDeviceId);
+        this.ctx = new AudioContextClass({ latencyHint: 0 });
       } catch (e) {
-        console.warn('Could not restore audio output device:', e);
+        try {
+          this.ctx = new AudioContextClass({ latencyHint: 'interactive' });
+        } catch (e2) {
+          this.ctx = new AudioContextClass();
+        }
+      }
+
+      // Strategy 2: Post-construction setSinkId (fallback — buffer already locked for default device)
+      if (targetDevice && typeof this.ctx.setSinkId === 'function') {
+        try {
+          await this.ctx.setSinkId(targetDevice);
+        } catch (e) {
+          console.warn('Could not set audio output device:', e);
+        }
       }
     }
+
+    console.log(
+      `[AudioEngine] Context created → sinkId=${targetDevice || 'default'}, ` +
+      `sampleRate=${this.ctx.sampleRate}Hz, ` +
+      `baseLatency=${((this.ctx.baseLatency || 0) * 1000).toFixed(1)}ms, ` +
+      `outputLatency=${((this.ctx.outputLatency || 0) * 1000).toFixed(1)}ms`
+    );
 
     const now = this.ctx.currentTime;
 
@@ -268,25 +295,73 @@ export class AudioEngine {
   }
 
   /**
-   * Set audio output device (routes audio directly to external sound card / audio interface)
+   * Set audio output device (routes audio directly to external sound card / audio interface).
+   *
+   * IMPORTANT: Simply calling setSinkId() on an existing AudioContext does NOT
+   * renegotiate the internal buffer size — Chrome locks latencyHint at construction.
+   * When switching to an external interface (e.g. Focusrite Scarlett), this results in
+   * the new device inheriting the default device's larger buffer PLUS a bridging penalty,
+   * making it paradoxically slower than onboard audio.
+   *
+   * The fix: tear down and fully rebuild the AudioContext so Chrome negotiates the optimal
+   * low-latency buffer directly with the new device's driver (WASAPI exclusive / ASIO).
    */
   async setOutputDevice(deviceId) {
-    this.selectedDeviceId = deviceId || 'default';
+    const newDeviceId = deviceId || 'default';
+
+    // Skip rebuild if already targeting this device
+    if (this.isInitialized && this.selectedDeviceId === newDeviceId) {
+      return true;
+    }
+
+    this.selectedDeviceId = newDeviceId;
+
+    // If not yet initialized, init() will pick up selectedDeviceId automatically
     if (!this.isInitialized) {
       await this.init();
+      return true;
     }
-    if (this.ctx && typeof this.ctx.setSinkId === 'function') {
+
+    // --- Tear down existing context and rebuild for new device ---
+
+    // 1. Stop all active voices immediately
+    for (const midi of Array.from(this.activeVoices.keys())) {
       try {
-        await this.ctx.setSinkId(this.selectedDeviceId === 'default' ? '' : this.selectedDeviceId);
-        return true;
-      } catch (err) {
-        console.warn('Failed to set audio output device:', err);
-        return false;
-      }
-    } else {
-      console.warn('AudioContext.setSinkId is not supported in this browser.');
-      return false;
+        const voice = this.activeVoices.get(midi);
+        if (voice) {
+          voice.oscillators.forEach(osc => { try { osc.stop(); osc.disconnect(); } catch (e) { } });
+          try { voice.gainNode.disconnect(); } catch (e) { }
+        }
+      } catch (e) { }
     }
+    this.activeVoices.clear();
+    this.sustainedVoices.clear();
+
+    // 2. Close the old AudioContext to release the old device driver
+    const oldCtx = this.ctx;
+    this.ctx = null;
+    this.isInitialized = false;
+
+    if (oldCtx) {
+      try {
+        await oldCtx.close();
+      } catch (e) {
+        console.warn('Error closing old AudioContext:', e);
+      }
+    }
+
+    // 3. Rebuild AudioContext — init() will use this.selectedDeviceId
+    //    and negotiate { latencyHint: 0 } directly with the new device's driver
+    await this.init();
+
+    console.log(
+      `[AudioEngine] Rebuilt context for device "${newDeviceId}". ` +
+      `baseLatency=${((this.ctx?.baseLatency || 0) * 1000).toFixed(1)}ms, ` +
+      `outputLatency=${((this.ctx?.outputLatency || 0) * 1000).toFixed(1)}ms, ` +
+      `sampleRate=${this.ctx?.sampleRate}Hz`
+    );
+
+    return true;
   }
 
   /**

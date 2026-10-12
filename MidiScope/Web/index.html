@@ -57,6 +57,41 @@
         </button>
       </div>
 
+      <!-- Universal Master Metronome & Transport (Available across all modes & pages) -->
+      <div id="universal-metronome-bar" class="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/80 p-1 rounded-xl shadow-inner">
+        <!-- Master Metronome Toggle Button -->
+        <button id="btn-master-metronome" title="Start / Stop Metronome (Global Hotkey: M)" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 bg-slate-900/90 hover:bg-slate-700 text-slate-300 border border-slate-700/80">
+          <span id="master-metronome-icon">⏱️</span>
+          <span id="master-metronome-label" class="hidden md:inline">Metronome</span>
+          <span id="master-metronome-status" class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-slate-800 text-slate-400 border border-slate-700">OFF</span>
+        </button>
+
+        <!-- Master BPM Stepper -->
+        <div class="flex items-center gap-0.5 bg-slate-950/70 border border-slate-800 rounded-lg px-1 py-0.5" title="Universal Tempo (BPM)">
+          <button id="btn-master-bpm-minus" class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white rounded hover:bg-slate-800 font-bold text-xs transition-colors" title="-1 BPM">-</button>
+          <span id="master-bpm-display" class="text-xs font-mono font-black text-sky-400 px-1 min-w-[58px] text-center select-none">108 BPM</span>
+          <button id="btn-master-bpm-plus" class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white rounded hover:bg-slate-800 font-bold text-xs transition-colors" title="+1 BPM">+</button>
+        </div>
+
+        <!-- Master Tap Tempo -->
+        <button id="btn-master-tap-tempo" class="px-2 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 text-xs font-bold transition-all active:scale-90" title="Tap repeatedly on beat to set BPM (Global Hotkey: T)">
+          Tap
+        </button>
+
+        <!-- Master Sound / Click Toggle -->
+        <button id="btn-master-click-toggle" class="p-1.5 rounded-lg text-xs bg-slate-900/80 hover:bg-slate-700 border border-slate-700/80 text-sky-300 transition-colors" title="Toggle Metronome Audio Click (Sound ON/OFF)">
+          <span id="master-click-icon">🔊</span>
+        </button>
+
+        <!-- Master Visual Beat Pulse Dots -->
+        <div id="master-beat-dots" class="hidden xl:flex items-center gap-1 px-1.5 py-1 bg-slate-950/70 border border-slate-800 rounded-lg" title="Live Beat Pulse">
+          <div class="beat-dot downbeat" data-beat="0"></div>
+          <div class="beat-dot" data-beat="1"></div>
+          <div class="beat-dot" data-beat="2"></div>
+          <div class="beat-dot" data-beat="3"></div>
+        </div>
+      </div>
+
       <!-- Quick Status & Action Buttons -->
       <div class="flex items-center gap-2">
         <div id="midi-status-badge" class="status-badge bg-slate-800 text-slate-400 border border-slate-700 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer" title="Click to open MIDI settings">
@@ -97,8 +132,15 @@
         </div>
       </div>
 
-      <!-- Active Notes & Pedal Status -->
+      <!-- Active Notes, Pedal Status & Rhythm Trainer Toggle -->
       <div class="flex items-center gap-3">
+        <!-- Rhythm Trainer Toggle Pill -->
+        <button id="btn-toggle-freeplay-rhythm" title="Show or hide Rhythm Assessment and The Pocket gauge docked below the staff" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 active:scale-95 shadow-sm">
+          <span>🎯</span>
+          <span>Rhythm Trainer</span>
+          <span id="freeplay-rhythm-badge" class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-slate-800 text-slate-400 border border-slate-700">OFF</span>
+        </button>
+
         <div id="pedal-indicator" class="pedal-badge">
           Pedal UP
         </div>
@@ -435,6 +477,7 @@
           <label class="text-slate-400 font-medium">Display:</label>
           <select id="select-view-mode" class="bg-slate-800 border border-slate-700 text-slate-200 rounded px-2.5 py-1 text-xs">
             <option value="live">Live Grand Staff (Chords)</option>
+            <option value="rhythm_trainer">Scrolling Rhythm Score (with ±ms)</option>
             <option value="scrolling">Scrolling Sheet Timeline</option>
           </select>
         </div>
@@ -610,6 +653,220 @@
         </div>
       </div>
       <canvas id="staff-canvas"></canvas>
+    </div>
+
+    <!-- Free Play Rhythm Trainer HUD Panel (shown when Rhythm Trainer is active in Free Play) -->
+    <div id="freeplay-rhythm-panel" class="hidden bg-slate-900/90 border border-sky-500/40 rounded-xl p-4 flex flex-col gap-4 shadow-xl shadow-sky-950/25 backdrop-blur-md transition-all relative">
+      
+      <!-- Top Bar: Metronome Controls & Rhythm Grid Config -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        
+        <!-- Metronome Master Transport & BPM -->
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Play / Stop Metronome Button -->
+          <button id="btn-freeplay-metronome" title="Start or Stop Metronome (Hotkey: M)" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-sky-500/30 active:scale-95 transition-all flex items-center gap-2">
+            <span id="freeplay-metronome-icon">▶️</span>
+            <span id="freeplay-metronome-text">Start Metronome</span>
+          </button>
+
+          <!-- BPM Stepper & Tap Tempo -->
+          <div class="flex items-center gap-1.5 bg-slate-950/70 border border-slate-800 rounded-xl px-2.5 py-1.5">
+            <button id="btn-freeplay-bpm-minus5" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white rounded bg-slate-800 hover:bg-slate-700 font-bold text-[10px] transition-colors" title="-5 BPM">-5</button>
+            <button id="btn-freeplay-bpm-minus" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white rounded bg-slate-800 hover:bg-slate-700 font-bold text-xs transition-colors" title="-1 BPM">-</button>
+            <span id="freeplay-bpm-display" class="text-sm font-mono font-black text-sky-400 px-1.5 min-w-[65px] text-center select-none">108 BPM</span>
+            <button id="btn-freeplay-bpm-plus" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white rounded bg-slate-800 hover:bg-slate-700 font-bold text-xs transition-colors" title="+1 BPM">+</button>
+            <button id="btn-freeplay-bpm-plus5" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white rounded bg-slate-800 hover:bg-slate-700 font-bold text-[10px] transition-colors" title="+5 BPM">+5</button>
+            
+            <div class="h-5 w-px bg-slate-800 mx-1"></div>
+            
+            <!-- Tap Tempo Button -->
+            <button id="btn-freeplay-tap-tempo" class="px-2.5 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 font-bold text-xs transition-all active:scale-90" title="Tap repeatedly on beat to set BPM (Hotkey: T)">
+              🥁 Tap
+            </button>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="hidden sm:flex items-center gap-1 bg-slate-950/50 p-1 rounded-lg border border-slate-800/80">
+            <span class="text-[10px] text-slate-500 font-bold uppercase px-1">Presets:</span>
+            <button class="freeplay-tempo-preset text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300" data-bpm="60">60 (Slow)</button>
+            <button class="freeplay-tempo-preset text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300" data-bpm="90">90</button>
+            <button class="freeplay-tempo-preset text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300" data-bpm="108">108</button>
+            <button class="freeplay-tempo-preset text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300" data-bpm="132">132 (Fast)</button>
+          </div>
+        </div>
+
+        <!-- Metric Grid, Time Signature & Tolerance -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Time Signature -->
+          <div class="flex flex-col gap-0.5">
+            <label class="text-[9px] text-slate-400 font-bold uppercase">Time Sig</label>
+            <select id="select-freeplay-timesig" class="bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2 py-1 text-xs font-semibold focus:ring-sky-500 focus:border-sky-500">
+              <option value="4" selected>4/4 Time</option>
+              <option value="3">3/4 Waltz</option>
+              <option value="2">2/4 March</option>
+              <option value="6">6/8 Compound</option>
+            </select>
+          </div>
+
+          <!-- Rhythm Grid Subdivision -->
+          <div class="flex flex-col gap-0.5">
+            <label class="text-[9px] text-slate-400 font-bold uppercase" title="Choose subdivision resolution to measure notes against">Rhythm Grid</label>
+            <select id="select-freeplay-grid" class="bg-slate-800 border border-slate-700 text-sky-300 rounded-lg px-2 py-1 text-xs font-bold focus:ring-sky-500 focus:border-sky-500">
+              <option value="smart" selected>⚡ Smart Adaptive (Auto)</option>
+              <option value="quarter">♩ Quarter Notes (Downbeat)</option>
+              <option value="eighth">♪ Eighth Notes (1/8)</option>
+              <option value="sixteenth">♬ Sixteenth Notes (1/16)</option>
+              <option value="triplet">3️⃣ Triplets (1/3)</option>
+            </select>
+          </div>
+
+          <!-- Sensitivity / Tolerance -->
+          <div class="flex flex-col gap-0.5">
+            <label class="text-[9px] text-slate-400 font-bold uppercase" title="Timing window tolerance">Window</label>
+            <select id="select-freeplay-tolerance" class="bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2 py-1 text-xs font-semibold focus:ring-sky-500 focus:border-sky-500">
+              <option value="normal" selected>Normal (±45ms)</option>
+              <option value="strict">Strict Pro (±30ms)</option>
+              <option value="relaxed">Relaxed (±70ms)</option>
+            </select>
+          </div>
+
+          <!-- Audio Click Sound Toggle -->
+          <div class="flex flex-col gap-0.5">
+            <label class="text-[9px] text-slate-400 font-bold uppercase">Click</label>
+            <button id="btn-freeplay-click-toggle" class="px-2.5 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-semibold flex items-center gap-1 transition-colors">
+              <span id="freeplay-click-icon">🔊</span>
+              <span id="freeplay-click-text">Sound ON</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle Bar: Visual Metronome Pulse, Continuous Pacing Sweep & Live Pocket Gauge -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+        
+        <!-- Visual Metronome Beat Indicator Dots (Cols 1-4) -->
+        <div class="lg:col-span-4 bg-slate-950/70 border border-slate-800/90 rounded-xl p-3 flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <span>⏱️</span>
+              <span>Beat Pulse</span>
+            </div>
+            <span id="freeplay-beat-label" class="text-xs font-mono font-bold text-sky-400">Ready</span>
+          </div>
+
+          <!-- Beat Dots Meter -->
+          <div id="freeplay-beat-dots" class="flex items-center justify-around py-1 bg-slate-900 border border-slate-800 rounded-lg">
+            <div class="beat-dot downbeat" data-beat="0"></div>
+            <div class="beat-dot" data-beat="1"></div>
+            <div class="beat-dot" data-beat="2"></div>
+            <div class="beat-dot" data-beat="3"></div>
+          </div>
+
+          <!-- Continuous Beat Phase Sweep Bar -->
+          <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800" title="Continuous Beat Phase (anticipate the next beat)">
+            <div id="freeplay-phase-bar" class="bg-gradient-to-r from-sky-500 to-indigo-500 h-full rounded-full transition-all duration-75" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- The "Pocket" Hardware-Style Timing Deviation Gauge (Cols 5-12) -->
+        <div class="lg:col-span-8 bg-slate-950/70 border border-slate-800/90 rounded-xl p-3 flex flex-col gap-2 relative overflow-hidden">
+          
+          <div class="flex items-center justify-between">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <span>🎯</span>
+              <span>The Pocket (Timing Deviation)</span>
+            </div>
+            <!-- Live Hit Feedback Pill -->
+            <div id="freeplay-live-hit-pill" class="text-xs font-black px-2.5 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-800 transition-all flex items-center gap-1.5">
+              <span>Play to assess rhythm</span>
+            </div>
+          </div>
+
+          <!-- Hardware Timing Meter Track with Center Line & Glowing Needle -->
+          <div class="relative w-full h-7 bg-slate-900/90 rounded-lg border border-slate-800 flex items-center px-2 select-none overflow-hidden">
+            <!-- Colored Zones -->
+            <div class="absolute inset-y-0 left-0 w-1/4 bg-rose-500/10 border-r border-rose-500/20"></div>
+            <div class="absolute inset-y-0 left-1/4 w-1/4 bg-amber-500/10 border-r border-amber-500/20"></div>
+            <div class="absolute inset-y-0 left-1/2 w-1/4 bg-emerald-500/15 border-r border-emerald-500/30 -translate-x-1/2 rounded-sm"></div>
+            <div class="absolute inset-y-0 right-1/4 w-1/4 bg-amber-500/10 border-l border-amber-500/20"></div>
+            <div class="absolute inset-y-0 right-0 w-1/4 bg-rose-500/10 border-l border-rose-500/20"></div>
+
+            <!-- Zero / Center Pocket Line -->
+            <div class="absolute inset-y-0 left-1/2 w-0.5 bg-emerald-400 -translate-x-1/2 z-10 shadow-sm shadow-emerald-400"></div>
+
+            <!-- Animated Needle Indicator -->
+            <div id="pocket-needle" class="absolute top-0 bottom-0 w-2.5 -translate-x-1/2 rounded-full bg-white shadow-lg shadow-sky-400 border border-sky-300 transition-all duration-100 ease-out z-20 flex items-center justify-center" style="left: 50%;">
+              <div class="w-1 h-3 bg-sky-500 rounded-full"></div>
+            </div>
+
+            <!-- Zone Scale Labels -->
+            <div class="absolute inset-x-0 bottom-0.5 flex justify-between px-2 text-[8px] font-mono text-slate-500 pointer-events-none">
+              <span>-150ms (RUSH)</span>
+              <span>-45ms</span>
+              <span class="text-emerald-400 font-bold">0 (POCKET)</span>
+              <span>+45ms</span>
+              <span>+150ms (DRAG)</span>
+            </div>
+          </div>
+
+          <!-- Subtext Guide -->
+          <div class="flex items-center justify-between text-[10px] text-slate-400 px-1">
+            <span id="freeplay-subdivision-badge" class="font-medium text-slate-400">Awaiting notes...</span>
+            <span id="freeplay-chord-sync-text" class="text-slate-500 italic">Play with the metronome pulse</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Bar: Live Performance Metrics & Recent Stroke Tape -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800">
+        
+        <!-- Scorecard Badges: Accuracy, Streak, Tendency, Hit Breakdown -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Accuracy Score Pill -->
+          <div class="bg-slate-950/70 border border-slate-800 px-3 py-1.5 rounded-xl">
+            <div class="text-[9px] uppercase font-bold tracking-wider text-slate-400">Rhythm Score</div>
+            <div id="freeplay-accuracy-display" class="text-base font-black text-emerald-400">100%</div>
+          </div>
+
+          <!-- Streak Pill -->
+          <div class="bg-slate-950/70 border border-slate-800 px-3 py-1.5 rounded-xl">
+            <div class="text-[9px] uppercase font-bold tracking-wider text-slate-400">On-Beat Streak</div>
+            <div id="freeplay-streak-display" class="text-base font-black text-amber-400 flex items-center gap-1">
+              <span>🔥</span> <span id="freeplay-streak-count">0</span>
+              <span class="text-[10px] text-slate-400 font-medium ml-1">(Best: <span id="freeplay-best-streak">0</span>)</span>
+            </div>
+          </div>
+
+          <!-- Tendency Badge -->
+          <div class="bg-slate-950/70 border border-slate-800 px-3 py-1.5 rounded-xl">
+            <div class="text-[9px] uppercase font-bold tracking-wider text-slate-400">Pacing Tendency</div>
+            <div id="freeplay-tendency-display" class="text-xs font-bold text-sky-400 flex items-center gap-1 mt-0.5">
+              <span>🎯</span> <span>Locked in Pocket</span>
+            </div>
+          </div>
+
+          <!-- Hit Breakdown Counters -->
+          <div class="hidden sm:flex items-center gap-2 bg-slate-950/50 border border-slate-800/80 px-2.5 py-1.5 rounded-xl text-[11px] font-mono">
+            <span class="text-emerald-400" title="Perfect hits (<= 45ms)">🟢 <span id="freeplay-count-perfect">0</span></span>
+            <span class="text-amber-400" title="Early hits">🟡 Early: <span id="freeplay-count-early">0</span></span>
+            <span class="text-sky-400" title="Late hits">🔵 Late: <span id="freeplay-count-late">0</span></span>
+            <span class="text-rose-400" title="Off-beat hits">🔴 Off: <span id="freeplay-count-off">0</span></span>
+          </div>
+        </div>
+
+        <!-- Action Controls: Reset Stats & Recent Hits Strip -->
+        <div class="flex items-center gap-2">
+          <!-- Recent Hits Mini Strip -->
+          <div id="freeplay-recent-hits" class="hidden md:flex items-center gap-1 max-w-xs overflow-hidden" title="Recent Note Hits">
+            <!-- Dynamically populated hit pills -->
+          </div>
+
+          <!-- Reset Run Button -->
+          <button id="btn-freeplay-reset-stats" title="Clear current score and start a fresh song run" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors active:scale-95 shadow-sm">
+            <span>🔄</span> <span>Reset Run</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Virtual Piano Keyboard Section -->

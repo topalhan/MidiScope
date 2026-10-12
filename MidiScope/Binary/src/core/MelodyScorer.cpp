@@ -299,13 +299,23 @@ void MelodyScorer::processTime(double currentSongBeats, double nowSec)
                 if (!ev.completed)
                 {
                     ev.completed = true;
-                    ev.timing = TimingRating::Missed;
-                    missedCount++;
-                    currentStreak = 0;
-                    hadRecentMissOrMistake = true;
+                    if (isAuditMode)
+                    {
+                        ev.isAudited = true;
+                        ev.timing = TimingRating::Audit;
+                        lastFeedback.rating = TimingRating::Audit;
+                        lastFeedback.text = juce::String::fromUTF8("👀 Ghost-Fingered");
+                    }
+                    else
+                    {
+                        ev.timing = TimingRating::Missed;
+                        missedCount++;
+                        currentStreak = 0;
+                        hadRecentMissOrMistake = true;
 
-                    lastFeedback.rating = TimingRating::Missed;
-                    lastFeedback.text = juce::String::fromUTF8("\xF0\x9F\x94\xB4 Missed");
+                        lastFeedback.rating = TimingRating::Missed;
+                        lastFeedback.text = juce::String::fromUTF8("\xF0\x9F\x94\xB4 Missed");
+                    }
                 }
             }
             advanceToNextNote();
@@ -561,6 +571,45 @@ bool MelodyScorer::evaluateNote(int midiNote, int velocity, double noteTimestamp
         }
         else
         {
+            // Forward progression check in Wait mode:
+            // If the note struck matches the NEXT expected note in the melody,
+            // advance to the next note and register this strike as the hit!
+            const int nextIndex = currentNoteIndex + 1;
+            const MelodyNote* nextTarget = (nextIndex < static_cast<int>(currentMelody.notes.size()))
+                                         ? &currentMelody.notes[static_cast<size_t>(nextIndex)]
+                                         : nullptr;
+
+            if (nextTarget != nullptr && midiNote == nextTarget->midi)
+            {
+                if (currentNoteIndex >= 0 && currentNoteIndex < static_cast<int>(noteEvaluations.size()))
+                {
+                    auto& curEv = noteEvaluations[static_cast<size_t>(currentNoteIndex)];
+                    curEv.completed = true;
+                    curEv.timing = TimingRating::Missed;
+                }
+
+                currentNoteIndex = nextIndex;
+                correctCount++;
+                currentStreak++;
+                maxStreak = std::max(maxStreak, currentStreak);
+                hadRecentMissOrMistake = false;
+
+                if (currentNoteIndex < static_cast<int>(noteEvaluations.size()))
+                {
+                    auto& nextEv = noteEvaluations[static_cast<size_t>(currentNoteIndex)];
+                    nextEv.completed = true;
+                    nextEv.timing = TimingRating::Early;
+                    nextEv.offsetMs = 0.0;
+                }
+
+                lastFeedback.rating = TimingRating::Early;
+                lastFeedback.offsetMs = 0.0;
+                lastFeedback.text = juce::String::fromUTF8("✓ Advanced to ") + nextTarget->name;
+
+                advanceToNextNote();
+                return true;
+            }
+
             lastFeedback.rating = TimingRating::Missed;
             lastFeedback.offsetMs = 0.0;
             lastFeedback.text = "Played " + playedInfo.fullName + " (Expected " + target->name + ")";
@@ -584,11 +633,30 @@ void MelodyScorer::calculateLiveScorecard()
     scorecard.recoveryPoints = recoveryPointsTotal;
     scorecard.maxStreak = maxStreak;
 
+    if (isAuditMode)
+    {
+        scorecard.pitchAccuracy = 100;
+        scorecard.rhythmAccuracy = 100;
+        scorecard.sightReadingScore = 100;
+        scorecard.stars = 3;
+        return;
+    }
+
+    // Zero correct notes upon completion should yield 0% score and 1 star
+    if (finished && total > 0 && correctCount == 0)
+    {
+        scorecard.pitchAccuracy = 0;
+        scorecard.rhythmAccuracy = 0;
+        scorecard.sightReadingScore = 0;
+        scorecard.stars = 1;
+        return;
+    }
+
     // Pitch accuracy percentage: correct notes out of (correct + mistakes + missed)
     const int pitchDenominator = correctCount + mistakeCount + missedCount;
     scorecard.pitchAccuracy = (pitchDenominator > 0)
         ? std::clamp(static_cast<int>(std::round((static_cast<double>(correctCount) / static_cast<double>(pitchDenominator)) * 100.0)), 0, 100)
-        : 100;
+        : (finished && total > 0 ? 0 : 100);
 
     // Rhythm accuracy percentage
     const int scoredNotes = perfectCount + greatCount + missedCount + (isTimeDrivenMode() ? mistakeCount : 0);
@@ -600,7 +668,7 @@ void MelodyScorer::calculateLiveScorecard()
     }
     else
     {
-        scorecard.rhythmAccuracy = 100;
+        scorecard.rhythmAccuracy = (finished && total > 0 ? 0 : 100);
     }
 
     // Composite Sight-Reading score: 60% rhythm + 40% pitch + recovery bonus
