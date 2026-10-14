@@ -673,3 +673,75 @@ body {
   0% { transform: scale(0.7) translateY(-4px); opacity: 0; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
 }
+
+/* Free Play Notes & Mistake Review Styles */
+#freeplay-review-panel {
+  animation: review-panel-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes review-panel-in {
+  0% { transform: translateY(-8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.freeplay-note-chip {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(51, 65, 85, 0.8);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  min-width: 68px;
+}
+
+.freeplay-note-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  border-color: rgba(99, 102, 241, 0.6);
+}
+
+.freeplay-note-chip.selected {
+  outline: 2px solid #818cf8;
+  outline-offset: 1px;
+  background: rgba(49, 46, 129, 0.4);
+  box-shadow: 0 0 16px rgba(129, 140, 248, 0.4);
+  transform: translateY(-2px);
+}
+
+.freeplay-note-chip.mistake-scale {
+  border-color: rgba(244, 63, 94, 0.6);
+  background: rgba(136, 19, 55, 0.25);
+}
+
+.freeplay-note-chip.mistake-scale:hover {
+  border-color: #f43f5e;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.4);
+}
+
+.freeplay-note-chip.mistake-timing {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: rgba(120, 53, 15, 0.25);
+}
+
+.freeplay-note-chip.mistake-timing:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.freeplay-note-chip.clean-note {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.freeplay-note-chip.clean-note:hover {
+  border-color: #10b981;
+}
+
+.review-filter-pill {
+  user-select: none;
+}

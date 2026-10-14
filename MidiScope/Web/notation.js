@@ -64,6 +64,7 @@ export class NotationRenderer {
     this.reviewPillBounds = null;
     this.noteHitboxes = [];
     this.onReviewNoteChanged = null;
+    this.freePlayReviewNote = null;
 
     // Manual horizontal score dragging & scrolling
     this.manualScrollOffset = 0;
@@ -281,6 +282,13 @@ export class NotationRenderer {
         });
       }
     }
+  }
+
+  /**
+   * Set or clear active note for Free Play mistake inspection
+   */
+  setFreePlayReviewNote(note) {
+    this.freePlayReviewNote = note;
   }
 
   /**
@@ -667,6 +675,108 @@ export class NotationRenderer {
     } else {
       this.renderScrollingMode(ctx, marginX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp);
     }
+
+    if (this.freePlayReviewNote && this.options.mode !== 'practice') {
+      this.renderFreePlayReviewHighlight(ctx, marginX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp);
+    }
+  }
+
+  /**
+   * Render glowing pulse beacon and callout card for active note review in Free Play
+   */
+  renderFreePlayReviewHighlight(ctx, marginX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp) {
+    if (!this.freePlayReviewNote) return;
+    const item = this.freePlayReviewNote;
+    const midi = item.midi;
+    const info = MusicTheory.getNoteInfo(midi, this.options.preferFlats);
+    const clef = midi >= this.options.splitPoint ? 'treble' : 'bass';
+    const staffPos = MusicTheory.getStaffPosition(info.diatonicStep, clef);
+    const bottomY = clef === 'treble' ? trebleBottomY : bassBottomY;
+    const noteY = bottomY - staffPos * (lineSpacing / 2);
+    const noteX = marginX + staffWidth * 0.42;
+
+    ctx.save();
+
+    // 1. Ledger lines
+    this.drawLedgerLines(ctx, noteX, staffPos, bottomY, lineSpacing);
+
+    // 2. Pulse Beacon
+    const isMistake = !!item.isMistake;
+    const beaconColor = isMistake
+      ? (item.keyEvaluation?.isDeviation ? '#f43f5e' : '#fbbf24')
+      : '#10b981';
+    const pulse = 0.5 + 0.5 * Math.sin(timestamp / 130);
+
+    ctx.beginPath();
+    ctx.arc(noteX, noteY, (lineSpacing * 1.15) + pulse * 6, 0, Math.PI * 2);
+    ctx.fillStyle = beaconColor;
+    ctx.globalAlpha = 0.22 + pulse * 0.18;
+    ctx.fill();
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = beaconColor;
+    ctx.globalAlpha = 0.85;
+    ctx.stroke();
+
+    // 3. Notehead
+    ctx.globalAlpha = 1.0;
+    this.drawNotehead(ctx, { x: noteX, y: noteY, midi, color: beaconColor }, lineSpacing, 1.0, timestamp);
+
+    // 4. Accidental & Note Tag
+    this.drawAccidental(ctx, { x: noteX, y: noteY, midi, info, active: true, clef }, lineSpacing, 1.0);
+
+    // 5. Floating Review Callout Card
+    const trebleTopY = trebleBottomY - lineSpacing * 4;
+    const calloutY = Math.max(22, trebleTopY - lineSpacing * 1.6);
+
+    let calloutText = `${info.fullName}`;
+    if (item.keyEvaluation?.isDeviation) {
+      const closest = (item.keyEvaluation.closestDiatonicNotes && item.keyEvaluation.closestDiatonicNotes.length > 0)
+        ? item.keyEvaluation.closestDiatonicNotes.join(' / ')
+        : 'In-key';
+      calloutText = `⚠️ Played ${info.fullName} • Not in ${item.keySignature || 'Key'} (Closest: ${closest})`;
+    } else if (item.timingEvaluation && item.timingEvaluation.rating && item.timingEvaluation.rating !== 'perfect') {
+      const off = item.timingEvaluation.offsetMs || 0;
+      calloutText = `⏱️ Played ${info.fullName} (${off >= 0 ? '+' : ''}${off}ms ${item.timingEvaluation.rating.toUpperCase()})`;
+    } else {
+      calloutText = `✨ Played ${info.fullName} • In Scale (${item.keySignature || 'Diatonic'})`;
+    }
+
+    ctx.font = '700 11px "Inter", sans-serif';
+    const textW = ctx.measureText(calloutText).width;
+    const padX = 10;
+    const cardW = padX * 2 + textW;
+    const cardH = 22;
+    const cardX = Math.max(marginX, Math.min(marginX + staffWidth - cardW, noteX - cardW / 2));
+
+    ctx.fillStyle = '#0f172a';
+    ctx.strokeStyle = beaconColor;
+    ctx.lineWidth = 1.5;
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(cardX, calloutY - cardH, cardW, cardH, 5);
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      ctx.fillRect(cardX, calloutY - cardH, cardW, cardH);
+      ctx.strokeRect(cardX, calloutY - cardH, cardW, cardH);
+    }
+
+    // Downward arrow pointing to notehead
+    ctx.fillStyle = beaconColor;
+    ctx.beginPath();
+    ctx.moveTo(noteX - 5, calloutY);
+    ctx.lineTo(noteX + 5, calloutY);
+    ctx.lineTo(noteX, calloutY + 6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Callout text
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(calloutText, cardX + cardW / 2, calloutY - cardH / 2);
+
+    ctx.restore();
   }
 
   /**
@@ -1024,7 +1134,7 @@ export class NotationRenderer {
     // Notes above top line (staffPos >= 10)
     if (staffPos >= 10) {
       const highestLine = (staffPos % 2 === 0) ? staffPos : staffPos - 1;
-      for (let pos = 10; pos <= highestLine; pos -= 2) {
+      for (let pos = 10; pos <= highestLine; pos += 2) {
         const y = bottomLineY - pos * (spacing / 2);
         ctx.beginPath();
         ctx.moveTo(x - ledgerWidth / 2, y);

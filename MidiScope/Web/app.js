@@ -1,4 +1,4 @@
-export const BUILD_ID = '20260915.2115';
+export const BUILD_ID = '20261014.0820';
 /**
  * Main Application Coordinator
  * Integrates NotationRenderer, AudioEngine, MidiManager, Virtual Piano Keyboard,
@@ -6,14 +6,14 @@ export const BUILD_ID = '20260915.2115';
  */
 
 import { MusicTheory } from './chords.js';
-import { NotationRenderer } from './notation.js?v=20260915.2115';
+import { NotationRenderer } from './notation.js?v=20261014.0820';
 import { AudioEngine } from './audio.js';
 import { MidiManager } from './midi.js';
-import { MelodyTrainer } from './trainer.js?v=20260915.2115';
+import { MelodyTrainer } from './trainer.js?v=20261014.0820';
 import { MELODIES } from './melodies.js';
 import { parseMidiFile, inspectMidiChannels } from './midiparser.js';
-import { DailyRoutineController } from './routine.js?v=20260915.2115';
-import { FreePlayRhythmTrainer } from './rhythm_trainer.js?v=20260915.2115';
+import { DailyRoutineController } from './routine.js?v=20261014.0820';
+import { FreePlayRhythmTrainer } from './rhythm_trainer.js?v=20261014.0820';
 
 class App {
   constructor() {
@@ -121,8 +121,40 @@ class App {
     this.freeplayCountEarly = document.getElementById('freeplay-count-early');
     this.freeplayCountLate = document.getElementById('freeplay-count-late');
     this.freeplayCountOff = document.getElementById('freeplay-count-off');
-    this.freeplayRecentHits = document.getElementById('freeplay-recent-hits');
     this.btnFreeplayResetStats = document.getElementById('btn-freeplay-reset-stats');
+
+    // Free Play Notes & Mistake Review DOM & State
+    this.btnToggleFreeplayReview = document.getElementById('btn-toggle-freeplay-review');
+    this.freeplayReviewBadge = document.getElementById('freeplay-review-badge');
+    this.freeplayReviewPanel = document.getElementById('freeplay-review-panel');
+    this.freeplayReviewKeyBadge = document.getElementById('freeplay-review-key-badge');
+    this.btnFreeplayPrevMistake = document.getElementById('btn-freeplay-prev-mistake');
+    this.btnFreeplayNextMistake = document.getElementById('btn-freeplay-next-mistake');
+    this.freeplayMistakeStepperText = document.getElementById('freeplay-mistake-stepper-text');
+    this.btnFreeplayClearNotes = document.getElementById('btn-freeplay-clear-notes');
+    this.btnFreeplayCopyNotes = document.getElementById('btn-freeplay-copy-notes');
+    this.btnFreeplayCloseReview = document.getElementById('btn-freeplay-close-review');
+    this.freeplayReviewFilterGroup = document.getElementById('freeplay-review-filter-group');
+    this.freeplayScaleAccuracy = document.getElementById('freeplay-scale-accuracy');
+    this.freeplayRhythmAccuracy = document.getElementById('freeplay-rhythm-accuracy');
+    this.freeplayNoteDetailCard = document.getElementById('freeplay-note-detail-card');
+    this.detailNoteBadge = document.getElementById('detail-note-badge');
+    this.detailNoteStatus = document.getElementById('detail-note-status');
+    this.detailNoteTime = document.getElementById('detail-note-time');
+    this.detailNoteDuration = document.getElementById('detail-note-duration');
+    this.detailNoteExplanation = document.getElementById('detail-note-explanation');
+    this.btnDetailPlaySound = document.getElementById('btn-detail-play-sound');
+    this.freeplayNotesContainer = document.getElementById('freeplay-notes-container');
+    this.freeplayNotesEmpty = document.getElementById('freeplay-notes-empty');
+    this.countAllNotes = document.getElementById('count-all-notes');
+    this.countMistakeNotes = document.getElementById('count-mistake-notes');
+    this.countScaleNotes = document.getElementById('count-scale-notes');
+    this.countTimingNotes = document.getElementById('count-timing-notes');
+
+    this.freePlayNotes = [];
+    this.activeFreePlayReviewIndex = -1;
+    this.freePlayReviewFilter = 'all';
+    this.isFreePlayReviewOpen = false;
 
     this.practiceHud = document.getElementById('practice-hud');
     this.practiceMelodyTitle = document.getElementById('practice-melody-title');
@@ -300,11 +332,13 @@ class App {
     this.setupTrainerEvents();
     this.setupRoutineEvents();
     this.setupFreePlayRhythmTrainer();
+    this.setupFreePlayReviewEvents();
     this.setupUniversalMetronome();
     this.setupUIEventListeners();
     this.setupMidiFileLoader();
     this.populateMelodyModal();
     this.setWindMode(true);
+    this.setAppMode('freeplay');
 
     // 4. Connect Web MIDI & Enumerate Audio Interfaces
     await this.midi.requestAccess();
@@ -743,6 +777,9 @@ class App {
         this.notation.recordRhythmStroke(result);
       }
 
+      // Attach timing info to Free Play notes review
+      this.recordFreePlayRhythmEvaluation(result);
+
       // Synchronize with detected chord display
       if (this.chordNameEl && this.activeNotes.size > 0) {
         const chordName = this.chordNameEl.innerText.split(' — ')[0];
@@ -753,6 +790,9 @@ class App {
 
     // 4. Statistics Updated
     trainer.onStatsUpdated = (stats) => {
+      if (this.freeplayRhythmAccuracy) {
+        this.freeplayRhythmAccuracy.innerText = `${stats.accuracy}%`;
+      }
       if (this.freeplayAccuracyDisplay) {
         this.freeplayAccuracyDisplay.innerText = `${stats.accuracy}%`;
         if (stats.accuracy >= 90) {
@@ -933,6 +973,590 @@ class App {
         this.freeplayLiveHitPill.className = 'text-xs font-black px-2.5 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-800 transition-all flex items-center gap-1.5';
       }
       this.showToast('🔄 Rhythm stats & score reset for a fresh run!', 'info');
+    });
+  }
+
+  /**
+   * Free Play Note History & Mistake Review Engine
+   */
+  setupFreePlayReviewEvents() {
+    this.btnToggleFreeplayReview?.addEventListener('click', () => {
+      this.toggleFreePlayReviewPanel();
+    });
+
+    this.btnFreeplayCloseReview?.addEventListener('click', () => {
+      this.toggleFreePlayReviewPanel(false);
+    });
+
+    this.btnFreeplayNextMistake?.addEventListener('click', () => {
+      this.nextFreePlayMistake();
+    });
+
+    this.btnFreeplayPrevMistake?.addEventListener('click', () => {
+      this.prevFreePlayMistake();
+    });
+
+    this.btnFreeplayClearNotes?.addEventListener('click', () => {
+      this.clearFreePlayNotes();
+    });
+
+    this.btnFreeplayCopyNotes?.addEventListener('click', () => {
+      this.copyFreePlayNotes();
+    });
+
+    if (this.freeplayReviewFilterGroup) {
+      const pills = this.freeplayReviewFilterGroup.querySelectorAll('.review-filter-pill');
+      pills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          pills.forEach(p => {
+            p.classList.remove('active', 'bg-indigo-600', 'text-white');
+            p.classList.add('bg-slate-800', 'text-slate-300');
+          });
+          pill.classList.add('active', 'bg-indigo-600', 'text-white');
+          pill.classList.remove('bg-slate-800', 'text-slate-300');
+          this.freePlayReviewFilter = pill.dataset.filter || 'all';
+          this.renderFreePlayNotesList();
+        });
+      });
+    }
+  }
+
+  recordFreePlayNoteOn(midi, velocity) {
+    const keySigName = document.getElementById('select-key-signature')?.value || 'C Major';
+    const noteInfo = MusicTheory.getNoteInfo(midi, this.preferFlats);
+    const keyEval = MusicTheory.isAccidentalDeviation(midi, keySigName);
+    const keyDef = MusicTheory.getKeySignature(keySigName);
+
+    // Find closest diatonic notes if out of scale
+    const closestDiatonicNotes = [];
+    if (keyEval.isDeviation) {
+      const candidateOffsets = [-1, 1, -2, 2];
+      for (const off of candidateOffsets) {
+        const candMidi = midi + off;
+        if (candMidi >= 0 && candMidi <= 127) {
+          const candPitchClass = ((candMidi % 12) + 12) % 12;
+          if (keyDef.diatonicPitchClasses.includes(candPitchClass)) {
+            const candInfo = MusicTheory.getNoteInfo(candMidi, this.preferFlats);
+            if (!closestDiatonicNotes.includes(candInfo.fullName)) {
+              closestDiatonicNotes.push(candInfo.fullName);
+              if (closestDiatonicNotes.length >= 2) break;
+            }
+          }
+        }
+      }
+    }
+    keyEval.closestDiatonicNotes = closestDiatonicNotes;
+
+    const noteRecord = {
+      id: Date.now() + Math.random(),
+      midi,
+      velocity,
+      startTime: performance.now(),
+      timeStr: new Date().toLocaleTimeString(),
+      endTime: null,
+      durationMs: null,
+      durationStr: '--',
+      noteInfo,
+      keySignature: keySigName,
+      keyEvaluation: keyEval,
+      timingEvaluation: null,
+      isMistake: keyEval.isDeviation,
+      mistakeType: keyEval.isDeviation ? 'scale' : null,
+      mistakeReason: keyEval.isDeviation
+        ? `Out of Key: ${noteInfo.fullName} is not in ${keySigName} (closest: ${closestDiatonicNotes.join(', ')})`
+        : null
+    };
+
+    this.freePlayNotes.push(noteRecord);
+    if (this.freePlayNotes.length > 200) {
+      this.freePlayNotes.shift();
+    }
+
+    this.updateFreePlayReviewBadge();
+    if (this.isFreePlayReviewOpen) {
+      this.renderFreePlayNotesList();
+    }
+  }
+
+  recordFreePlayNoteOff(midi) {
+    const now = performance.now();
+    for (let i = this.freePlayNotes.length - 1; i >= 0; i--) {
+      const n = this.freePlayNotes[i];
+      if (n.midi === midi && n.endTime === null) {
+        n.endTime = now;
+        n.durationMs = Math.round(now - n.startTime);
+        n.durationStr = `${n.durationMs}ms`;
+        break;
+      }
+    }
+    if (this.isFreePlayReviewOpen) {
+      this.renderFreePlayNotesList();
+    }
+  }
+
+  recordFreePlayRhythmEvaluation(result) {
+    if (!result || !Array.isArray(result.notes)) return;
+    const now = performance.now();
+    const resultMidis = result.notes.map(n => n.midi);
+
+    for (let i = this.freePlayNotes.length - 1; i >= 0; i--) {
+      const n = this.freePlayNotes[i];
+      if (now - n.startTime > 3000) break;
+      if (resultMidis.includes(n.midi) && !n.timingEvaluation) {
+        n.timingEvaluation = result;
+        const isTimingIssue = result.rating === 'off_beat' || (result.rating !== 'perfect' && Math.abs(result.offsetMs) > 55);
+        if (isTimingIssue) {
+          n.isMistake = true;
+          if (n.mistakeType === 'scale') {
+            n.mistakeType = 'both';
+            n.mistakeReason += ` & Timing: ${result.text}`;
+          } else {
+            n.mistakeType = 'timing';
+            n.mistakeReason = `Timing Flaw: ${result.text} (${result.rating.toUpperCase()})`;
+          }
+        }
+      }
+    }
+
+    this.updateFreePlayReviewBadge();
+    if (this.isFreePlayReviewOpen) {
+      this.renderFreePlayNotesList();
+    }
+  }
+
+  reEvaluateFreePlayNotesKeySignature() {
+    const keySigName = document.getElementById('select-key-signature')?.value || 'C Major';
+    if (this.freeplayReviewKeyBadge) {
+      this.freeplayReviewKeyBadge.innerText = `Key: ${keySigName}`;
+    }
+    const keyDef = MusicTheory.getKeySignature(keySigName);
+
+    for (const n of this.freePlayNotes) {
+      n.keySignature = keySigName;
+      const keyEval = MusicTheory.isAccidentalDeviation(n.midi, keySigName);
+      const closestDiatonicNotes = [];
+      if (keyEval.isDeviation) {
+        const candidateOffsets = [-1, 1, -2, 2];
+        for (const off of candidateOffsets) {
+          const candMidi = n.midi + off;
+          if (candMidi >= 0 && candMidi <= 127) {
+            const candPitchClass = ((candMidi % 12) + 12) % 12;
+            if (keyDef.diatonicPitchClasses.includes(candPitchClass)) {
+              const candInfo = MusicTheory.getNoteInfo(candMidi, this.preferFlats);
+              if (!closestDiatonicNotes.includes(candInfo.fullName)) {
+                closestDiatonicNotes.push(candInfo.fullName);
+                if (closestDiatonicNotes.length >= 2) break;
+              }
+            }
+          }
+        }
+      }
+      keyEval.closestDiatonicNotes = closestDiatonicNotes;
+      n.keyEvaluation = keyEval;
+
+      const isTimingIssue = n.timingEvaluation && (n.timingEvaluation.rating === 'off_beat' || (n.timingEvaluation.rating !== 'perfect' && Math.abs(n.timingEvaluation.offsetMs) > 55));
+      if (keyEval.isDeviation && isTimingIssue) {
+        n.isMistake = true;
+        n.mistakeType = 'both';
+        n.mistakeReason = `Out of Key (${n.noteInfo.fullName} not in ${keySigName}) & Timing (${n.timingEvaluation.text})`;
+      } else if (keyEval.isDeviation) {
+        n.isMistake = true;
+        n.mistakeType = 'scale';
+        n.mistakeReason = `Out of Key: ${n.noteInfo.fullName} is not in ${keySigName} (closest: ${closestDiatonicNotes.join(', ')})`;
+      } else if (isTimingIssue) {
+        n.isMistake = true;
+        n.mistakeType = 'timing';
+        n.mistakeReason = `Timing Flaw: ${n.timingEvaluation.text}`;
+      } else {
+        n.isMistake = false;
+        n.mistakeType = null;
+        n.mistakeReason = null;
+      }
+    }
+
+    this.updateFreePlayReviewBadge();
+    if (this.isFreePlayReviewOpen) {
+      this.renderFreePlayNotesList();
+      if (this.activeFreePlayReviewIndex >= 0 && this.activeFreePlayReviewIndex < this.freePlayNotes.length) {
+        this.selectFreePlayReviewNote(this.activeFreePlayReviewIndex, false);
+      }
+    }
+  }
+
+  updateFreePlayReviewBadge() {
+    if (!this.freeplayReviewBadge) return;
+    const total = this.freePlayNotes.length;
+    const mistakes = this.freePlayNotes.filter(n => n.isMistake).length;
+
+    if (total === 0) {
+      this.freeplayReviewBadge.innerText = '0 Notes';
+      this.freeplayReviewBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-slate-800 text-slate-400 border border-slate-700';
+    } else if (mistakes > 0) {
+      this.freeplayReviewBadge.innerText = `${total} Note${total === 1 ? '' : 's'} • ${mistakes} ⚠️`;
+      this.freeplayReviewBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-rose-500/25 text-rose-300 border border-rose-500/40 animate-pulse';
+    } else {
+      this.freeplayReviewBadge.innerText = `${total} Note${total === 1 ? '' : 's'}`;
+      this.freeplayReviewBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+    }
+  }
+
+  toggleFreePlayReviewPanel(forceOpen = null) {
+    this.isFreePlayReviewOpen = (forceOpen !== null) ? forceOpen : !this.isFreePlayReviewOpen;
+    if (this.isFreePlayReviewOpen) {
+      this.freeplayReviewPanel?.classList.remove('hidden');
+      if (this.btnToggleFreeplayReview) {
+        this.btnToggleFreeplayReview.classList.add('bg-indigo-500/30', 'text-indigo-200', 'border-indigo-500/60');
+      }
+      const keySigName = document.getElementById('select-key-signature')?.value || 'C Major';
+      if (this.freeplayReviewKeyBadge) {
+        this.freeplayReviewKeyBadge.innerText = `Key: ${keySigName}`;
+      }
+      this.renderFreePlayNotesList();
+      if (this.activeFreePlayReviewIndex === -1 && this.freePlayNotes.length > 0) {
+        const firstMistakeIdx = this.freePlayNotes.findIndex(n => n.isMistake);
+        if (firstMistakeIdx >= 0) {
+          this.selectFreePlayReviewNote(firstMistakeIdx, false);
+        } else {
+          this.selectFreePlayReviewNote(this.freePlayNotes.length - 1, false);
+        }
+      }
+    } else {
+      this.freeplayReviewPanel?.classList.add('hidden');
+      if (this.btnToggleFreeplayReview) {
+        this.btnToggleFreeplayReview.classList.remove('bg-indigo-500/30', 'text-indigo-200', 'border-indigo-500/60');
+      }
+      this.clearReviewPianoKeys();
+      if (this.notation) {
+        this.notation.setFreePlayReviewNote(null);
+      }
+    }
+  }
+
+  renderFreePlayNotesList() {
+    if (!this.freeplayNotesContainer) return;
+
+    const filter = this.freePlayReviewFilter || 'all';
+    let filteredNotes = this.freePlayNotes.map((note, idx) => ({ note, origIndex: idx }));
+
+    if (filter === 'mistakes') {
+      filteredNotes = filteredNotes.filter(item => item.note.isMistake);
+    } else if (filter === 'scale') {
+      filteredNotes = filteredNotes.filter(item => item.note.keyEvaluation?.isDeviation);
+    } else if (filter === 'timing') {
+      filteredNotes = filteredNotes.filter(item => item.note.timingEvaluation && item.note.timingEvaluation.rating !== 'perfect');
+    }
+
+    const totalNotes = this.freePlayNotes.length;
+    const mistakesCount = this.freePlayNotes.filter(n => n.isMistake).length;
+    const scaleDevCount = this.freePlayNotes.filter(n => n.keyEvaluation?.isDeviation).length;
+    const timingFlawCount = this.freePlayNotes.filter(n => n.timingEvaluation && n.timingEvaluation.rating !== 'perfect').length;
+
+    if (this.countAllNotes) this.countAllNotes.innerText = totalNotes;
+    if (this.countMistakeNotes) this.countMistakeNotes.innerText = mistakesCount;
+    if (this.countScaleNotes) this.countScaleNotes.innerText = scaleDevCount;
+    if (this.countTimingNotes) this.countTimingNotes.innerText = timingFlawCount;
+
+    if (this.freeplayScaleAccuracy) {
+      if (totalNotes === 0) {
+        this.freeplayScaleAccuracy.innerText = '100%';
+        this.freeplayScaleAccuracy.className = 'font-bold text-emerald-400 font-mono';
+      } else {
+        const inKeyPct = Math.round(((totalNotes - scaleDevCount) / totalNotes) * 100);
+        this.freeplayScaleAccuracy.innerText = `${inKeyPct}%`;
+        this.freeplayScaleAccuracy.className = inKeyPct >= 90
+          ? 'font-bold text-emerald-400 font-mono'
+          : inKeyPct >= 70
+          ? 'font-bold text-amber-400 font-mono'
+          : 'font-bold text-rose-400 font-mono';
+      }
+    }
+
+    if (this.freeplayMistakeStepperText) {
+      if (mistakesCount === 0) {
+        this.freeplayMistakeStepperText.innerText = 'No Mistakes';
+        this.freeplayMistakeStepperText.className = 'text-[11px] font-mono font-bold text-emerald-400 px-1.5 select-none';
+      } else {
+        const mistakeIndices = [];
+        this.freePlayNotes.forEach((n, idx) => { if (n.isMistake) mistakeIndices.push(idx); });
+        const curMistakePos = mistakeIndices.indexOf(this.activeFreePlayReviewIndex);
+        if (curMistakePos >= 0) {
+          this.freeplayMistakeStepperText.innerText = `Mistake ${curMistakePos + 1} of ${mistakesCount}`;
+        } else {
+          this.freeplayMistakeStepperText.innerText = `${mistakesCount} Mistake${mistakesCount === 1 ? '' : 's'}`;
+        }
+        this.freeplayMistakeStepperText.className = 'text-[11px] font-mono font-bold text-amber-300 px-1.5 select-none';
+      }
+    }
+
+    if (this.freePlayNotes.length === 0) {
+      this.freeplayNotesContainer.innerHTML = `
+        <div id="freeplay-notes-empty" class="text-xs text-slate-500 italic py-2 px-3">
+          No notes played yet. Play notes on your MIDI instrument or keyboard to see them and review mistakes here!
+        </div>
+      `;
+      if (this.freeplayNoteDetailCard) this.freeplayNoteDetailCard.classList.add('hidden');
+      return;
+    }
+
+    if (filteredNotes.length === 0) {
+      this.freeplayNotesContainer.innerHTML = `
+        <div class="text-xs text-slate-400 italic py-2 px-3">
+          No notes match filter "${filter}". Switch to "All Notes" to view all ${totalNotes} notes.
+        </div>
+      `;
+      return;
+    }
+
+    this.freeplayNotesContainer.innerHTML = '';
+
+    filteredNotes.forEach(({ note, origIndex }) => {
+      const chip = document.createElement('div');
+      const isSelected = origIndex === this.activeFreePlayReviewIndex;
+
+      let chipClass = 'freeplay-note-chip ';
+      if (isSelected) chipClass += 'selected ';
+
+      if (note.isMistake) {
+        if (note.mistakeType === 'scale' || note.mistakeType === 'both') {
+          chipClass += 'mistake-scale ';
+        } else {
+          chipClass += 'mistake-timing ';
+        }
+      } else {
+        chipClass += 'clean-note ';
+      }
+
+      chip.className = chipClass;
+      chip.dataset.index = origIndex;
+
+      const clefIcon = note.noteInfo.clef === 'treble' ? '𝄞' : '𝄢';
+      let statusIcon = '✅';
+      let statusColor = 'text-emerald-400';
+      let subBadge = note.durationStr;
+
+      if (note.isMistake) {
+        if (note.keyEvaluation?.isDeviation) {
+          statusIcon = '⚠️';
+          statusColor = 'text-rose-400';
+          subBadge = 'Off-Key';
+        } else if (note.timingEvaluation && note.timingEvaluation.rating !== 'perfect') {
+          statusIcon = '⏱️';
+          statusColor = 'text-amber-400';
+          subBadge = `${note.timingEvaluation.offsetMs >= 0 ? '+' : ''}${note.timingEvaluation.offsetMs}ms`;
+        }
+      }
+
+      chip.innerHTML = `
+        <div class="flex items-center gap-1">
+          <span class="text-[10px] text-slate-400">${clefIcon}</span>
+          <span class="text-xs font-black text-white">${note.noteInfo.fullName}</span>
+          <span class="text-[10px]">${statusIcon}</span>
+        </div>
+        <div class="text-[9px] font-mono ${statusColor} font-bold mt-0.5">
+          ${subBadge}
+        </div>
+      `;
+
+      chip.addEventListener('click', () => {
+        this.selectFreePlayReviewNote(origIndex, true);
+      });
+
+      this.freeplayNotesContainer.appendChild(chip);
+    });
+
+    const selectedEl = this.freeplayNotesContainer.querySelector('.freeplay-note-chip.selected');
+    if (selectedEl) {
+      selectedEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+  }
+
+  selectFreePlayReviewNote(index, playSound = false) {
+    if (index < 0 || index >= this.freePlayNotes.length) return;
+    this.activeFreePlayReviewIndex = index;
+    const n = this.freePlayNotes[index];
+
+    if (this.freeplayNoteDetailCard) {
+      this.freeplayNoteDetailCard.classList.remove('hidden');
+    }
+
+    if (this.detailNoteBadge) {
+      this.detailNoteBadge.innerText = n.noteInfo.fullName;
+      if (n.isMistake) {
+        if (n.keyEvaluation?.isDeviation) {
+          this.detailNoteBadge.className = 'w-11 h-11 rounded-xl flex flex-col items-center justify-center font-black text-base shadow-md border bg-rose-950/70 border-rose-500 text-rose-200 shadow-rose-950/50';
+        } else {
+          this.detailNoteBadge.className = 'w-11 h-11 rounded-xl flex flex-col items-center justify-center font-black text-base shadow-md border bg-amber-950/70 border-amber-500 text-amber-200 shadow-amber-950/50';
+        }
+      } else {
+        this.detailNoteBadge.className = 'w-11 h-11 rounded-xl flex flex-col items-center justify-center font-black text-base shadow-md border bg-emerald-950/70 border-emerald-500 text-emerald-200 shadow-emerald-950/50';
+      }
+    }
+
+    if (this.detailNoteStatus) {
+      if (n.isMistake) {
+        if (n.keyEvaluation?.isDeviation && n.timingEvaluation && n.timingEvaluation.rating !== 'perfect') {
+          this.detailNoteStatus.innerText = 'Off-Key & Timing Flaw';
+          this.detailNoteStatus.className = 'px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40';
+        } else if (n.keyEvaluation?.isDeviation) {
+          this.detailNoteStatus.innerText = 'Off-Key Mistake';
+          this.detailNoteStatus.className = 'px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40';
+        } else {
+          this.detailNoteStatus.innerText = `Timing: ${n.timingEvaluation?.rating?.toUpperCase() || 'Dev'}`;
+          this.detailNoteStatus.className = 'px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        }
+      } else {
+        this.detailNoteStatus.innerText = 'In Key • Clean';
+        this.detailNoteStatus.className = 'px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      }
+    }
+
+    if (this.detailNoteTime) {
+      this.detailNoteTime.innerText = n.timeStr || '';
+    }
+
+    if (this.detailNoteDuration) {
+      this.detailNoteDuration.innerText = n.durationStr || 'Playing';
+    }
+
+    if (this.detailNoteExplanation) {
+      if (n.keyEvaluation?.isDeviation) {
+        const closest = (n.keyEvaluation.closestDiatonicNotes && n.keyEvaluation.closestDiatonicNotes.length > 0)
+          ? n.keyEvaluation.closestDiatonicNotes.join(' or ')
+          : 'diatonic note';
+        this.detailNoteExplanation.innerHTML = `
+          <span class="text-rose-300 font-bold">❌ Scale Deviation:</span>
+          ${n.noteInfo.fullName} is an accidental not present in the <strong class="text-white">${n.keySignature}</strong> scale. Recommended scale notes: <strong class="text-emerald-300">${closest}</strong>.
+        `;
+      } else if (n.timingEvaluation && n.timingEvaluation.rating !== 'perfect') {
+        const off = n.timingEvaluation.offsetMs;
+        this.detailNoteExplanation.innerHTML = `
+          <span class="text-amber-300 font-bold">⏱️ Timing Flaw:</span>
+          Played <strong class="text-white">${off >= 0 ? '+' : ''}${off}ms ${n.timingEvaluation.rating}</strong> (${n.timingEvaluation.metricLabel || 'relative to beat'}).
+        `;
+      } else {
+        this.detailNoteExplanation.innerHTML = `
+          <span class="text-emerald-300 font-bold">✨ Clean:</span>
+          ${n.noteInfo.fullName} is diatonic to <strong class="text-white">${n.keySignature}</strong> and aligned with rhythmic flow.
+        `;
+      }
+    }
+
+    if (this.btnDetailPlaySound) {
+      this.btnDetailPlaySound.onclick = () => {
+        this.playReviewNoteSound(n.midi, n.velocity);
+      };
+    }
+
+    let targetMidi = null;
+    let wrongMidi = null;
+
+    if (n.keyEvaluation?.isDeviation) {
+      wrongMidi = n.midi;
+      const keyDef = MusicTheory.getKeySignature(n.keySignature);
+      for (const off of [-1, 1, -2, 2]) {
+        const cand = n.midi + off;
+        if (cand >= 0 && cand <= 127) {
+          const candPitchClass = ((cand % 12) + 12) % 12;
+          if (keyDef.diatonicPitchClasses.includes(candPitchClass)) {
+            targetMidi = cand;
+            break;
+          }
+        }
+      }
+    } else if (n.isMistake) {
+      wrongMidi = n.midi;
+    } else {
+      targetMidi = n.midi;
+    }
+
+    this.setReviewPianoKeys(targetMidi, wrongMidi);
+
+    if (this.notation) {
+      this.notation.setFreePlayReviewNote(n);
+    }
+
+    if (playSound) {
+      this.playReviewNoteSound(n.midi, n.velocity);
+    }
+
+    this.renderFreePlayNotesList();
+  }
+
+  playReviewNoteSound(midi, velocity = 90) {
+    if (!this.audio) return;
+    this.audio.noteOn(midi, velocity);
+    setTimeout(() => {
+      this.audio.noteOff(midi);
+    }, 380);
+  }
+
+  nextFreePlayMistake() {
+    const mistakeIndices = [];
+    this.freePlayNotes.forEach((n, idx) => { if (n.isMistake) mistakeIndices.push(idx); });
+    if (mistakeIndices.length === 0) {
+      this.showToast('✨ No mistakes found in played notes!', 'info');
+      return;
+    }
+    const curPos = mistakeIndices.indexOf(this.activeFreePlayReviewIndex);
+    const nextIdx = (curPos === -1 || curPos >= mistakeIndices.length - 1)
+      ? mistakeIndices[0]
+      : mistakeIndices[curPos + 1];
+    this.selectFreePlayReviewNote(nextIdx, true);
+  }
+
+  prevFreePlayMistake() {
+    const mistakeIndices = [];
+    this.freePlayNotes.forEach((n, idx) => { if (n.isMistake) mistakeIndices.push(idx); });
+    if (mistakeIndices.length === 0) {
+      this.showToast('✨ No mistakes found in played notes!', 'info');
+      return;
+    }
+    const curPos = mistakeIndices.indexOf(this.activeFreePlayReviewIndex);
+    const prevIdx = (curPos <= 0)
+      ? mistakeIndices[mistakeIndices.length - 1]
+      : mistakeIndices[curPos - 1];
+    this.selectFreePlayReviewNote(prevIdx, true);
+  }
+
+  clearFreePlayNotes() {
+    this.freePlayNotes = [];
+    this.activeFreePlayReviewIndex = -1;
+    this.clearReviewPianoKeys();
+    if (this.notation) {
+      this.notation.setFreePlayReviewNote(null);
+    }
+    this.updateFreePlayReviewBadge();
+    this.renderFreePlayNotesList();
+    if (this.freeplayNoteDetailCard) {
+      this.freeplayNoteDetailCard.classList.add('hidden');
+    }
+    this.showToast('🗑️ Free Play notes and mistakes cleared!', 'info');
+  }
+
+  copyFreePlayNotes() {
+    if (this.freePlayNotes.length === 0) {
+      this.showToast('No notes played yet to copy.', 'warning');
+      return;
+    }
+    const keySigName = document.getElementById('select-key-signature')?.value || 'C Major';
+    const total = this.freePlayNotes.length;
+    const mistakes = this.freePlayNotes.filter(n => n.isMistake);
+    const scaleMistakes = this.freePlayNotes.filter(n => n.keyEvaluation?.isDeviation);
+
+    let text = `MidiScope Free Play Review (${new Date().toLocaleString()}):\n`;
+    text += `Key Signature: ${keySigName}\n`;
+    text += `Total Notes: ${total} | Scale Accuracy: ${Math.round(((total - scaleMistakes.length) / total) * 100)}%\n`;
+    text += `Mistakes: ${mistakes.length} (${scaleMistakes.length} Scale Deviations)\n\n`;
+    text += `Notes Stream:\n`;
+    this.freePlayNotes.forEach((n, i) => {
+      const status = n.isMistake ? `❌ ${n.mistakeReason || 'Mistake'}` : '✅ In Key';
+      text += `#${i + 1}: ${n.noteInfo.fullName} (${n.durationStr || 'held'}) - ${status}\n`;
+    });
+
+    navigator.clipboard?.writeText(text).then(() => {
+      this.showToast('📋 Performance review summary copied to clipboard!', 'success');
+    }).catch(() => {
+      this.showToast('Failed to copy to clipboard', 'error');
     });
   }
 
@@ -1213,6 +1837,7 @@ class App {
       if (this.freePlayRhythmTrainer) {
         this.freePlayRhythmTrainer.onNotePlayed(midi, velocity);
       }
+      this.recordFreePlayNoteOn(midi, velocity);
       this.updateChordDisplay();
     }
   }
@@ -1254,6 +1879,7 @@ class App {
       if (this.freePlayRhythmTrainer) {
         this.freePlayRhythmTrainer.onNoteReleased(midi);
       }
+      this.recordFreePlayNoteOff(midi);
       this.updateChordDisplay();
     }
   }
@@ -1285,6 +1911,8 @@ class App {
       this.tabRoutine?.classList.add('active');
       this.freeplayHud?.classList.add('hidden');
       this.freeplayRhythmPanel?.classList.add('hidden');
+      this.freeplayReviewPanel?.classList.add('hidden');
+      this.notation?.setFreePlayReviewNote(null);
       this.practiceHud?.classList.add('hidden');
       this.routineHud?.classList.remove('hidden');
 
@@ -1310,6 +1938,8 @@ class App {
       this.tabPractice?.classList.add('active');
       this.freeplayHud?.classList.add('hidden');
       this.freeplayRhythmPanel?.classList.add('hidden');
+      this.freeplayReviewPanel?.classList.add('hidden');
+      this.notation?.setFreePlayReviewNote(null);
       this.routineHud?.classList.add('hidden');
       this.practiceHud?.classList.remove('hidden');
 
@@ -1342,6 +1972,14 @@ class App {
       } else {
         this.freeplayRhythmPanel?.classList.add('hidden');
         this.notation.setOption('rhythmTrainerActive', false);
+      }
+
+      if (this.isFreePlayReviewOpen) {
+        this.freeplayReviewPanel?.classList.remove('hidden');
+        this.renderFreePlayNotesList();
+      } else {
+        this.freeplayReviewPanel?.classList.add('hidden');
+        this.notation?.setFreePlayReviewNote(null);
       }
 
       this.routine?.pause();
@@ -3068,6 +3706,17 @@ class App {
         } else if (e.key === 't' || e.key === 'T') {
           e.preventDefault();
           this.registerMasterTapTempo();
+        } else if (this.appMode === 'freeplay') {
+          if (e.key === 'r' || e.key === 'R') {
+            e.preventDefault();
+            this.toggleFreePlayReviewPanel();
+          } else if (e.key === '[' || (this.isFreePlayReviewOpen && e.key === 'ArrowLeft')) {
+            e.preventDefault();
+            this.prevFreePlayMistake();
+          } else if (e.key === ']' || (this.isFreePlayReviewOpen && e.key === 'ArrowRight')) {
+            e.preventDefault();
+            this.nextFreePlayMistake();
+          }
         }
       }
     });
@@ -3399,6 +4048,7 @@ class App {
           if (toggleAcc) toggleAcc.innerText = '♭ Flats';
           this.updatePianoKeyLabels();
         }
+        this.reEvaluateFreePlayNotesKeySignature();
         this.showToast(`Key set to ${key}. Scale muscle memory active; deviations trigger Accidental Alert.`, 'info');
       });
     }

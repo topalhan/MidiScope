@@ -1,7 +1,7 @@
 @echo off
 title MidiSheet Local Web Server
 echo ========================================================
-echo Starting MidiSheet Web Server on http://localhost:8000
+echo Starting MidiSheet Web Server on http://localhost:PORT - check the port below
 echo ========================================================
 echo Press Ctrl+C at any time to stop the server.
 echo.

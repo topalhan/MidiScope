@@ -16,7 +16,7 @@ export class MelodyTrainer {
     this.isFinished = false;
     this.mode = 'wait'; // 'wait' (wait-for-note), 'tempo', 'strict' (no-pause sight-reading), 'first_read'
     this.bpm = 108;
-    this.metronomeEnabled = true;
+    this.metronomeEnabled = false;
 
     // In-tempo & Metronome tracking
     this.isCountingIn = false;
@@ -99,8 +99,9 @@ export class MelodyTrainer {
     this.expectedTapMidi = null;
     this.isAuditMode = false;
 
-    // Load default melody
+    // Load default melody without auto-starting metronome
     this.loadMelody(this.melodies[0].id);
+    this.stopMetronome();
   }
 
   isStrictTimeMode() {
@@ -394,7 +395,7 @@ export class MelodyTrainer {
       } else {
         this.startSilentAnalysis(30);
       }
-    } else if (this.isTimeDrivenMode() || this.metronomeEnabled) {
+    } else if (this.isTimeDrivenMode() || (this.metronomeEnabled && this.mode !== 'wait')) {
       this.startMetronome();
     }
   }
