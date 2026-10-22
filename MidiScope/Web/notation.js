@@ -5,6 +5,16 @@
 
 import { MusicTheory } from './chords.js';
 
+// Standard SMuFL Bravura Vector Clefs (1 staff space = 355 font units)
+const BRAVURA_G_CLEF_PATH = 'M 541 -598 C 539 -615 541 -616 550 -625 C 706 -770 824 -953 824 -1174 C 824 -1299 789 -1423 730 -1509 C 708 -1541 671 -1581 655 -1581 C 635 -1581 590 -1544 562 -1512 C 455 -1394 420 -1214 420 -1064 C 420 -981 431 -887 441 -828 C 444 -811 445 -808 428 -793 C 220 -622 0 -416 0 -125 C 0 125 171 363 524 363 C 557 363 595 360 624 354 C 639 351 642 350 645 367 C 662 464 684 589 684 657 C 684 870 540 896 455 896 C 377 896 340 873 340 854 C 340 844 353 840 386 829 C 431 816 482 778 482 694 C 482 615 432 547 344 547 C 248 547 190 624 190 713 C 190 806 246 948 464 948 C 560 948 747 904 747 660 C 747 577 721 441 706 351 C 703 334 704 336 724 327 C 870 269 966 147 966 -16 C 966 -200 831 -363 619 -363 C 582 -363 582 -363 577 -389 Z M 677 -1358 C 724 -1358 763 -1319 763 -1240 C 763 -1080 626 -950 513 -851 C 503 -842 497 -844 494 -863 C 488 -900 485 -949 485 -995 C 485 -1220 589 -1358 677 -1358 Z M 520 -377 C 524 -350 524 -351 498 -343 C 372 -300 289 -186 289 -63 C 289 66 357 158 455 192 C 467 196 484 200 494 200 C 505 200 511 193 511 184 C 511 174 500 170 490 166 C 429 140 386 78 386 12 C 386 -71 442 -132 530 -157 C 553 -163 556 -161 559 -145 L 631 284 C 634 300 632 300 611 304 C 588 308 559 311 530 311 C 278 311 115 171 115 -29 C 115 -114 130 -228 249 -363 C 336 -459 402 -513 469 -567 C 484 -579 487 -577 490 -562 Z M 619 -148 C 616 -166 618 -170 635 -168 C 752 -158 848 -60 848 66 C 848 157 793 230 713 271 C 696 279 693 279 690 262 Z';
+
+const BRAVURA_F_CLEF_PATH = 'M 363 -377 C 112 -377 0 -194 0 -56 C 0 59 60 158 177 158 C 268 158 330 95 330 6 C 330 -86 262 -144 192 -144 C 153 -144 138 -134 120 -134 C 101 -134 96 -145 96 -160 C 96 -217 183 -323 330 -323 C 482 -323 549 -173 549 53 C 549 455 350 680 14 871 C 1 878 -7 886 -7 897 C -7 906 -1 914 12 914 C 19 914 27 912 36 907 C 390 734 765 478 765 40 C 765 -210 612 -377 363 -377 Z M 906 -259 C 861 -259 827 -225 827 -180 C 827 -135 861 -101 906 -101 C 950 -101 985 -135 985 -180 C 985 -225 950 -259 906 -259 Z M 907 102 C 863 102 829 135 829 180 C 829 225 863 258 907 258 C 952 258 985 225 985 180 C 985 135 952 102 907 102 Z';
+
+// Standard SMuFL Bravura Vector Accidentals
+const BRAVURA_FLAT_PATH = 'M 17 245 C 22 251 26 252 30 252 C 35 252 39 249 39 249 C 82 225 117 186 153 161 C 281 72 325 -16 325 -82 C 325 -164 262 -216 196 -220 C 171 -220 137 -209 117 -196 C 108 -189 92 -176 85 -176 C 82 -176 81 -176 78 -177 C 68 -181 62 -192 62 -202 C 63 -233 72 -579 72 -608 C 72 -624 59 -632 45 -632 C 24 -632 1 -618 0 -592 C 0 -592 6 230 17 245 Z M 68 117 C 68 117 63 30 63 -27 C 63 -50 65 -68 66 -73 C 76 -102 134 -144 167 -144 C 209 -144 226 -96 226 -60 C 226 17 160 95 98 134 C 92 137 88 138 84 138 C 71 138 68 124 68 117 Z';
+const BRAVURA_SHARP_PATH = 'M 341 -170 C 351 -174 359 -186 359 -194 L 359 -297 C 359 -304 354 -308 348 -308 C 346 -308 344 -308 341 -307 C 341 -307 312 -295 305 -294 C 295 -294 285 -301 285 -312 L 285 -488 C 285 -497 276 -504 265 -504 C 251 -504 242 -497 242 -488 L 242 -301 C 240 -287 236 -268 223 -259 C 206 -249 157 -229 132 -223 C 120 -223 115 -240 115 -252 L 115 -425 C 115 -433 105 -441 95 -441 C 81 -441 72 -433 72 -425 L 72 -230 C 72 -210 63 -196 55 -192 C 46 -187 17 -176 17 -176 C 7 -173 0 -161 0 -153 L 0 -50 C 0 -42 4 -37 13 -37 L 16 -39 C 17 -39 39 -48 50 -53 L 52 -55 C 63 -55 72 -40 72 -29 L 72 114 C 72 130 65 143 56 147 C 48 150 17 163 17 163 C 7 166 0 177 0 186 L 0 288 C 0 297 4 301 13 301 L 16 300 C 17 300 37 291 50 287 C 52 285 53 285 55 285 C 65 285 72 301 72 308 L 72 485 C 72 494 81 501 91 501 C 105 501 115 494 115 485 L 115 285 C 115 266 122 256 130 253 L 217 217 C 217 217 219 217 219 217 L 222 216 C 235 216 242 233 242 242 L 242 422 C 242 431 251 438 261 438 C 276 438 285 431 285 422 L 285 217 C 285 206 291 189 301 184 C 311 180 341 168 341 168 C 351 164 359 153 359 144 L 359 42 C 359 35 354 30 348 30 C 346 30 344 30 341 32 L 304 46 C 295 46 285 37 285 20 L 285 -114 C 285 -124 292 -151 304 -156 Z M 242 65 C 233 94 166 122 132 122 C 124 122 117 120 115 115 C 112 109 111 78 111 43 C 111 -1 112 -52 115 -63 C 118 -88 184 -118 220 -118 C 230 -118 239 -115 242 -109 C 245 -102 248 -66 248 -27 C 248 12 245 52 242 65 Z';
+const BRAVURA_NATURAL_PATH = 'M 203 -261 C 200 -261 199 -259 197 -259 C 197 -259 105 -226 68 -226 C 59 -226 53 -228 53 -233 L 53 -474 C 53 -484 45 -491 36 -491 L 17 -491 C 7 -491 0 -484 0 -474 L 0 268 C 0 276 4 281 13 281 L 16 279 C 17 279 20 279 22 278 C 42 269 122 235 164 235 C 179 235 189 239 189 251 L 189 465 C 189 475 196 482 206 482 L 225 482 C 233 482 242 475 242 465 L 242 -258 C 242 -265 236 -269 230 -269 C 229 -269 226 -269 225 -268 Z M 53 -56 C 53 -76 141 -114 176 -114 C 184 -114 189 -112 189 -107 L 189 42 C 189 68 107 101 71 101 C 60 101 53 98 53 92 Z';
+
 export class NotationRenderer {
   /**
    * @param {HTMLCanvasElement} canvas
@@ -32,6 +42,8 @@ export class NotationRenderer {
       bpm: 108,                 // Metronome tempo for duration calculation
       rhythmTrainerActive: false, // Free Play scrolling rhythm score with timing badges
       beatsPerMeasure: 4,       // Time signature metric for barlines
+      staffLayout: 'vertical',  // 'vertical' (2 staves scrolling vertically) or 'horizontal' (single staff)
+      showBassClef: 'auto',     // 'auto' (show only when piece has bass notes), 'always', 'never'
       ...options
     };
 
@@ -66,8 +78,10 @@ export class NotationRenderer {
     this.onReviewNoteChanged = null;
     this.freePlayReviewNote = null;
 
-    // Manual horizontal score dragging & scrolling
+    // Score dragging & scrolling (Horizontal & Vertical Multi-Line)
     this.manualScrollOffset = 0;
+    this.smoothVerticalScroll = 0;
+    this.manualVerticalScrollOffset = 0;
     this.isUserDragging = false;
     this.dragStartX = 0;
     this.dragStartScroll = 0;
@@ -104,6 +118,24 @@ export class NotationRenderer {
 
   setKeySignature(key) {
     this.setOption('keySignature', key);
+  }
+
+  /**
+   * Determine whether the Bass Clef staff should be shown.
+   * If option is 'always' -> true
+   * If option is 'never' -> false
+   * If option is 'auto' (default) -> only show if the active piece contains notes below splitPoint (Middle C / 60)
+   */
+  shouldShowBassClef() {
+    if (this.options.showBassClef === 'always') return true;
+    if (this.options.showBassClef === 'never') return false;
+
+    // 'auto': only show if the active piece contains notes below splitPoint
+    if (this.options.mode === 'practice' && this.practiceData && this.practiceData.melody && Array.isArray(this.practiceData.melody.notes)) {
+      return this.practiceData.melody.notes.some(n => typeof n.midi === 'number' && n.midi < this.options.splitPoint);
+    }
+
+    return true;
   }
 
   setDisrupterMode(mode) {
@@ -195,12 +227,17 @@ export class NotationRenderer {
     window.addEventListener('pointerup', endDrag);
     window.addEventListener('pointercancel', endDrag);
 
-    // Mouse wheel / trackpad horizontal scrolling
+    // Mouse wheel / trackpad scrolling
     this.canvas.addEventListener('wheel', (e) => {
       if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
         e.preventDefault();
-        const delta = (Math.abs(e.deltaX) > 0.001 ? e.deltaX : e.deltaY) * 0.8;
-        this.manualScrollOffset += delta;
+        if (this.options.staffLayout === 'vertical') {
+          const delta = (Math.abs(e.deltaY) > 0.001 ? e.deltaY : e.deltaX) * 0.003;
+          this.manualVerticalScrollOffset = (this.manualVerticalScrollOffset || 0) + delta;
+        } else {
+          const delta = (Math.abs(e.deltaX) > 0.001 ? e.deltaX : e.deltaY) * 0.8;
+          this.manualScrollOffset += delta;
+        }
       }
     }, { passive: false });
 
@@ -209,6 +246,7 @@ export class NotationRenderer {
       if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
         e.preventDefault();
         this.manualScrollOffset = 0;
+        this.manualVerticalScrollOffset = 0;
       }
     });
 
@@ -216,15 +254,28 @@ export class NotationRenderer {
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
       if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
-        if (e.code === 'ArrowLeft') {
-          this.manualScrollOffset = Math.max(0, this.manualScrollOffset - 80);
-          e.preventDefault();
-        } else if (e.code === 'ArrowRight') {
-          this.manualScrollOffset += 80;
-          e.preventDefault();
-        } else if (e.code === 'Home') {
-          this.manualScrollOffset = 0;
-          e.preventDefault();
+        if (this.options.staffLayout === 'vertical') {
+          if (e.code === 'ArrowUp') {
+            this.manualVerticalScrollOffset = Math.max(0, (this.manualVerticalScrollOffset || 0) - 1);
+            e.preventDefault();
+          } else if (e.code === 'ArrowDown') {
+            this.manualVerticalScrollOffset = (this.manualVerticalScrollOffset || 0) + 1;
+            e.preventDefault();
+          } else if (e.code === 'Home') {
+            this.manualVerticalScrollOffset = 0;
+            e.preventDefault();
+          }
+        } else {
+          if (e.code === 'ArrowLeft') {
+            this.manualScrollOffset = Math.max(0, this.manualScrollOffset - 80);
+            e.preventDefault();
+          } else if (e.code === 'ArrowRight') {
+            this.manualScrollOffset += 80;
+            e.preventDefault();
+          } else if (e.code === 'Home') {
+            this.manualScrollOffset = 0;
+            e.preventDefault();
+          }
         }
       }
     });
@@ -245,6 +296,7 @@ export class NotationRenderer {
   jumpToMistake(mistakeIndex) {
     this.activeReviewMistakeIndex = mistakeIndex;
     this.manualScrollOffset = 0;
+    this.manualVerticalScrollOffset = 0;
     this.notifyReviewNoteChanged();
   }
 
@@ -254,6 +306,7 @@ export class NotationRenderer {
     const next = mistakes.find(idx => idx > this.activeReviewMistakeIndex);
     this.activeReviewMistakeIndex = (next !== undefined) ? next : mistakes[0];
     this.manualScrollOffset = 0;
+    this.manualVerticalScrollOffset = 0;
     this.notifyReviewNoteChanged();
   }
 
@@ -263,6 +316,7 @@ export class NotationRenderer {
     const prev = [...mistakes].reverse().find(idx => idx < this.activeReviewMistakeIndex);
     this.activeReviewMistakeIndex = (prev !== undefined) ? prev : mistakes[mistakes.length - 1];
     this.manualScrollOffset = 0;
+    this.manualVerticalScrollOffset = 0;
     this.notifyReviewNoteChanged();
   }
 
@@ -634,24 +688,28 @@ export class NotationRenderer {
     const staffBarColor  = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(15, 23, 42, 0.55)';
     const clefColor      = isDark ? '#e2e8f0' : '#1e293b';
 
+    const showBass = this.shouldShowBassClef();
+
     // Layout dimensions: dynamically scales with canvas height and width
     const isMobile = w < 640;
     const lineSpacing = Math.max(11, Math.min(16, Math.round(h * 0.040)));
     const staffHeight = lineSpacing * 4;
-    const staffGap = lineSpacing * 4.5; // Gap between treble bottom line & bass top line
-    const totalGrandStaffHeight = staffHeight * 2 + staffGap;
+    const staffGap = showBass ? lineSpacing * 4.5 : 0;
+    const totalGrandStaffHeight = showBass ? (staffHeight * 2 + staffGap) : staffHeight;
 
     const startY = Math.max(isMobile ? 32 : 36, (h - totalGrandStaffHeight) / 2);
     const trebleTopY = startY;
     const trebleBottomY = trebleTopY + staffHeight;
-    const bassTopY = trebleBottomY + staffGap;
-    const bassBottomY = bassTopY + staffHeight;
+    const bassTopY = showBass ? (trebleBottomY + staffGap) : null;
+    const bassBottomY = showBass ? (bassTopY + staffHeight) : null;
 
     const marginX = isMobile ? 18 : 50;
     const staffWidth = w - marginX * 2;
 
-    // Draw Grand Staff infrastructure
-    this.drawGrandStaffLines(ctx, marginX, staffWidth, trebleTopY, bassTopY, lineSpacing, staffLineColor, staffBarColor);
+    // Draw Grand Staff infrastructure (for non-practice or horizontal single staff mode)
+    if (this.options.mode !== 'practice' || this.options.staffLayout === 'horizontal') {
+      this.drawGrandStaffLines(ctx, marginX, staffWidth, trebleTopY, bassTopY, lineSpacing, staffLineColor, staffBarColor);
+    }
 
     const isRhythmTrainer = this.options.rhythmTrainerActive || this.options.mode === 'rhythm_trainer';
 
@@ -796,34 +854,40 @@ export class NotationRenderer {
       ctx.stroke();
     }
 
-    // Bass staff (5 lines)
-    for (let i = 0; i < 5; i++) {
-      const y = bassTopY + i * spacing;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + width, y);
-      ctx.stroke();
+    const hasBass = (bassTopY !== null && bassTopY !== undefined);
+
+    // Bass staff (5 lines) - only if bassTopY is provided
+    if (hasBass) {
+      for (let i = 0; i < 5; i++) {
+        const y = bassTopY + i * spacing;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + width, y);
+        ctx.stroke();
+      }
     }
 
-    // Left Bar Line (connecting top of treble to bottom of bass)
+    // Left Bar Line
     ctx.lineWidth = 2;
     ctx.strokeStyle = barColor;
     const trebleTop = trebleTopY;
-    const bassBottom = bassTopY + spacing * 4;
+    const bottomLineY = hasBass ? (bassTopY + spacing * 4) : (trebleTopY + spacing * 4);
 
     ctx.beginPath();
     ctx.moveTo(x, trebleTop);
-    ctx.lineTo(x, bassBottom);
+    ctx.lineTo(x, bottomLineY);
     ctx.stroke();
 
     // Right Bar Line (measure end)
     ctx.beginPath();
     ctx.moveTo(x + width, trebleTop);
-    ctx.lineTo(x + width, bassBottom);
+    ctx.lineTo(x + width, bottomLineY);
     ctx.stroke();
 
-    // Curly Grand Staff Brace on left
-    this.drawStaffBrace(ctx, x - 18, trebleTop - 6, bassBottom + 6);
+    // Curly Grand Staff Brace on left (only for Grand Staff with both staves)
+    if (hasBass) {
+      this.drawStaffBrace(ctx, x - 18, trebleTop - 6, bottomLineY + 6);
+    }
 
     ctx.restore();
   }
@@ -861,66 +925,221 @@ export class NotationRenderer {
   drawClefs(ctx, x, trebleTopY, bassTopY, spacing, color) {
     ctx.save();
     ctx.fillStyle = color;
-    ctx.strokeStyle = color;
+
+    if (!this.gClefPath2D && typeof Path2D !== 'undefined') {
+      this.gClefPath2D = new Path2D(BRAVURA_G_CLEF_PATH);
+    }
+    if (!this.fClefPath2D && typeof Path2D !== 'undefined') {
+      this.fClefPath2D = new Path2D(BRAVURA_F_CLEF_PATH);
+    }
+
+    const scale = spacing / 355.0;
 
     // --- TREBLE CLEF ---
-    // Scaled to fit 5 lines (4 * spacing)
+    // Scaled to fit 5 lines with calligraphic weight
+    // G4 line is Line 2 (4th line from top = trebleTopY + 3 * spacing)
+    const gLineY = trebleTopY + 3 * spacing;
     ctx.save();
-    const gLineY = trebleTopY + 3 * spacing; // G4 line (2nd from bottom = 4th line from top)
-    const scaleT = (spacing * 4) / 60;
-    ctx.translate(x + 8, gLineY);
-    ctx.scale(scaleT, scaleT);
-
-    // Beautiful stylized Treble Clef path
-    ctx.beginPath();
-    ctx.lineWidth = 2.8;
-    ctx.moveTo(1, 35);
-    // Bottom hook / dot
-    ctx.arc(1, 37, 3.8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Central spiral around G4
-    ctx.beginPath();
-    ctx.lineWidth = 3;
-    ctx.moveTo(1, 34);
-    ctx.lineTo(1, -38);
-    // Top loop
-    ctx.bezierCurveTo(2, -50, 15, -45, 14, -30);
-    ctx.bezierCurveTo(13, -15, -4, 5, -4, 15);
-    // Lower curl around line
-    ctx.bezierCurveTo(-4, 25, 12, 28, 14, 15);
-    ctx.bezierCurveTo(15, 4, 3, 2, 0, 7);
-    ctx.stroke();
+    ctx.translate(x + 2, gLineY);
+    ctx.scale(scale, scale);
+    if (this.gClefPath2D) {
+      ctx.fill(this.gClefPath2D);
+    }
     ctx.restore();
 
-    // --- BASS CLEF ---
+    // --- BASS CLEF (Only if bassTopY is provided) ---
+    if (bassTopY !== null && bassTopY !== undefined) {
+      // F3 line is Line 4 (2nd line from top = bassTopY + 1 * spacing)
+      const fLineY = bassTopY + 1 * spacing;
+      ctx.save();
+      ctx.translate(x + 2, fLineY);
+      ctx.scale(scale, scale);
+      if (this.fClefPath2D) {
+        ctx.fill(this.fClefPath2D);
+      }
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  /**
+   * Vector rendering of Flat accidental for key signature and notes
+   */
+  renderVectorFlat(ctx, x, y, spacing, color) {
     ctx.save();
-    const fLineY = bassTopY + 1 * spacing; // F3 line (2nd from top = 4th from bottom)
-    const scaleB = (spacing * 4) / 48;
-    ctx.translate(x + 8, fLineY);
-    ctx.scale(scaleB, scaleB);
-
-    // F-clef main curve
-    ctx.beginPath();
-    ctx.lineWidth = 3.2;
-    ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.lineWidth = 3.4;
-    ctx.moveTo(0, 0);
-    ctx.bezierCurveTo(0, -14, 20, -14, 20, 2);
-    ctx.bezierCurveTo(20, 14, 10, 24, 0, 28);
-    ctx.stroke();
-
-    // The two F-clef dots in spaces 3 and 4
-    ctx.beginPath();
-    ctx.arc(26, -5, 3.2, 0, Math.PI * 2);
-    ctx.arc(26, 7, 3.2, 0, Math.PI * 2);
-    ctx.fill();
+    if (color) {
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+    }
+    if (!this.flatPath2D && typeof Path2D !== 'undefined') {
+      this.flatPath2D = new Path2D(BRAVURA_FLAT_PATH);
+    }
+    if (this.flatPath2D) {
+      const scale = spacing / 340.0;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+      ctx.fill(this.flatPath2D);
+      ctx.restore();
+    } else {
+      const h = spacing * 1.1;
+      const w = spacing * 0.48;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(x - w * 0.3, y - h * 0.65);
+      ctx.lineTo(x - w * 0.3, y + h * 0.35);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - w * 0.3, y + h * 0.35);
+      ctx.bezierCurveTo(x + w * 1.1, y + h * 0.15, x + w * 0.8, y - h * 0.25, x - w * 0.3, y - h * 0.05);
+      ctx.fill();
+    }
     ctx.restore();
+  }
 
+  /**
+   * Vector rendering of Sharp accidental for key signature and notes
+   */
+  renderVectorSharp(ctx, x, y, spacing, color) {
+    ctx.save();
+    if (color) {
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+    }
+    if (!this.sharpPath2D && typeof Path2D !== 'undefined') {
+      this.sharpPath2D = new Path2D(BRAVURA_SHARP_PATH);
+    }
+    if (this.sharpPath2D) {
+      const scale = spacing / 340.0;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+      ctx.fill(this.sharpPath2D);
+      ctx.restore();
+    } else {
+      const w = spacing * 0.46;
+      const h = spacing * 0.95;
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(x - w / 3, y - h / 2);
+      ctx.lineTo(x - w / 3, y + h / 2);
+      ctx.moveTo(x + w / 3, y - h / 2 + 2);
+      ctx.lineTo(x + w / 3, y + h / 2 + 2);
+      ctx.stroke();
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(x - w * 0.6, y - spacing * 0.2 + 2);
+      ctx.lineTo(x + w * 0.6, y - spacing * 0.2 - 2);
+      ctx.moveTo(x - w * 0.6, y + spacing * 0.2 + 2);
+      ctx.lineTo(x + w * 0.6, y + spacing * 0.2 - 2);
+      ctx.stroke();
+    }
     ctx.restore();
+  }
+
+  /**
+   * Vector rendering of Natural accidental for note alterations
+   */
+  renderVectorNatural(ctx, x, y, spacing, color) {
+    ctx.save();
+    if (color) {
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+    }
+    if (!this.naturalPath2D && typeof Path2D !== 'undefined') {
+      this.naturalPath2D = new Path2D(BRAVURA_NATURAL_PATH);
+    }
+    if (this.naturalPath2D) {
+      const scale = spacing / 340.0;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+      ctx.fill(this.naturalPath2D);
+      ctx.restore();
+    } else {
+      ctx.lineWidth = 1.6;
+      const w = spacing * 0.44;
+      const h = spacing * 0.95;
+      ctx.beginPath();
+      ctx.moveTo(accX - w / 2, accY - h / 2);
+      ctx.lineTo(accX - w / 2, accY + h * 0.2);
+      ctx.moveTo(accX + w / 2, accY - h * 0.2);
+      ctx.lineTo(accX + w / 2, accY + h / 2);
+      ctx.stroke();
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(accX - w / 2, accY - h * 0.18);
+      ctx.lineTo(accX + w / 2, accY - h * 0.18 + 2);
+      ctx.moveTo(accX - w / 2, accY + h * 0.18 - 2);
+      ctx.lineTo(accX + w / 2, accY + h * 0.18);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Draw Key Signature on both Treble and Bass staves
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} startX - Left start x of key signature
+   * @param {number} trebleBottomY - Bottom line of treble staff
+   * @param {number} bassBottomY - Bottom line of bass staff
+   * @param {number} spacing - Staff line spacing
+   * @param {string|object} keyNameOrDef - Key signature name or definition object
+   * @param {string} color - Glyph stroke/fill color
+   * @returns {{ width: number, count: number }}
+   */
+  drawKeySignature(ctx, startX, trebleBottomY, bassBottomY, spacing, keyNameOrDef, color) {
+    const keyDef = typeof keyNameOrDef === 'object' && keyNameOrDef !== null
+      ? keyNameOrDef
+      : MusicTheory.getKeySignature(keyNameOrDef || this.options.keySignature || 'C Major');
+
+    if (!keyDef || (!keyDef.flats?.length && !keyDef.sharps?.length)) {
+      return { width: 0, count: 0 };
+    }
+
+    const isFlats = keyDef.flats && keyDef.flats.length > 0;
+    const count = isFlats ? keyDef.flats.length : keyDef.sharps.length;
+    if (count === 0) return { width: 0, count: 0 };
+
+    // Standard accidental staff step positions (from bottom line 0, step = spacing / 2):
+    // Treble flats: Bb4 (4), Eb5 (7), Ab4 (3), Db5 (6), Gb4 (2), Cb5 (5), Fb4 (1)
+    // Bass flats:   Bb2 (2), Eb3 (5), Ab2 (1), Db3 (4), Gb2 (0), Cb3 (3), Fb2 (-1)
+    // Treble sharps: F#5 (8), C#5 (5), G#5 (9), D#5 (6), A#4 (3), E#5 (7), B#4 (4)
+    // Bass sharps:   F#3 (6), C#3 (3), G#3 (7), D#3 (4), A#2 (1), E#3 (5), B#2 (2)
+    const trebleSteps = isFlats ? [4, 7, 3, 6, 2, 5, 1] : [8, 5, 9, 6, 3, 7, 4];
+    const bassSteps   = isFlats ? [2, 5, 1, 4, 0, 3, -1] : [6, 3, 7, 4, 1, 5, 2];
+
+    const stepAdvance = spacing * 0.88;
+    const halfStep = spacing / 2;
+
+    for (let i = 0; i < count; i++) {
+      const accX = startX + i * stepAdvance;
+
+      const tStep = trebleSteps[i % trebleSteps.length];
+      const tY = trebleBottomY - tStep * halfStep;
+
+      const hasBass = (bassBottomY !== null && bassBottomY !== undefined);
+
+      if (isFlats) {
+        this.renderVectorFlat(ctx, accX, tY, spacing, color);
+        if (hasBass) {
+          const bStep = bassSteps[i % bassSteps.length];
+          const bY = bassBottomY - bStep * halfStep;
+          this.renderVectorFlat(ctx, accX, bY, spacing, color);
+        }
+      } else {
+        this.renderVectorSharp(ctx, accX, tY, spacing, color);
+        if (hasBass) {
+          const bStep = bassSteps[i % bassSteps.length];
+          const bY = bassBottomY - bStep * halfStep;
+          this.renderVectorSharp(ctx, accX, bY, spacing, color);
+        }
+      }
+    }
+
+    const totalWidth = (count - 1) * stepAdvance + Math.round(spacing * 0.95);
+    return { width: totalWidth, count };
   }
 
   /**
@@ -1497,15 +1716,23 @@ export class NotationRenderer {
    * Draw musical accidental (# or b or natural)
    */
   drawAccidental(ctx, note, spacing, alpha) {
-    if (!note || !note.info || !note.info.accidental) return;
+    if (!note) return;
+
+    const noteMidi = (typeof note.midi === 'number') ? note.midi : ((note.info && typeof note.info.midi === 'number') ? note.info.midi : 60);
+    const keySig = (this.practiceData && this.practiceData.melody && this.practiceData.melody.key) || this.options.keySignature || 'C Major';
+
+    const displayAcc = note.displayAccidental !== undefined
+      ? note.displayAccidental
+      : MusicTheory.getNoteAccidentalForScore(noteMidi, keySig, note.explicitAccidental);
+
+    // If no accidental should be displayed for this note in this key signature, skip!
+    if (!displayAcc) return;
 
     ctx.save();
     ctx.globalAlpha = alpha;
     const accX = note.x - spacing * 1.5;
     const accY = note.y;
 
-    const noteMidi = (typeof note.midi === 'number') ? note.midi : ((note.info && typeof note.info.midi === 'number') ? note.info.midi : 60);
-    const keySig = (this.practiceData && this.practiceData.melody && this.practiceData.melody.key) || this.options.keySignature || 'C Major';
     const accDev = MusicTheory.isAccidentalDeviation(noteMidi, keySig);
     const isAlert = this.options.accidentalAlert && accDev.isDeviation;
 
@@ -1519,64 +1746,12 @@ export class NotationRenderer {
       ctx.strokeStyle = ctx.fillStyle;
     }
 
-    if (note.info.accidental === '#' || note.info.accidental === '♯') {
-      // Crisp vector Sharp symbol
-      ctx.lineWidth = isAlert ? 1.7 : 1.3;
-      const w = spacing * 0.48;
-      const h = spacing * 0.95;
-
-      // Two vertical parallel lines
-      ctx.beginPath();
-      ctx.moveTo(accX - w / 3, accY - h / 2);
-      ctx.lineTo(accX - w / 3, accY + h / 2);
-      ctx.moveTo(accX + w / 3, accY - h / 2 + 2);
-      ctx.lineTo(accX + w / 3, accY + h / 2 + 2);
-      ctx.stroke();
-
-      // Slanted crossbars
-      ctx.lineWidth = isAlert ? 2.8 : 2.4;
-      ctx.beginPath();
-      ctx.moveTo(accX - w * 0.6, accY - spacing * 0.2 + 2);
-      ctx.lineTo(accX + w * 0.6, accY - spacing * 0.2 - 2);
-      ctx.moveTo(accX - w * 0.6, accY + spacing * 0.2 + 2);
-      ctx.lineTo(accX + w * 0.6, accY + spacing * 0.2 - 2);
-      ctx.stroke();
-    } else if (note.info.accidental === 'b' || note.info.accidental === '♭') {
-      // Crisp vector Flat symbol
-      ctx.lineWidth = isAlert ? 2.0 : 1.6;
-      const h = spacing * 1.1;
-      const w = spacing * 0.5;
-
-      // Vertical line
-      ctx.beginPath();
-      ctx.moveTo(accX - w * 0.3, accY - h * 0.6);
-      ctx.lineTo(accX - w * 0.3, accY + h * 0.35);
-      ctx.stroke();
-
-      // Curved loop
-      ctx.lineWidth = isAlert ? 2.4 : 2.0;
-      ctx.beginPath();
-      ctx.moveTo(accX - w * 0.3, accY + h * 0.35);
-      ctx.bezierCurveTo(accX + w * 0.9, accY + h * 0.2, accX + w * 0.7, accY - h * 0.2, accX - w * 0.3, accY - h * 0.05);
-      ctx.stroke();
-    } else if (note.info.accidental === '♮' || note.info.accidental === 'natural') {
-      // Crisp vector Natural symbol
-      ctx.lineWidth = isAlert ? 1.8 : 1.4;
-      const w = spacing * 0.44;
-      const h = spacing * 0.95;
-      ctx.beginPath();
-      ctx.moveTo(accX - w / 2, accY - h / 2);
-      ctx.lineTo(accX - w / 2, accY + h * 0.2);
-      ctx.moveTo(accX + w / 2, accY - h * 0.2);
-      ctx.lineTo(accX + w / 2, accY + h / 2);
-      ctx.stroke();
-      ctx.lineWidth = isAlert ? 2.4 : 2.0;
-      ctx.beginPath();
-      ctx.moveTo(accX - w / 2, accY - h * 0.18);
-      ctx.lineTo(accX + w / 2, accY - h * 0.18 + 2);
-      ctx.moveTo(accX - w / 2, accY + h * 0.18 - 2);
-      ctx.lineTo(accX + w / 2, accY + h * 0.18);
-      ctx.stroke();
+    if (displayAcc === '#' || displayAcc === '♯') {
+      this.renderVectorSharp(ctx, accX, accY, spacing, isAlert ? '#f59e0b' : null);
+    } else if (displayAcc === 'b' || displayAcc === '♭') {
+      this.renderVectorFlat(ctx, accX, accY, spacing, isAlert ? '#f59e0b' : null);
+    } else if (displayAcc === '♮' || displayAcc === 'natural') {
+      this.renderVectorNatural(ctx, accX, accY, spacing, isAlert ? '#f59e0b' : null);
     }
 
     ctx.restore();
@@ -1782,14 +1957,37 @@ export class NotationRenderer {
     const beatsPerMeasure = this.options.beatsPerMeasure || 4;
     const timeSig = [beatsPerMeasure, 4];
 
-    // 1. Clefs, Time Signature & Divider
-    const clefX = staffX + (isMobile ? 14 : 20);
+    // 1. Clefs, Key Signature, Time Signature & Divider
+    const activeKey = this.options.keySignature || 'C Major';
+    const activeKeyDef = MusicTheory.getKeySignature(activeKey);
+    const keySigAccCount = activeKeyDef ? (activeKeyDef.flats?.length || activeKeyDef.sharps?.length || 0) : 0;
+
+    const clefMarginLeft = isMobile ? 12 : 18;
+    const clefWidth = Math.ceil(966 * (lineSpacing / 355.0));
+    const clefX = staffX + clefMarginLeft;
+    const clefRightEdge = clefX + clefWidth;
+
     this.drawClefs(ctx, clefX, trebleTopY, bassTopY, lineSpacing, isDark ? '#e2e8f0' : '#1e293b');
 
-    const timeSigX = staffX + (isMobile ? 42 : 54);
-    this.drawTimeSignature(ctx, timeSigX, trebleBottomY, bassBottomY, lineSpacing, timeSig);
+    const keySigGap = isMobile ? 10 : 14;
+    const keySigStepW = lineSpacing * 0.88;
+    const keySigW = keySigAccCount > 0 ? Math.round((keySigAccCount - 1) * keySigStepW + lineSpacing * 0.95) : 0;
+    const keySigStartX = clefRightEdge + keySigGap;
+    const keySigRightEdge = keySigAccCount > 0 ? (keySigStartX + keySigW) : clefRightEdge;
 
-    const clefDividerX = staffX + (isMobile ? 66 : 82);
+    if (keySigAccCount > 0) {
+      this.drawKeySignature(ctx, keySigStartX, trebleBottomY, bassBottomY, lineSpacing, activeKeyDef, isDark ? '#e2e8f0' : '#1e293b');
+    }
+
+    const timeSigGap = isMobile ? 12 : 16;
+    const timeSigW = Math.round(lineSpacing * 1.6);
+    const timeSigStartX = keySigRightEdge + timeSigGap;
+    const timeSigCenterX = timeSigStartX + Math.round(timeSigW / 2);
+    const timeSigRightEdge = timeSigStartX + timeSigW;
+
+    this.drawTimeSignature(ctx, timeSigCenterX, trebleBottomY, bassBottomY, lineSpacing, timeSig);
+
+    const clefDividerX = timeSigRightEdge + (isMobile ? 14 : 20);
     ctx.save();
     ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.4)' : 'rgba(15, 23, 42, 0.35)';
     ctx.lineWidth = 1.2;
@@ -2037,6 +2235,8 @@ export class NotationRenderer {
     if (melodyChanged || isRestarted) {
       this.activeReviewMistakeIndex = -1;
       this.manualScrollOffset = 0;
+      this.smoothVerticalScroll = 0;
+      this.manualVerticalScrollOffset = 0;
       this.playheadBeats = 0;
       this.smoothScrollX = 0;
       this.scrollX = 0;
@@ -2048,6 +2248,7 @@ export class NotationRenderer {
 
     if (becameFinished) {
       this.manualScrollOffset = 0;
+      this.manualVerticalScrollOffset = 0;
       const mistakes = this.getMistakeNoteIndices();
       if (mistakes.length > 0) {
         this.activeReviewMistakeIndex = mistakes[0];
@@ -2061,6 +2262,8 @@ export class NotationRenderer {
   resetScoreToBeginning() {
     this.activeReviewMistakeIndex = -1;
     this.manualScrollOffset = 0;
+    this.smoothVerticalScroll = 0;
+    this.manualVerticalScrollOffset = 0;
     this.playheadBeats = 0;
     this.smoothScrollX = 0;
     this.scrollX = 0;
@@ -2173,9 +2376,757 @@ export class NotationRenderer {
   }
 
   /**
-   * Render Interactive Melody Practice Sheet Music Mode with VST3 Parity
+   * Render Interactive Melody Practice Sheet Music Mode
+   * Dispatches to either 2-Staff Vertical Scrolling layout or Single-Staff Horizontal layout
    */
   renderPracticeMode(ctx, staffX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp) {
+    if (this.options.staffLayout === 'horizontal') {
+      this.renderHorizontalPracticeMode(ctx, staffX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp);
+    } else {
+      this.renderVerticalPracticeMode(ctx, staffX, staffWidth, lineSpacing, timestamp);
+    }
+  }
+
+  /**
+   * Render Interactive Melody Practice with 2-Staff Vertical Scrolling
+   * Always maintains 2 sets of grand staves on the screen.
+   * As the user finishes the first line, they continue playing onto the second line,
+   * while the staves scroll up smoothly and populate new notes in a new staff line below.
+   */
+  renderVerticalPracticeMode(ctx, staffX, staffWidth, lineSpacing, timestamp) {
+    const H = this.height;
+    if (!this.practiceData || !this.practiceData.melody) {
+      this.drawIdleStaffGuide(ctx, staffX, staffWidth, H * 0.35, H * 0.65, lineSpacing);
+      return;
+    }
+
+    this.noteHitboxes = [];
+    const isDark = this.options.theme === 'dark';
+    const melody = this.practiceData.melody;
+    const activeKey = (melody && melody.key) || this.options.keySignature || 'C Major';
+    const activeKeyDef = MusicTheory.getKeySignature(activeKey);
+    const preferFlats = (activeKeyDef && activeKeyDef.flats && activeKeyDef.flats.length > 0) || this.options.preferFlats;
+    const isMobile = this.width < 640;
+
+    const showBass = this.shouldShowBassClef();
+
+    const currentIdx = this.practiceData.noteIndex;
+    const results = this.practiceData.noteResults || [];
+    const isFinished = !!this.practiceData.isFinished;
+    const totalNotes = melody.notes.length;
+    const timeSig = melody.timeSignature || [4, 4];
+    const beatsPerMeasure = timeSig[0] || 4;
+
+    const mistakeIndices = this.getMistakeNoteIndices();
+    const hasMistakes = mistakeIndices.length > 0;
+
+    // Auto-focus first mistake upon finish if none selected
+    if (isFinished && hasMistakes && (this.activeReviewMistakeIndex === -1 || !mistakeIndices.includes(this.activeReviewMistakeIndex))) {
+      this.activeReviewMistakeIndex = mistakeIndices[0];
+      this.notifyReviewNoteChanged();
+    }
+
+    // 1. Calculate Beat Timelines & Measures
+    let cumulativeBeats = 0;
+    const noteBeats = [];
+    melody.notes.forEach((note) => {
+      noteBeats.push(cumulativeBeats);
+      cumulativeBeats += Math.max(0.1, note.duration || 1);
+    });
+    const totalBeats = Math.max(beatsPerMeasure, cumulativeBeats);
+    const totalMeasures = Math.max(1, Math.ceil(totalBeats / beatsPerMeasure));
+
+    // Staff vertical line spacing & clef metrics
+    const vSpacing = Math.max(10, Math.min(13.5, Math.round(H * 0.027)));
+    const clefMarginLeft = isMobile ? 12 : 18;
+    const clefWidth = Math.ceil(966 * (vSpacing / 355.0));
+    const clefX = staffX + clefMarginLeft;
+    const clefRightEdge = clefX + clefWidth;
+
+    // Distribution across systems (reserve space for clefs, key signature, and time signature)
+    const keySigAccCount = activeKeyDef ? (activeKeyDef.flats?.length || activeKeyDef.sharps?.length || 0) : 0;
+    const keySigGap = isMobile ? 10 : 14;
+    const keySigStepW = vSpacing * 0.88;
+    const keySigW = keySigAccCount > 0 ? Math.round((keySigAccCount - 1) * keySigStepW + vSpacing * 0.95) : 0;
+    const keySigStartX = clefRightEdge + keySigGap;
+    const keySigRightEdge = keySigAccCount > 0 ? (keySigStartX + keySigW) : clefRightEdge;
+
+    const timeSigGap = isMobile ? 12 : 16;
+    const timeSigW = Math.round(vSpacing * 1.6);
+    const timeSigStartX = keySigRightEdge + timeSigGap;
+    const timeSigCenterX = timeSigStartX + Math.round(timeSigW / 2);
+    const timeSigRightEdge = timeSigStartX + timeSigW;
+
+    const postHeaderGap = isMobile ? 16 : 22;
+    const notesAreaStartX = timeSigRightEdge + postHeaderGap;
+    const clefSectionW = notesAreaStartX - staffX;
+    const notesAreaWidth = staffWidth - clefSectionW - (isMobile ? 12 : 20);
+
+    const targetMeasureW = isMobile ? 170 : 230;
+    const measuresPerLine = Math.max(2, Math.min(4, Math.floor(notesAreaWidth / targetMeasureW)));
+    const measureWidth = notesAreaWidth / measuresPerLine;
+    const totalSystems = Math.max(1, Math.ceil(totalMeasures / measuresPerLine));
+
+    // Map each note to measure, system, and exact x position
+    const notePositions = [];
+    const noteToSystemMap = [];
+
+    melody.notes.forEach((note, i) => {
+      const startB = noteBeats[i];
+      const mIdx = Math.min(totalMeasures - 1, Math.floor(startB / beatsPerMeasure));
+      const sIdx = Math.min(totalSystems - 1, Math.floor(mIdx / measuresPerLine));
+      const mInSys = mIdx % measuresPerLine;
+      const beatInM = startB - mIdx * beatsPerMeasure;
+      const frac = Math.max(0, Math.min(0.95, beatInM / beatsPerMeasure));
+
+      const noteX = notesAreaStartX + mInSys * measureWidth + 20 + frac * (measureWidth - 36);
+
+      notePositions.push({
+        systemIndex: sIdx,
+        measureIndex: mIdx,
+        x: noteX
+      });
+      noteToSystemMap.push(sIdx);
+    });
+
+    // 2. Active System & Smooth Vertical Scrolling
+    let activeSystemIdx = 0;
+    if (isFinished && this.activeReviewMistakeIndex >= 0 && this.activeReviewMistakeIndex < totalNotes) {
+      activeSystemIdx = noteToSystemMap[this.activeReviewMistakeIndex] || 0;
+    } else if (currentIdx >= 0 && currentIdx < totalNotes) {
+      activeSystemIdx = noteToSystemMap[currentIdx] || 0;
+    } else if (isFinished) {
+      activeSystemIdx = Math.max(0, totalSystems - 2);
+    }
+
+    const targetVerticalScroll = activeSystemIdx;
+    if (this.smoothVerticalScroll === undefined || isNaN(this.smoothVerticalScroll)) {
+      this.smoothVerticalScroll = targetVerticalScroll;
+    } else {
+      this.smoothVerticalScroll += (targetVerticalScroll - this.smoothVerticalScroll) * 0.16;
+      if (Math.abs(targetVerticalScroll - this.smoothVerticalScroll) < 0.002) {
+        this.smoothVerticalScroll = targetVerticalScroll;
+      }
+    }
+
+    if (isNaN(this.manualVerticalScrollOffset)) this.manualVerticalScrollOffset = 0;
+    const effectiveScroll = Math.max(0, Math.min(Math.max(0, totalSystems - 2), this.smoothVerticalScroll + this.manualVerticalScrollOffset));
+
+    // 3. Layout Dimensions for 2 Systems on Screen
+    const staffHeight = vSpacing * 4;
+    const staffGap = showBass ? vSpacing * 3.6 : 0;
+    const systemStaffHeight = showBass ? (staffHeight * 2 + staffGap) : staffHeight;
+
+    const interSystemGap = showBass
+      ? Math.max(26, Math.min(48, Math.round(H * 0.085)))
+      : Math.max(34, Math.min(60, Math.round(H * 0.12)));
+    const slotHeight = systemStaffHeight + interSystemGap;
+    const topBaseY = Math.max(28, Math.round((H - (systemStaffHeight * 2 + interSystemGap)) / 2));
+
+    const staffLineColor = isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(15, 23, 42, 0.3)';
+    const staffBarColor  = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(15, 23, 42, 0.55)';
+    const clefColor      = isDark ? '#e2e8f0' : '#1e293b';
+
+    // 4. Render Visible Systems
+    for (let s = 0; s < totalSystems; s++) {
+      const sysTopTrebleY = topBaseY + (s - effectiveScroll) * slotHeight;
+      const sysBottomTrebleY = sysTopTrebleY + staffHeight;
+      const sysTopBassY = showBass ? (sysBottomTrebleY + staffGap) : null;
+      const sysBottomBassY = showBass ? (sysTopBassY + staffHeight) : null;
+      const sysBottomEdge = showBass ? sysBottomBassY : sysBottomTrebleY;
+
+      // Skip systems completely outside viewport
+      if (sysTopTrebleY + systemStaffHeight < -30 || sysTopTrebleY > H + 40) {
+        continue;
+      }
+
+      ctx.save();
+
+      // Opacity fade for systems scrolling off the very top or bottom
+      let sysAlpha = 1.0;
+      if (sysTopTrebleY < topBaseY - 15) {
+        sysAlpha = Math.max(0, 1 - (topBaseY - 15 - sysTopTrebleY) / slotHeight);
+      } else if (sysBottomEdge > H - 15) {
+        sysAlpha = Math.max(0, 1 - (sysBottomEdge - (H - 15)) / slotHeight);
+      }
+      ctx.globalAlpha = sysAlpha;
+
+      // A. Staff Lines & Bracket
+      this.drawGrandStaffLines(ctx, staffX, staffWidth, sysTopTrebleY, sysTopBassY, vSpacing, staffLineColor, staffBarColor);
+
+      // B. Clefs
+      this.drawClefs(ctx, clefX, sysTopTrebleY, sysTopBassY, vSpacing, clefColor);
+
+      // Key Signature (Drawn on every system)
+      if (keySigAccCount > 0) {
+        this.drawKeySignature(ctx, keySigStartX, sysBottomTrebleY, sysBottomBassY, vSpacing, activeKeyDef, clefColor);
+      }
+
+      // C. Time Signature (Only on First System)
+      if (s === 0) {
+        this.drawTimeSignature(ctx, timeSigCenterX, sysBottomTrebleY, sysBottomBassY, vSpacing, timeSig);
+      }
+
+      // D. Measure Barlines & Numbers for this System
+      const startM = s * measuresPerLine;
+      const endM = Math.min(totalMeasures, (s + 1) * measuresPerLine);
+
+      for (let m = startM; m <= endM; m++) {
+        const mInSys = m - startM;
+        const barX = notesAreaStartX + mInSys * measureWidth;
+        const isSongEnd = (m === totalMeasures);
+
+        if (mInSys > 0 || isSongEnd) {
+          ctx.save();
+          if (isSongEnd && mInSys === (endM - startM)) {
+            // Double barline at end of piece
+            ctx.strokeStyle = isDark ? 'rgba(203, 213, 225, 0.75)' : 'rgba(15, 23, 42, 0.75)';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(barX - 4, sysTopTrebleY);
+            ctx.lineTo(barX - 4, sysBottomTrebleY);
+            if (showBass && sysTopBassY && sysBottomBassY) {
+              ctx.moveTo(barX - 4, sysTopBassY);
+              ctx.lineTo(barX - 4, sysBottomBassY);
+            }
+            ctx.stroke();
+
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(barX, sysTopTrebleY);
+            ctx.lineTo(barX, sysBottomTrebleY);
+            if (showBass && sysTopBassY && sysBottomBassY) {
+              ctx.moveTo(barX, sysTopBassY);
+              ctx.lineTo(barX, sysBottomBassY);
+            }
+            ctx.stroke();
+          } else if (mInSys > 0 && mInSys < measuresPerLine) {
+            // Standard measure barline
+            ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.45)' : 'rgba(15, 23, 42, 0.35)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(barX, sysTopTrebleY);
+            ctx.lineTo(barX, sysBottomTrebleY);
+            if (showBass && sysTopBassY && sysBottomBassY) {
+              ctx.moveTo(barX, sysTopBassY);
+              ctx.lineTo(barX, sysBottomBassY);
+            }
+            ctx.stroke();
+
+            // Measure Number Badge
+            ctx.font = '700 8.5px "Inter", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = isDark ? '#1e293b' : '#e2e8f0';
+            const numW = 16;
+            const numH = 12;
+            const pillY = sysTopTrebleY - 14;
+            if (ctx.roundRect) {
+              ctx.beginPath();
+              ctx.roundRect(barX - numW / 2, pillY, numW, numH, 3);
+              ctx.fill();
+            } else {
+              ctx.fillRect(barX - numW / 2, pillY, numW, numH);
+            }
+            ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+            ctx.fillText(String(m + 1), barX, pillY + numH / 2);
+          }
+          ctx.restore();
+        }
+      }
+
+      // E. Contour Ribbons across consecutive notes in this system
+      if (this.options.showIntervalContour && melody.notes.length >= 2) {
+        for (let i = 0; i < melody.notes.length - 1; i++) {
+          if (noteToSystemMap[i] === s && noteToSystemMap[i + 1] === s) {
+            const n1 = melody.notes[i];
+            const n2 = melody.notes[i + 1];
+            const info1 = MusicTheory.getNoteInfo(n1.midi, preferFlats);
+            const clef1 = (showBass && n1.midi < this.options.splitPoint) ? 'bass' : 'treble';
+            const pos1 = MusicTheory.getStaffPosition(info1.diatonicStep, clef1);
+            const y1 = (clef1 === 'treble' ? sysBottomTrebleY : sysBottomBassY) - pos1 * (vSpacing / 2);
+
+            const info2 = MusicTheory.getNoteInfo(n2.midi, preferFlats);
+            const clef2 = (showBass && n2.midi < this.options.splitPoint) ? 'bass' : 'treble';
+            const pos2 = MusicTheory.getStaffPosition(info2.diatonicStep, clef2);
+            const y2 = (clef2 === 'treble' ? sysBottomTrebleY : sysBottomBassY) - pos2 * (vSpacing / 2);
+
+            this.drawIntervalRibbon(ctx, { x: notePositions[i].x, y: y1, midi: n1.midi }, { x: notePositions[i + 1].x, y: y2, midi: n2.midi }, vSpacing, 0.45, false);
+          }
+        }
+      }
+
+      // F. Notes in this System
+      melody.notes.forEach((note, i) => {
+        if (noteToSystemMap[i] !== s) return;
+        const pos = notePositions[i];
+        const noteX = pos.x;
+
+        const info = MusicTheory.getNoteInfo(note.midi, preferFlats);
+        const clef = (showBass && note.midi < this.options.splitPoint) ? 'bass' : 'treble';
+        const staffPos = MusicTheory.getStaffPosition(info.diatonicStep, clef);
+        const bottomY = clef === 'treble' ? sysBottomTrebleY : sysBottomBassY;
+        const noteY = bottomY - staffPos * (vSpacing / 2);
+
+        const isTarget = (i === currentIdx && !isFinished);
+        const isPast = (i < currentIdx);
+        const isReviewActive = (isFinished && i === this.activeReviewMistakeIndex);
+
+        const res = results[i] || null;
+        const hadMistakes = res && (res.mistakes > 0 || res.status === 'mistake' || res.status === 'missed');
+        const wrongMidi = res ? res.lastWrongMidi : null;
+        const wrongInfo = wrongMidi !== null ? MusicTheory.getNoteInfo(wrongMidi, preferFlats) : null;
+        const wrongName = wrongInfo ? wrongInfo.fullName : '?';
+
+        // Hitbox for clicking notes
+        this.noteHitboxes.push({
+          bounds: {
+            x: noteX - 16,
+            y: sysTopTrebleY - 20,
+            width: 32,
+            height: systemStaffHeight + 40
+          },
+          index: i
+        });
+
+        // Ledger Lines
+        this.drawLedgerLines(ctx, noteX, staffPos, bottomY, vSpacing);
+
+        // Note Color
+        let noteColor;
+        const isHollow = note.duration >= 2;
+        const isWhole = note.duration >= 4;
+
+        if (isReviewActive) {
+          noteColor = '#f43f5e';
+        } else if (isTarget) {
+          noteColor = '#38bdf8';
+        } else if (isPast) {
+          if (hadMistakes) {
+            noteColor = '#f43f5e';
+          } else if (res && res.status === 'reviewed') {
+            noteColor = '#38bdf8';
+          } else if (res && res.timing && Math.abs(res.timing.offsetMs) > 100) {
+            noteColor = '#f59e0b';
+          } else {
+            noteColor = '#22c55e';
+          }
+        } else {
+          noteColor = isDark ? '#e2e8f0' : '#1e293b';
+        }
+
+        // Active Mistake Review Beacon Pulse
+        if (isReviewActive) {
+          const pulse = 0.5 + 0.5 * Math.sin(timestamp / 130);
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(noteX, noteY, (vSpacing * 1.1) + pulse * 6, 0, Math.PI * 2);
+          ctx.fillStyle = '#f43f5e';
+          ctx.globalAlpha = 0.22 + pulse * 0.18;
+          ctx.fill();
+          ctx.lineWidth = 2.0;
+          ctx.strokeStyle = '#fb7185';
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Target note pulse halo & caret
+        if (isTarget) {
+          const isFlashingRed = this.flashMistakeTimestamp && (timestamp - this.flashMistakeTimestamp < 420);
+          const glowColor = isFlashingRed ? '#ef4444' : '#38bdf8';
+
+          const pulse = 0.5 + 0.5 * Math.sin(timestamp / 140);
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(noteX, noteY, (vSpacing * 0.95) + pulse * 5, 0, Math.PI * 2);
+          ctx.fillStyle = glowColor;
+          ctx.globalAlpha = 0.22 + pulse * 0.18;
+          ctx.fill();
+          ctx.globalAlpha = 1.0;
+
+          // Downward target caret
+          const caretY = sysTopTrebleY - vSpacing * 1.1;
+          ctx.fillStyle = glowColor;
+          ctx.beginPath();
+          ctx.moveTo(noteX, caretY + 6);
+          ctx.lineTo(noteX - 5, caretY);
+          ctx.lineTo(noteX + 5, caretY);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Stems & Flags
+        if (!isWhole) {
+          const stemDir = staffPos >= 4 ? 'down' : 'up';
+          const rx = vSpacing * 0.62;
+          const stemLen = vSpacing * 3.3;
+          const stemX = stemDir === 'up' ? (noteX + rx * 0.88) : (noteX - rx * 0.88);
+          const stemEndY = stemDir === 'up' ? (noteY - stemLen) : (noteY + stemLen);
+
+          ctx.save();
+          ctx.lineWidth = 1.7;
+          ctx.strokeStyle = noteColor;
+          ctx.beginPath();
+          ctx.moveTo(stemX, noteY);
+          ctx.lineTo(stemX, stemEndY);
+          ctx.stroke();
+
+          if (note.duration <= 0.55) {
+            ctx.fillStyle = noteColor;
+            ctx.beginPath();
+            if (stemDir === 'up') {
+              ctx.moveTo(stemX, stemEndY);
+              ctx.bezierCurveTo(
+                stemX + vSpacing * 1.0, stemEndY + vSpacing * 0.8,
+                stemX + vSpacing * 0.85, stemEndY + vSpacing * 1.9,
+                stemX, stemEndY + vSpacing * 2.1
+              );
+              ctx.lineTo(stemX, stemEndY + vSpacing * 1.6);
+              ctx.bezierCurveTo(
+                stemX + vSpacing * 0.55, stemEndY + vSpacing * 1.3,
+                stemX + vSpacing * 0.65, stemEndY + vSpacing * 0.65,
+                stemX, stemEndY + vSpacing * 0.45
+              );
+              ctx.closePath();
+              ctx.fill();
+            } else {
+              ctx.moveTo(stemX, stemEndY);
+              ctx.bezierCurveTo(
+                stemX + vSpacing * 1.0, stemEndY - vSpacing * 0.8,
+                stemX + vSpacing * 0.85, stemEndY - vSpacing * 1.9,
+                stemX, stemEndY - vSpacing * 2.1
+              );
+              ctx.lineTo(stemX, stemEndY - vSpacing * 1.6);
+              ctx.bezierCurveTo(
+                stemX + vSpacing * 0.55, stemEndY - vSpacing * 1.3,
+                stemX + vSpacing * 0.65, stemEndY - vSpacing * 0.65,
+                stemX, stemEndY - vSpacing * 0.45
+              );
+              ctx.closePath();
+              ctx.fill();
+            }
+          }
+          ctx.restore();
+        }
+
+        // Notehead
+        ctx.save();
+        const rx = vSpacing * 0.62;
+        const ry = vSpacing * 0.44;
+        const rot = -0.32;
+
+        ctx.beginPath();
+        ctx.ellipse(noteX, noteY, rx, ry, rot, 0, Math.PI * 2);
+
+        if (isHollow) {
+          ctx.lineWidth = 2.2;
+          ctx.strokeStyle = noteColor;
+          ctx.fillStyle = isDark ? '#0b1120' : '#fcfbf9';
+          ctx.fill();
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = noteColor;
+          ctx.fill();
+        }
+
+        if (!isHollow) {
+          ctx.beginPath();
+          ctx.ellipse(noteX - rx * 0.2, noteY - ry * 0.2, rx * 0.5, ry * 0.3, rot, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Augmentation Dot
+        const isDotted = Math.abs(note.duration - 1.5) < 0.05 || Math.abs(note.duration - 3.0) < 0.05 || Math.abs(note.duration - 0.75) < 0.05;
+        if (isDotted) {
+          ctx.save();
+          const dotRadius = vSpacing * 0.20;
+          const dotX = noteX + rx * 1.55;
+          const onLine = (staffPos % 2 === 0);
+          const dotY = onLine ? (noteY - vSpacing * 0.42) : noteY;
+          ctx.fillStyle = noteColor;
+          ctx.beginPath();
+          ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Accidental
+        const scoreAcc = MusicTheory.getNoteAccidentalForScore(note.midi, activeKey, note.explicitAccidental);
+        if (scoreAcc) {
+          this.drawAccidental(ctx, { x: noteX, y: noteY, midi: note.midi, info, explicitAccidental: note.explicitAccidental, displayAccidental: scoreAcc, active: isTarget || isReviewActive, clef }, vSpacing, 1.0);
+        }
+
+        // Pitch Name Label
+        if (this.options.showNoteNames) {
+          ctx.save();
+          const pillW = isReviewActive ? 38 : 30;
+          const pillH = 15;
+          const pillX = noteX - pillW / 2;
+          const pillY = (showBass ? sysBottomBassY : sysBottomTrebleY) + vSpacing * 0.8;
+
+          if (isReviewActive || isTarget) {
+            ctx.fillStyle = isReviewActive ? '#f43f5e' : '#38bdf8';
+            if (ctx.roundRect) {
+              ctx.beginPath();
+              ctx.roundRect(pillX, pillY, pillW, pillH, 3);
+              ctx.fill();
+            } else {
+              ctx.fillRect(pillX, pillY, pillW, pillH);
+            }
+            ctx.font = '800 9.5px "Inter", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#0f172a';
+            ctx.fillText(info.fullName, noteX, pillY + pillH / 2);
+          } else {
+            ctx.fillStyle = isDark ? '#0f172a' : '#f1f5f9';
+            ctx.strokeStyle = isPast ? (hadMistakes ? 'rgba(244, 63, 94, 0.5)' : 'rgba(34, 197, 94, 0.5)') : (isDark ? '#334155' : '#cbd5e1');
+            ctx.lineWidth = 1;
+            if (ctx.roundRect) {
+              ctx.beginPath();
+              ctx.roundRect(pillX, pillY, pillW, pillH, 3);
+              ctx.fill();
+              ctx.stroke();
+            } else {
+              ctx.fillRect(pillX, pillY, pillW, pillH);
+              ctx.strokeRect(pillX, pillY, pillW, pillH);
+            }
+            ctx.font = '600 9px "Inter", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = isPast ? (hadMistakes ? '#f87171' : '#4ade80') : (isDark ? '#94a3b8' : '#475569');
+            ctx.fillText(info.fullName, noteX, pillY + pillH / 2);
+          }
+          ctx.restore();
+        }
+
+        // Rhythm Timing Accuracy Badge (±ms Offset)
+        if (isPast && res && res.timing && res.timing.offsetMs !== undefined && res.timing.offsetMs !== null && (!hadMistakes || !isFinished)) {
+          ctx.save();
+          const ro = res.timing.offsetMs;
+          const offStr = (ro >= 0 ? '+' : '') + ro + 'ms';
+          const badgeY = sysTopTrebleY - vSpacing * 0.95;
+
+          ctx.font = '700 8.5px "Inter", sans-serif';
+          const textW = ctx.measureText(offStr).width;
+          const badgeW = textW + 8;
+          const badgeH = 13;
+          const badgeX = noteX - badgeW / 2;
+
+          const absOff = Math.abs(ro);
+          let bgCol, borderCol, textCol;
+          if (absOff <= 65) {
+            bgCol = isDark ? 'rgba(34, 197, 94, 0.22)' : 'rgba(34, 197, 94, 0.15)';
+            borderCol = isDark ? 'rgba(34, 197, 94, 0.8)' : '#16a34a';
+            textCol = isDark ? '#86efac' : '#15803d';
+          } else if (absOff <= 150) {
+            bgCol = isDark ? 'rgba(245, 158, 11, 0.22)' : 'rgba(245, 158, 11, 0.15)';
+            borderCol = isDark ? 'rgba(245, 158, 11, 0.8)' : '#d97706';
+            textCol = isDark ? '#fde047' : '#b45309';
+          } else {
+            bgCol = isDark ? 'rgba(244, 63, 94, 0.22)' : 'rgba(244, 63, 94, 0.15)';
+            borderCol = isDark ? 'rgba(244, 63, 94, 0.8)' : '#e11d48';
+            textCol = isDark ? '#fecdd3' : '#be123c';
+          }
+
+          ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
+          ctx.fillRect(badgeX, badgeY - badgeH, badgeW, badgeH);
+          ctx.fillStyle = bgCol;
+          ctx.strokeStyle = borderCol;
+          ctx.lineWidth = 1;
+          if (ctx.roundRect) {
+            ctx.beginPath();
+            ctx.roundRect(badgeX, badgeY - badgeH, badgeW, badgeH, 3);
+            ctx.fill();
+            ctx.stroke();
+          } else {
+            ctx.fillRect(badgeX, badgeY - badgeH, badgeW, badgeH);
+            ctx.strokeRect(badgeX, badgeY - badgeH, badgeW, badgeH);
+          }
+
+          ctx.fillStyle = textCol;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(offStr, noteX, badgeY - badgeH / 2);
+          ctx.restore();
+        }
+
+        // Mistake Callout Badge (with timing if available)
+        if (hadMistakes && isFinished) {
+          ctx.save();
+          const flagY = sysTopTrebleY - vSpacing * 1.1;
+          let flagText = wrongName;
+          if (res && res.timing && res.timing.offsetMs !== undefined && res.timing.offsetMs !== null) {
+            const ro = res.timing.offsetMs;
+            flagText += ` (${ro >= 0 ? '+' : ''}${ro}ms)`;
+          }
+          ctx.font = '700 8.5px "Inter", sans-serif';
+          const textW = ctx.measureText(flagText).width;
+          const flagW = textW + 14;
+          const flagH = 14;
+          const flagX = noteX - flagW / 2;
+
+          ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
+          ctx.strokeStyle = isReviewActive ? '#f43f5e' : 'rgba(244, 63, 94, 0.7)';
+          ctx.lineWidth = isReviewActive ? 1.5 : 1;
+          if (ctx.roundRect) {
+            ctx.beginPath();
+            ctx.roundRect(flagX, flagY - flagH, flagW, flagH, 3);
+            ctx.fill();
+            ctx.stroke();
+          } else {
+            ctx.fillRect(flagX, flagY - flagH, flagW, flagH);
+            ctx.strokeRect(flagX, flagY - flagH, flagW, flagH);
+          }
+          ctx.fillStyle = isReviewActive ? '#fecdd3' : (isDark ? '#fb7185' : '#e11d48');
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`✗ ${flagText}`, noteX, flagY - flagH / 2);
+          ctx.restore();
+        }
+      });
+
+      // G. Playhead for In-Tempo / Strict Sight-Reading
+      const isTimeDriven = (this.practiceData.mode === 'tempo' || this.practiceData.mode === 'strict' || this.practiceData.mode === 'first_read');
+      const playheadBeats = (this.playheadBeats !== undefined && this.playheadBeats !== null)
+        ? this.playheadBeats
+        : (this.practiceData.playheadBeats || 0);
+
+      if (isTimeDriven && !isFinished && !this.practiceData.isCountingIn && !this.practiceData.isAnalyzing) {
+        const curSysStartBeat = s * measuresPerLine * beatsPerMeasure;
+        const curSysEndBeat = curSysStartBeat + (endM - startM) * beatsPerMeasure;
+        if (playheadBeats >= curSysStartBeat && playheadBeats <= curSysEndBeat) {
+          const fracInSys = Math.max(0, Math.min(1, (playheadBeats - curSysStartBeat) / Math.max(1, curSysEndBeat - curSysStartBeat)));
+          const playheadX = notesAreaStartX + fracInSys * (endM - startM) * measureWidth;
+
+          ctx.save();
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2.0;
+          ctx.beginPath();
+          ctx.moveTo(playheadX, sysTopTrebleY - 6);
+          ctx.lineTo(playheadX, sysBottomBassY + 6);
+          ctx.stroke();
+
+          // Top and Bottom Pointer Triangles
+          ctx.fillStyle = '#38bdf8';
+          ctx.beginPath();
+          ctx.moveTo(playheadX, sysTopTrebleY);
+          ctx.lineTo(playheadX - 5, sysTopTrebleY - 7);
+          ctx.lineTo(playheadX + 5, sysTopTrebleY - 7);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.moveTo(playheadX, sysBottomBassY);
+          ctx.lineTo(playheadX - 5, sysBottomBassY + 7);
+          ctx.lineTo(playheadX + 5, sysBottomBassY + 7);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      ctx.restore();
+    }
+
+    // 5. Header Review Controls / Note Progress
+    const headerY = Math.max(8, topBaseY - 22);
+    const staffRightX = staffX + staffWidth;
+
+    if (isFinished && hasMistakes) {
+      const curOrder = mistakeIndices.indexOf(this.activeReviewMistakeIndex) + 1;
+      const totalM = mistakeIndices.length;
+      const btnW = 28;
+      const btnH = 20;
+      const pillW = 104;
+      const groupW = btnW + 6 + pillW + 6 + btnW;
+      const groupX = staffRightX - groupW;
+
+      this.prevMistakeBtnBounds = { x: groupX, y: headerY, width: btnW, height: btnH };
+      this.reviewPillBounds = { x: groupX + btnW + 6, y: headerY, width: pillW, height: btnH };
+      this.nextMistakeBtnBounds = { x: groupX + btnW + 6 + pillW + 6, y: headerY, width: btnW, height: btnH };
+
+      ctx.save();
+      ctx.fillStyle = isDark ? '#1e293b' : '#e2e8f0';
+      ctx.strokeStyle = isDark ? '#475569' : '#cbd5e1';
+      ctx.lineWidth = 1;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(this.prevMistakeBtnBounds.x, this.prevMistakeBtnBounds.y, btnW, btnH, 4);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(this.prevMistakeBtnBounds.x, this.prevMistakeBtnBounds.y, btnW, btnH);
+      }
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      const pcx = this.prevMistakeBtnBounds.x + btnW / 2;
+      const pcy = this.prevMistakeBtnBounds.y + btnH / 2;
+      ctx.moveTo(pcx + 3, pcy - 4);
+      ctx.lineTo(pcx + 3, pcy + 4);
+      ctx.lineTo(pcx - 3, pcy);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.2)';
+      ctx.strokeStyle = '#f43f5e';
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(this.reviewPillBounds.x, this.reviewPillBounds.y, pillW, btnH, 4);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(this.reviewPillBounds.x, this.reviewPillBounds.y, pillW, btnH);
+      }
+      ctx.font = '700 10.5px "Inter", sans-serif';
+      ctx.fillStyle = '#fb7185';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`Review ${curOrder || 1} of ${totalM}`, this.reviewPillBounds.x + pillW / 2, this.reviewPillBounds.y + btnH / 2);
+
+      ctx.fillStyle = isDark ? '#1e293b' : '#e2e8f0';
+      ctx.strokeStyle = isDark ? '#475569' : '#cbd5e1';
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(this.nextMistakeBtnBounds.x, this.nextMistakeBtnBounds.y, btnW, btnH, 4);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(this.nextMistakeBtnBounds.x, this.nextMistakeBtnBounds.y, btnW, btnH);
+      }
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      const ncx = this.nextMistakeBtnBounds.x + btnW / 2;
+      const ncy = this.nextMistakeBtnBounds.y + btnH / 2;
+      ctx.moveTo(ncx - 3, ncy - 4);
+      ctx.lineTo(ncx - 3, ncy + 4);
+      ctx.lineTo(ncx + 3, ncy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else {
+      this.prevMistakeBtnBounds = null;
+      this.nextMistakeBtnBounds = null;
+      this.reviewPillBounds = null;
+
+      ctx.save();
+      ctx.font = '700 11px "Inter", sans-serif';
+      ctx.fillStyle = '#38bdf8';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      const progressStr = isFinished ? '🎉 Complete' : `Line ${activeSystemIdx + 1} of ${totalSystems} • Note ${Math.min(currentIdx + 1, totalNotes)} of ${totalNotes}`;
+      ctx.fillText(progressStr, staffRightX, headerY + 8);
+      ctx.restore();
+    }
+  }
+
+  /**
+   * Render Interactive Melody Practice Sheet Music Mode (Single Staff Horizontal Scrolling)
+   */
+  renderHorizontalPracticeMode(ctx, staffX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp) {
     if (!this.practiceData || !this.practiceData.melody) {
       this.drawIdleStaffGuide(ctx, staffX, staffWidth, trebleBottomY, bassBottomY, lineSpacing);
       return;
@@ -2194,8 +3145,9 @@ export class NotationRenderer {
     const timeSig = melody.timeSignature || [4, 4];
     const beatsPerMeasure = timeSig[0] || 4;
 
+    const showBass = (bassBottomY !== null && bassBottomY !== undefined);
     const trebleTopY = trebleBottomY - lineSpacing * 4;
-    const bassTopY = bassBottomY - lineSpacing * 4;
+    const bassTopY = showBass ? (bassBottomY - lineSpacing * 4) : null;
 
     const mistakeIndices = this.getMistakeNoteIndices();
     const hasMistakes = mistakeIndices.length > 0;
@@ -2306,28 +3258,53 @@ export class NotationRenderer {
       ctx.restore();
     }
 
-    // 2. Clefs, Time Signature, and Section Divider
-    const clefX = staffX + (isMobile ? 14 : 20);
+    // 2. Clefs, Key Signature, Time Signature, and Section Divider
+    const activeKey = (melody && melody.key) || this.options.keySignature || 'C Major';
+    const activeKeyDef = MusicTheory.getKeySignature(activeKey);
+    const keySigAccCount = activeKeyDef ? (activeKeyDef.flats?.length || activeKeyDef.sharps?.length || 0) : 0;
+
+    const clefMarginLeft = isMobile ? 12 : 18;
+    const clefWidth = Math.ceil(966 * (lineSpacing / 355.0));
+    const clefX = staffX + clefMarginLeft;
+    const clefRightEdge = clefX + clefWidth;
+
     this.drawClefs(ctx, clefX, trebleTopY, bassTopY, lineSpacing, isDark ? '#e2e8f0' : '#1e293b');
 
-    const timeSigX = staffX + (isMobile ? 42 : 54);
-    this.drawTimeSignature(ctx, timeSigX, trebleBottomY, bassBottomY, lineSpacing, timeSig);
+    const keySigGap = isMobile ? 10 : 14;
+    const keySigStepW = lineSpacing * 0.88;
+    const keySigW = keySigAccCount > 0 ? Math.round((keySigAccCount - 1) * keySigStepW + lineSpacing * 0.95) : 0;
+    const keySigStartX = clefRightEdge + keySigGap;
+    const keySigRightEdge = keySigAccCount > 0 ? (keySigStartX + keySigW) : clefRightEdge;
+
+    if (keySigAccCount > 0) {
+      this.drawKeySignature(ctx, keySigStartX, trebleBottomY, bassBottomY, lineSpacing, activeKeyDef, isDark ? '#e2e8f0' : '#1e293b');
+    }
+
+    const timeSigGap = isMobile ? 12 : 16;
+    const timeSigW = Math.round(lineSpacing * 1.6);
+    const timeSigStartX = keySigRightEdge + timeSigGap;
+    const timeSigCenterX = timeSigStartX + Math.round(timeSigW / 2);
+    const timeSigRightEdge = timeSigStartX + timeSigW;
+
+    this.drawTimeSignature(ctx, timeSigCenterX, trebleBottomY, bassBottomY, lineSpacing, timeSig);
 
     // Section barline separating clefs/time sig from the dedicated INPUT column
-    const clefDividerX = staffX + (isMobile ? 66 : 82);
+    const clefDividerX = timeSigRightEdge + (isMobile ? 14 : 20);
     ctx.save();
     ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.4)' : 'rgba(15, 23, 42, 0.35)';
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(clefDividerX, trebleTopY);
     ctx.lineTo(clefDividerX, trebleBottomY);
-    ctx.moveTo(clefDividerX, bassTopY);
-    ctx.lineTo(clefDividerX, bassBottomY);
+    if (showBass && bassTopY && bassBottomY) {
+      ctx.moveTo(clefDividerX, bassTopY);
+      ctx.lineTo(clefDividerX, bassBottomY);
+    }
     ctx.stroke();
     ctx.restore();
 
     // 3. Dedicated Live MIDI INPUT Column
-    const inputColumnX = staffX + (isMobile ? 94 : 116);
+    const inputColumnX = clefDividerX + (isMobile ? 26 : 34);
     const targetMelodyNote = melody.notes[currentIdx] || null;
 
     let inputColor = isDark ? 'rgba(148, 163, 184, 0.45)' : 'rgba(100, 116, 139, 0.5)';
@@ -2370,15 +3347,17 @@ export class NotationRenderer {
     this.drawActivePlayedNotes(ctx, inputColumnX, trebleBottomY, bassBottomY, lineSpacing);
 
     // Section barline separating Live Input column from Scrolling Melody Score
-    const scoreDividerX = staffX + (isMobile ? 122 : 148);
+    const scoreDividerX = inputColumnX + (isMobile ? 26 : 34);
     ctx.save();
     ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.55)' : 'rgba(15, 23, 42, 0.5)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(scoreDividerX, trebleTopY);
     ctx.lineTo(scoreDividerX, trebleBottomY);
-    ctx.moveTo(scoreDividerX, bassTopY);
-    ctx.lineTo(scoreDividerX, bassBottomY);
+    if (showBass && bassTopY && bassBottomY) {
+      ctx.moveTo(scoreDividerX, bassTopY);
+      ctx.lineTo(scoreDividerX, bassBottomY);
+    }
     ctx.stroke();
     ctx.restore();
 
@@ -2521,7 +3500,7 @@ export class NotationRenderer {
     }
     this.scrollX = scrollX;
 
-    const labelBaselineY = bassBottomY + lineSpacing * 1.05;
+    const labelBaselineY = (showBass && bassBottomY) ? (bassBottomY + lineSpacing * 1.05) : (trebleBottomY + lineSpacing * 1.0);
 
     // Clip rendering area to prevent drawing over clefs or INPUT column
     ctx.save();
@@ -2543,16 +3522,20 @@ export class NotationRenderer {
         ctx.beginPath();
         ctx.moveTo(barX - 5, trebleTopY);
         ctx.lineTo(barX - 5, trebleBottomY);
-        ctx.moveTo(barX - 5, bassTopY);
-        ctx.lineTo(barX - 5, bassBottomY);
+        if (showBass && bassTopY && bassBottomY) {
+          ctx.moveTo(barX - 5, bassTopY);
+          ctx.lineTo(barX - 5, bassBottomY);
+        }
         ctx.stroke();
 
         ctx.lineWidth = 3.5;
         ctx.beginPath();
         ctx.moveTo(barX, trebleTopY);
         ctx.lineTo(barX, trebleBottomY);
-        ctx.moveTo(barX, bassTopY);
-        ctx.lineTo(barX, bassBottomY);
+        if (showBass && bassTopY && bassBottomY) {
+          ctx.moveTo(barX, bassTopY);
+          ctx.lineTo(barX, bassBottomY);
+        }
         ctx.stroke();
       } else {
         ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.45)' : 'rgba(15, 23, 42, 0.35)';
@@ -2560,8 +3543,10 @@ export class NotationRenderer {
         ctx.beginPath();
         ctx.moveTo(barX, trebleTopY);
         ctx.lineTo(barX, trebleBottomY);
-        ctx.moveTo(barX, bassTopY);
-        ctx.lineTo(barX, bassBottomY);
+        if (showBass && bassTopY && bassBottomY) {
+          ctx.moveTo(barX, bassTopY);
+          ctx.lineTo(barX, bassBottomY);
+        }
         ctx.stroke();
 
         // Measure Number Pill
@@ -2596,12 +3581,12 @@ export class NotationRenderer {
         // Only draw for visible notes on screen
         if (x2 >= notesStartX - 40 && x1 <= staffRightX + 40) {
           const info1 = MusicTheory.getNoteInfo(n1.midi, preferFlats);
-          const clef1 = n1.midi >= this.options.splitPoint ? 'treble' : 'bass';
+          const clef1 = (showBass && n1.midi < this.options.splitPoint) ? 'bass' : 'treble';
           const pos1 = MusicTheory.getStaffPosition(info1.diatonicStep, clef1);
           const y1 = (clef1 === 'treble' ? trebleBottomY : bassBottomY) - pos1 * (lineSpacing / 2);
 
           const info2 = MusicTheory.getNoteInfo(n2.midi, preferFlats);
-          const clef2 = n2.midi >= this.options.splitPoint ? 'treble' : 'bass';
+          const clef2 = (showBass && n2.midi < this.options.splitPoint) ? 'bass' : 'treble';
           const pos2 = MusicTheory.getStaffPosition(info2.diatonicStep, clef2);
           const y2 = (clef2 === 'treble' ? trebleBottomY : bassBottomY) - pos2 * (lineSpacing / 2);
 
@@ -2620,7 +3605,7 @@ export class NotationRenderer {
           x: noteX - 16,
           y: trebleTopY - 24,
           width: 32,
-          height: (bassBottomY - trebleTopY) + 48
+          height: (showBass && bassBottomY ? (bassBottomY - trebleTopY) : (lineSpacing * 4)) + 48
         },
         index: i
       });
@@ -2629,7 +3614,7 @@ export class NotationRenderer {
       if (noteX < notesStartX - 60 || noteX > staffRightX + 60) return;
 
       const info = MusicTheory.getNoteInfo(note.midi, preferFlats);
-      const clef = note.midi >= this.options.splitPoint ? 'treble' : 'bass';
+      const clef = (showBass && note.midi < this.options.splitPoint) ? 'bass' : 'treble';
       const staffPos = MusicTheory.getStaffPosition(info.diatonicStep, clef);
       const bottomY = clef === 'treble' ? trebleBottomY : bassBottomY;
       const noteY = bottomY - staffPos * (lineSpacing / 2);
@@ -2853,8 +3838,9 @@ export class NotationRenderer {
       }
 
       // Accidental
-      if (info.accidental) {
-        this.drawAccidental(ctx, { x: noteX, y: noteY, midi: note.midi, info, active: isTarget || isReviewActive, clef }, lineSpacing, 1.0);
+      const scoreAcc = MusicTheory.getNoteAccidentalForScore(note.midi, activeKey, note.explicitAccidental);
+      if (scoreAcc) {
+        this.drawAccidental(ctx, { x: noteX, y: noteY, midi: note.midi, info, explicitAccidental: note.explicitAccidental, displayAccidental: scoreAcc, active: isTarget || isReviewActive, clef }, lineSpacing, 1.0);
       }
 
       // Pitch Name Label Lane
@@ -3036,7 +4022,7 @@ export class NotationRenderer {
       }
 
       // 8. Per-Note Timing Accuracy Badge (Milliseconds Offset)
-      if (isPast && !hadMistakes && res && res.timing && res.timing.offsetMs !== undefined) {
+      if (isPast && res && res.timing && res.timing.offsetMs !== undefined && res.timing.offsetMs !== null && (!hadMistakes || !isFinished)) {
         ctx.save();
         const ro = res.timing.offsetMs;
         const offStr = (ro >= 0 ? '+' : '') + ro + 'ms';
@@ -3051,20 +4037,20 @@ export class NotationRenderer {
         const absOff = Math.abs(ro);
         let bgCol, borderCol, textCol;
         if (absOff <= 65) {
-          bgCol = 'rgba(34, 197, 94, 0.2)';
-          borderCol = 'rgba(34, 197, 94, 0.7)';
-          textCol = '#86efac';
+          bgCol = isDark ? 'rgba(34, 197, 94, 0.22)' : 'rgba(34, 197, 94, 0.15)';
+          borderCol = isDark ? 'rgba(34, 197, 94, 0.8)' : '#16a34a';
+          textCol = isDark ? '#86efac' : '#15803d';
         } else if (absOff <= 150) {
-          bgCol = 'rgba(245, 158, 11, 0.22)';
-          borderCol = 'rgba(245, 158, 11, 0.8)';
-          textCol = '#fde047';
+          bgCol = isDark ? 'rgba(245, 158, 11, 0.22)' : 'rgba(245, 158, 11, 0.15)';
+          borderCol = isDark ? 'rgba(245, 158, 11, 0.8)' : '#d97706';
+          textCol = isDark ? '#fde047' : '#b45309';
         } else {
-          bgCol = 'rgba(244, 63, 94, 0.22)';
-          borderCol = 'rgba(244, 63, 94, 0.8)';
-          textCol = '#fecdd3';
+          bgCol = isDark ? 'rgba(244, 63, 94, 0.22)' : 'rgba(244, 63, 94, 0.15)';
+          borderCol = isDark ? 'rgba(244, 63, 94, 0.8)' : '#e11d48';
+          textCol = isDark ? '#fecdd3' : '#be123c';
         }
 
-        ctx.fillStyle = '#0f172a';
+        ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
         ctx.fillRect(badgeX, badgeY - badgeH, badgeW, badgeH);
         ctx.fillStyle = bgCol;
         ctx.strokeStyle = borderCol;
@@ -3377,11 +4363,13 @@ export class NotationRenderer {
     ctx.fillText(String(topNum), x, tTopY);
     ctx.fillText(String(botNum), x, tBotY);
 
-    // Bass Time Sig
-    const bTopY = bassBottomY - spacing * 3.0;
-    const bBotY = bassBottomY - spacing * 1.0;
-    ctx.fillText(String(topNum), x, bTopY);
-    ctx.fillText(String(botNum), x, bBotY);
+    // Bass Time Sig (Only if bassBottomY is provided)
+    if (bassBottomY !== null && bassBottomY !== undefined) {
+      const bTopY = bassBottomY - spacing * 3.0;
+      const bBotY = bassBottomY - spacing * 1.0;
+      ctx.fillText(String(topNum), x, bTopY);
+      ctx.fillText(String(botNum), x, bBotY);
+    }
 
     ctx.restore();
   }

@@ -49,6 +49,10 @@ export class MelodyTrainer {
     // Per-note result array: each entry tracks status ('pending'|'correct'|'mistake'|'missed')
     this.noteResults = [];
 
+    // Session Performance Recording for AI Assessment & File Export (MIDI / MusicXML)
+    this.sessionPerformance = this.createEmptySessionPerformance();
+    this.lastSessionPerformance = null;
+
     // Note holding & debouncing state (vital for wind instruments / EWIs)
     this.heldNotes = new Set();
     this.lastPlayedMidi = -1;
@@ -146,6 +150,64 @@ export class MelodyTrainer {
 
   isMelodyFirstReadLocked(melodyId) {
     return !!this.getFirstReadRecord(melodyId);
+  }
+
+  createEmptySessionPerformance() {
+    return {
+      melody: this.currentMelody ? JSON.parse(JSON.stringify(this.currentMelody)) : null,
+      bpm: this.bpm,
+      mode: this.mode,
+      startTime: null,
+      endTime: null,
+      playedEvents: [],
+      missedEvents: []
+    };
+  }
+
+  createSessionPerformanceSnapshot() {
+    const perf = this.sessionPerformance ? { ...this.sessionPerformance } : this.createEmptySessionPerformance();
+    perf.melody = this.currentMelody ? JSON.parse(JSON.stringify(this.currentMelody)) : null;
+    perf.bpm = this.bpm;
+    perf.mode = this.mode;
+    perf.noteResults = this.noteResults ? JSON.parse(JSON.stringify(this.noteResults)) : [];
+    perf.stats = this.stats ? { ...this.stats } : {};
+    perf.playedEvents = perf.playedEvents ? [...perf.playedEvents] : [];
+    perf.missedEvents = perf.missedEvents ? [...perf.missedEvents] : [];
+    perf.isFinished = this.isFinished;
+    return perf;
+  }
+
+  getSessionPerformance() {
+    if (this.isFinished && this.lastSessionPerformance) {
+      return this.lastSessionPerformance;
+    }
+    return this.createSessionPerformanceSnapshot();
+  }
+
+  recordPlayedEvent(midi, velocity, now, targetNote, isMatch, timing) {
+    if (!this.sessionPerformance) {
+      this.sessionPerformance = this.createEmptySessionPerformance();
+    }
+    if (this.sessionPerformance.startTime === null) {
+      this.sessionPerformance.startTime = this.songStartTime || now;
+    }
+    const startOffsetMs = Math.max(0, now - this.sessionPerformance.startTime);
+
+    const eventRecord = {
+      id: Date.now() + Math.random(),
+      midi,
+      velocity: Math.max(1, Math.min(127, Number(velocity) || 100)),
+      timestamp: now,
+      startOffsetMs,
+      endTime: null,
+      durationMs: null,
+      targetIndex: this.noteIndex,
+      targetNote: targetNote ? { ...targetNote } : null,
+      isMatch,
+      status: isMatch ? 'correct' : 'mistake',
+      timing: timing ? { ...timing } : null
+    };
+    this.sessionPerformance.playedEvents.push(eventRecord);
   }
 
   resetFirstReadRecords() {
@@ -383,6 +445,9 @@ export class MelodyTrainer {
     this.lastCompletedTime = 0;
     this.lastReleaseTime = new Map();
 
+    this.sessionPerformance = this.createEmptySessionPerformance();
+    this.lastSessionPerformance = null;
+
     this.buildNoteTimeline();
     this.notifyState();
 
@@ -606,6 +671,15 @@ export class MelodyTrainer {
                     rating: 'missed',
                     offsetMs: null,
                     text: '🔴 Missed'
+                  });
+                }
+
+                if (this.sessionPerformance?.missedEvents) {
+                  this.sessionPerformance.missedEvents.push({
+                    targetIndex: this.noteIndex,
+                    targetNote: currentTarget ? { ...currentTarget } : null,
+                    timestamp: now,
+                    startOffsetMs: this.sessionPerformance.startTime ? Math.max(0, now - this.sessionPerformance.startTime) : 0
                   });
                 }
               }
@@ -852,6 +926,8 @@ export class MelodyTrainer {
       currentSlot.playedMidi = midi;
       currentSlot.timing = timing;
 
+      this.recordPlayedEvent(midi, velocity, now, targetNote, true, timing);
+
       this.stats.correctNotes++;
       this.stats.streak++;
       if (this.stats.streak > this.stats.bestStreak) {
@@ -899,6 +975,7 @@ export class MelodyTrainer {
         // Evaluate rhythmic timeliness so user is scored for keeping time!
         const timing = this.evaluateTiming(now);
         currentSlot.timing = timing;
+        this.recordPlayedEvent(midi, velocity, now, targetNote, false, timing);
 
         const rhythmText = timing.rating === 'perfect' ? '🟢 Great Rhythm!' :
                            (timing.rating === 'early' || timing.rating === 'late') ? `🟡 In Tempo (${timing.offsetMs}ms)` : '🔴 Off-beat';
@@ -937,6 +1014,7 @@ export class MelodyTrainer {
         }
       } else {
         // Traditional Wait mode: wait for correction
+        this.recordPlayedEvent(midi, velocity, now, targetNote, false, { rating: 'mistake', offsetMs: null, text: 'Wrong Pitch' });
         this.calculateAccuracy();
 
         if (this.onTimingFeedback) {
@@ -999,10 +1077,22 @@ export class MelodyTrainer {
   }
 
   onNoteReleased(midi) {
+    const now = performance.now();
     this.heldNotes.delete(midi);
-    this.lastReleaseTime.set(midi, performance.now());
+    this.lastReleaseTime.set(midi, now);
     if (this.heldNotes.size === 0) {
       this.lastPlayedMidi = -1;
+    }
+
+    if (this.sessionPerformance?.playedEvents) {
+      for (let i = this.sessionPerformance.playedEvents.length - 1; i >= 0; i--) {
+        const ev = this.sessionPerformance.playedEvents[i];
+        if (ev.midi === midi && ev.endTime === null) {
+          ev.endTime = now;
+          ev.durationMs = Math.max(50, Math.round(now - ev.timestamp));
+          break;
+        }
+      }
     }
   }
 
@@ -1052,6 +1142,22 @@ export class MelodyTrainer {
     this.isFinished = true;
     this.stats.endTime = performance.now();
     this.calculateAccuracy();
+
+    const now = this.stats.endTime;
+    if (this.sessionPerformance) {
+      this.sessionPerformance.endTime = now;
+      if (this.sessionPerformance.playedEvents) {
+        const beatMs = (60 / this.bpm) * 1000;
+        for (const ev of this.sessionPerformance.playedEvents) {
+          if (ev.endTime === null) {
+            ev.endTime = now;
+            const fallbackDur = ev.targetNote ? (ev.targetNote.duration * beatMs * 0.8) : 250;
+            ev.durationMs = Math.max(50, Math.round(Math.min(now - ev.timestamp, fallbackDur)));
+          }
+        }
+      }
+      this.lastSessionPerformance = this.createSessionPerformanceSnapshot();
+    }
 
     const durationSeconds = Math.max(1, Math.round((this.stats.endTime - this.stats.startTime) / 1000));
 
@@ -1175,7 +1281,8 @@ export class MelodyTrainer {
         sightReadingScore: this.stats.sightReadingScore,
         isFirstReadLocked: this.isMelodyFirstReadLocked(this.currentMelody?.id),
         firstReadRecord: this.getFirstReadRecord(this.currentMelody?.id),
-        mistakeIndices: this.getMistakeIndices()
+        mistakeIndices: this.getMistakeIndices(),
+        hasPerformanceData: ((this.sessionPerformance?.playedEvents?.length || 0) > 0 || (this.lastSessionPerformance?.playedEvents?.length || 0) > 0)
       });
     }
   }

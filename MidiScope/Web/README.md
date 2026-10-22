@@ -41,7 +41,13 @@ A modern, zero-dependency web application that accepts Web MIDI hardware input (
     - Multi-key transposition support (C, G, F, D, Bb Major; A, D Minor).
     - Daily completion streaks, progress calendar, and aggregated performance statistics.
     - Full C++20 / JUCE 8 parity in VST3 and Standalone plugin.
-  - **Performance Scorecard**: Awards 1, 2, or 3 glowing stars with detailed feedback at the end of each melody.
+  - **Performance Scorecard & AI Practice Export**:
+    - Awards 1, 2, or 3 glowing stars with detailed feedback at the end of each melody.
+    - **Export What You Played (MIDI & MusicXML)**:
+      - Export practice runs in **Standard MIDI (.mid)** or **MusicXML (.musicxml)** format based on user choice.
+      - **Dual-Track Mode (Recommended for AI)**: Generates parallel tracks/staves containing both the original target reference sheet music and the user's actual played notes.
+      - **Diagnostic Error Annotations**: Includes MusicXML lyric annotations and MIDI text markers detailing pitch slips (e.g. `❌ Played F#4 (Expected F4)`), missed beats, and millisecond timing offsets.
+      - **Built-in AI Prompt Generator**: One-click "Copy Prompt" button with pre-formatted questions ready to paste into ChatGPT, Claude, Gemini, or other AI models alongside the exported file for diagnostic coaching.
 - **Real-Time Grand Staff Notation**:
   - Crisp vector Treble Clef and Bass Clef rendering on an HTML5 canvas with HiDPI/Retina support.
   - Automatic clef routing: Notes $\ge \text{C4}$ (MIDI 60) on Treble, notes $< \text{C4}$ on Bass.
@@ -127,6 +133,7 @@ n:/projects/learning/
 ├── audio.js         # Polyphonic Web Audio synthesizer with instrument presets
 ├── midi.js          # Web MIDI API manager, hotplugging, and QWERTY keyboard bridge
 ├── midiparser.js    # External Standard MIDI File (SMF) type 0/1 parser
+├── musicxmlparser.js # MusicXML (.musicxml, .xml, .mxl) parser with multi-part selection
 ├── trainer.js       # Melody practice engine, real-time timing scorer, and mistake inspector
 ├── routine.js       # Daily 20-minute sight-reading routine controller (4-block curriculum)
 ├── routine_exercises.js # Curriculum exercises: awkward pairs, broken thirds, flash lines

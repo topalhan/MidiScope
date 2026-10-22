@@ -14,18 +14,187 @@
   --staff-bg: #0b1120;
 }
 
-html.light {
+html.light,
+html:not(.dark) {
   --bg-primary: #f8fafc;
   --bg-surface: #ffffff;
   --bg-surface-elevated: #f1f5f9;
-  --border-color: rgba(0, 0, 0, 0.1);
+  --border-color: #e2e8f0;
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-muted: #64748b;
   --accent-treble: #0284c7;
   --accent-bass: #7e22ce;
   --accent-pedal: #ca8a04;
   --staff-bg: #fcfbf9; /* subtle parchment off-white */
+}
+
+/* Base Body in Light Mode */
+html.light body,
+html:not(.dark) body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Light mode for sticky Header */
+html.light header,
+html:not(.dark) header {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-bottom-color: #e2e8f0 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Headings and Titles */
+html.light h1, html.light h2, html.light h3, html.light h4,
+html:not(.dark) h1, html:not(.dark) h2, html:not(.dark) h3, html:not(.dark) h4 {
+  color: #0f172a !important;
+}
+
+/* Card Containers & HUD Panes */
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/70,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/40,
+html.light .bg-slate-950\/70,
+html.light .bg-slate-950\/60,
+html.light .bg-slate-900,
+html.light .bg-slate-950,
+html:not(.dark) .bg-slate-900\/60,
+html:not(.dark) .bg-slate-900\/70,
+html:not(.dark) .bg-slate-900\/80,
+html:not(.dark) .bg-slate-900\/40,
+html:not(.dark) .bg-slate-950\/70,
+html:not(.dark) .bg-slate-950\/60,
+html:not(.dark) .bg-slate-900,
+html:not(.dark) .bg-slate-950 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Secondary Panels, Sub-bars, Buttons & Badges */
+html.light .bg-slate-800,
+html.light .bg-slate-800\/90,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800\/60,
+html.light .bg-slate-750,
+html:not(.dark) .bg-slate-800,
+html:not(.dark) .bg-slate-800\/90,
+html:not(.dark) .bg-slate-800\/80,
+html:not(.dark) .bg-slate-800\/60,
+html:not(.dark) .bg-slate-750 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+html.light .hover\:bg-slate-700:hover,
+html:not(.dark) .hover\:bg-slate-700:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Borders */
+html.light .border-slate-800,
+html.light .border-slate-800\/80,
+html.light .border-slate-800\/60,
+html.light .border-slate-700,
+html.light .border-slate-700\/80,
+html.light .border-slate-700\/60,
+html:not(.dark) .border-slate-800,
+html:not(.dark) .border-slate-800\/80,
+html:not(.dark) .border-slate-800\/60,
+html:not(.dark) .border-slate-700,
+html:not(.dark) .border-slate-700\/80,
+html:not(.dark) .border-slate-700\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Text Colors */
+html.light .text-white,
+html.light .text-slate-100,
+html.light .text-slate-200,
+html:not(.dark) .text-white,
+html:not(.dark) .text-slate-100,
+html:not(.dark) .text-slate-200 {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-300,
+html.light .text-slate-400,
+html:not(.dark) .text-slate-300,
+html:not(.dark) .text-slate-400 {
+  color: #475569 !important;
+}
+
+html.light .text-slate-500,
+html:not(.dark) .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Form Controls (Selects, Inputs) */
+html.light select,
+html.light input[type="text"],
+html.light input[type="number"],
+html:not(.dark) select,
+html:not(.dark) input[type="text"],
+html:not(.dark) input[type="number"] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light kbd,
+html:not(.dark) kbd {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+/* Staff Card */
+html.light .staff-card,
+html:not(.dark) .staff-card {
+  background-color: #fcfbf9 !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Modals */
+html.light .modal-card,
+html:not(.dark) .modal-card {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.light .modal-backdrop,
+html:not(.dark) .modal-backdrop {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+}
+
+/* Virtual Piano Keyboard in Light Mode */
+html.light #piano-keyboard-section,
+html:not(.dark) #piano-keyboard-section {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .piano-key.white,
+html:not(.dark) .piano-key.white {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+html.light .piano-key.black,
+html:not(.dark) .piano-key.black {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+
+html.light .piano-container,
+html:not(.dark) .piano-container {
+  background-color: #f1f5f9 !important;
 }
 
 * {
@@ -61,6 +230,13 @@ body {
   width: 100%;
   height: 380px;
   cursor: crosshair;
+  transition: height 0.25s ease;
+}
+
+/* Expanded height when piano keyboard is hidden or in vertical multi-line mode */
+.keyboard-hidden #staff-canvas,
+.staff-card.vertical-staves #staff-canvas {
+  height: 480px;
 }
 
 /* Status Badge */
@@ -298,6 +474,23 @@ body {
 
 #modal-phase-complete {
   z-index: 60;
+}
+
+#modal-export-session {
+  z-index: 70;
+}
+
+#modal-export-session .modal-card {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.export-format-btn, .export-scope-option {
+  transition: all 0.15s ease-in-out;
+}
+
+.export-format-btn:hover, .export-scope-option:hover {
+  transform: translateY(-1px);
 }
 
 .modal-card {
@@ -542,7 +735,12 @@ body {
 /* Mobile & Touch Responsive Enhancements */
 @media (max-width: 640px) {
   #staff-canvas {
-    height: 270px;
+    height: 280px;
+  }
+
+  .keyboard-hidden #staff-canvas,
+  .staff-card.vertical-staves #staff-canvas {
+    height: 380px;
   }
 
   .piano-container {

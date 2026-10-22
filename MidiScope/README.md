@@ -127,6 +127,7 @@ n:/projects/learning/
 ├── audio.js         # Polyphonic Web Audio synthesizer with instrument presets
 ├── midi.js          # Web MIDI API manager, hotplugging, and QWERTY keyboard bridge
 ├── midiparser.js    # External Standard MIDI File (SMF) type 0/1 parser
+├── musicxmlparser.js # MusicXML (.musicxml, .xml, .mxl) parser with multi-part selection
 ├── trainer.js       # Melody practice engine, real-time timing scorer, and mistake inspector
 ├── routine.js       # Daily 20-minute sight-reading routine controller (4-block curriculum)
 ├── routine_exercises.js # Curriculum exercises: awkward pairs, broken thirds, flash lines

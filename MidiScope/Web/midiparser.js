@@ -520,8 +520,8 @@ export function parseMidiFile(arrayBuffer, fileName = 'custom_melody.mid', targe
     };
   });
 
-  // Limit to reasonable practice snippet length (80 notes max)
-  const finalNotes = cleanNotes.slice(0, 80);
+  // Use all extracted notes without artificial length capping
+  const finalNotes = cleanNotes;
 
   // Derive song title
   const cleanFileName = fileName.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');

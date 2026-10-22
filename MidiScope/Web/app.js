@@ -12,8 +12,10 @@ import { MidiManager } from './midi.js';
 import { MelodyTrainer } from './trainer.js?v=20261014.0820';
 import { MELODIES } from './melodies.js';
 import { parseMidiFile, inspectMidiChannels } from './midiparser.js';
+import { parseMusicXml, inspectMusicXml } from './musicxmlparser.js';
 import { DailyRoutineController } from './routine.js?v=20261014.0820';
 import { FreePlayRhythmTrainer } from './rhythm_trainer.js?v=20261014.0820';
+import { exportToMidi, exportToMusicXml, downloadFile, generateAiPrompt } from './exporter.js';
 
 class App {
   constructor() {
@@ -65,9 +67,9 @@ class App {
     this.btnCalibMinus = document.getElementById('btn-calib-minus');
     this.btnCalibPlus = document.getElementById('btn-calib-plus');
     this.btnAutoCalib = document.getElementById('btn-auto-calib');
-    this.modalLatencyCalibValue = document.getElementById('modal-latency-calib-value');
-    this.btnModalCalibMinus = document.getElementById('btn-modal-calib-minus');
-    this.btnModalCalibPlus = document.getElementById('btn-modal-calib-plus');
+    this.modalLatencyCalibValue = document.getElementById('modal-latency-calib-value') || this.latencyCalibValue;
+    this.btnModalCalibMinus = document.getElementById('btn-modal-calib-minus') || this.btnCalibMinus;
+    this.btnModalCalibPlus = document.getElementById('btn-modal-calib-plus') || this.btnCalibPlus;
 
     // App Mode Tabs & Practice HUD elements
     // Universal Master Metronome in Header
@@ -197,15 +199,41 @@ class App {
     this.btnResetFirstRead = document.getElementById('btn-reset-first-read');
     this.melodyListContainer = document.getElementById('melody-list-container');
 
-    // MIDI Channel Selection Modal references
+    // Channel / Part Selection Modal references
     this.modalChannelSelect = document.getElementById('modal-channel-select');
+    this.channelModalTitle = document.getElementById('channel-modal-title');
+    this.channelModalSubtitle = document.getElementById('channel-modal-subtitle');
     this.channelListContainer = document.getElementById('channel-list-container');
     this.channelModalFilename = document.getElementById('channel-modal-filename');
     this.channelModalMeta = document.getElementById('channel-modal-meta');
     this.btnCloseChannelModal = document.getElementById('btn-close-channel-modal');
     this.btnCancelChannel = document.getElementById('btn-cancel-channel');
     this.pendingMidiBuffer = null;
+
+    // Export Performance for AI Assessment references
+    this.modalExportSession = document.getElementById('modal-export-session');
+    this.btnExportPractice = document.getElementById('btn-export-practice');
+    this.btnScoreExport = document.getElementById('btn-score-export');
+    this.btnCloseExportModal = document.getElementById('btn-close-export-modal');
+    this.btnCancelExport = document.getElementById('btn-cancel-export');
+    this.exportFmtMidi = document.getElementById('export-fmt-midi');
+    this.exportFmtMusicXml = document.getElementById('export-fmt-musicxml');
+    this.exportCheckAnnotations = document.getElementById('export-check-annotations');
+    this.exportAiPromptBox = document.getElementById('export-ai-prompt-box');
+    this.btnCopyAiPrompt = document.getElementById('btn-copy-ai-prompt');
+    this.copyAiPromptText = document.getElementById('copy-ai-prompt-text');
+    this.btnDownloadExport = document.getElementById('btn-download-export');
+    this.btnDownloadLabel = document.getElementById('btn-download-label');
+    this.exportMelodyTitle = document.getElementById('export-melody-title');
+    this.exportMelodyMeta = document.getElementById('export-melody-meta');
+    this.exportAccuracyBadge = document.getElementById('export-accuracy-badge');
+    this.exportMistakesBadge = document.getElementById('export-mistakes-badge');
+    this.currentExportFormat = 'midi';
+    this.currentExportScope = 'dual';
     this.pendingMidiFileName = '';
+    this.pendingXmlBuffer = null;
+    this.pendingXmlFileName = '';
+    this.isPendingXml = false;
 
     // MIDI File Upload & Drag-and-Drop references
     this.btnLoadMidi = document.getElementById('btn-load-midi');
@@ -324,8 +352,18 @@ class App {
       this.notation.resize();
     });
 
-    // 2. Build Virtual Piano
+    // 2. Build Virtual Piano & Apply Layout Preferences
     this.buildPiano();
+    this.showKeyboard = localStorage.getItem('midiscope_show_keyboard') !== 'false';
+    this.staffLayout = localStorage.getItem('midiscope_staff_layout') || 'vertical';
+    this.showBassClef = localStorage.getItem('midiscope_bass_clef') || 'auto';
+    this.showMidiStream = localStorage.getItem('midiscope_show_events') === 'true';
+    this.theme = localStorage.getItem('midiscope_theme') || 'dark';
+    if (this.notation) this.notation.setOption('showBassClef', this.showBassClef);
+    this.setKeyboardVisible(this.showKeyboard);
+    this.setMidiStreamVisible(this.showMidiStream);
+    this.setStaffLayout(this.staffLayout);
+    this.setTheme(this.theme);
 
     // 3. Setup Audio, MIDI, and Trainer Hooks
     this.setupMidiEvents();
@@ -2001,6 +2039,22 @@ class App {
   onTrainerStateChange(state) {
     if (!state.melody) return;
 
+    // Sync Key Signature UI and notation
+    if (state.melody.key) {
+      const selectKey = document.getElementById('select-key-signature');
+      if (selectKey && selectKey.value !== state.melody.key) {
+        let opt = Array.from(selectKey.options).find(o => o.value === state.melody.key);
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = state.melody.key;
+          opt.textContent = state.melody.key;
+          selectKey.appendChild(opt);
+        }
+        selectKey.value = state.melody.key;
+        this.notation.setOption('keySignature', state.melody.key);
+      }
+    }
+
     // Melody info
     this.practiceMelodyTitle.innerText = state.melody.title;
     this.practiceComposer.innerText = state.melody.composer;
@@ -2052,30 +2106,26 @@ class App {
       }
     }
 
-    // BPM Display
-    if (this.practiceBpmDisplay && state.bpm) {
-      this.practiceBpmDisplay.innerText = `${state.bpm} BPM`;
-    }
-
-    // Metronome Toggle Status
-    if (this.btnToggleMetronome && this.metronomeStatusText) {
-      const isMetOn = state.metronomeEnabled;
-      this.metronomeStatusText.innerText = isMetOn ? 'Metronome ON' : 'Metronome OFF';
-      if (isMetOn) {
-        this.btnToggleMetronome.className = 'px-2.5 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-semibold flex items-center gap-1 transition-colors';
-      } else {
-        this.btnToggleMetronome.className = 'px-2.5 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 border border-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors';
-      }
-    }
+    // Master Metronome UI sync (single header metronome for all modes)
+    this.updateMasterMetronomeUi();
 
     // Practice Mode Select sync
     if (this.selectPracticeMode && this.selectPracticeMode.value !== state.mode) {
       this.selectPracticeMode.value = state.mode;
     }
 
-    // Visual Beat Indicator dots count sync
+    // Visual Beat Indicator dots count sync for Master Header Metronome
     const timeSig = state.melody.timeSignature || [4, 4];
     const beatsCount = timeSig[0] || 4;
+    if (this.masterBeatDots && this.masterBeatDots.children.length !== beatsCount) {
+      this.masterBeatDots.innerHTML = '';
+      for (let b = 0; b < beatsCount; b++) {
+        const dot = document.createElement('div');
+        dot.className = `beat-dot ${b === 0 ? 'downbeat' : ''}`;
+        dot.dataset.beat = b;
+        this.masterBeatDots.appendChild(dot);
+      }
+    }
     if (this.visualBeatContainer && this.visualBeatContainer.children.length !== beatsCount) {
       this.visualBeatContainer.innerHTML = '';
       for (let b = 0; b < beatsCount; b++) {
@@ -2333,7 +2383,7 @@ class App {
   }
 
   /**
-   * Set up .MID file loading and Drag & Drop handlers
+   * Set up score file loading (.mid, .midi, .musicxml, .xml, .mxl) and Drag & Drop handlers
    */
   setupMidiFileLoader() {
     // 1. HUD Load button
@@ -2350,7 +2400,7 @@ class App {
     this.midiFileInput?.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
       if (file) {
-        this.loadMidiFromFile(file);
+        this.loadScoreFromFile(file);
       }
       this.midiFileInput.value = '';
     });
@@ -2376,7 +2426,7 @@ class App {
       this.midiModalDropzone.addEventListener('drop', (e) => {
         const file = e.dataTransfer?.files?.[0];
         if (file) {
-          this.loadMidiFromFile(file);
+          this.loadScoreFromFile(file);
         }
       });
     }
@@ -2415,10 +2465,10 @@ class App {
       }
       const file = e.dataTransfer?.files?.[0];
       if (file) {
-        this.loadMidiFromFile(file);
+        this.loadScoreFromFile(file);
       }
     });
-    // 6. Channel Selection Modal controls
+    // 6. Channel / Part Selection Modal controls
     this.btnCloseChannelModal?.addEventListener('click', () => this.closeChannelModal());
     this.btnCancelChannel?.addEventListener('click', () => this.closeChannelModal());
     this.modalChannelSelect?.addEventListener('click', (e) => {
@@ -2427,38 +2477,74 @@ class App {
   }
 
   /**
-   * Parse external MIDI file and load into practice trainer.
-   * If multiple channels are detected, prompts user with channel selection modal.
+   * Backwards-compatible alias for loading scores
    */
   async loadMidiFromFile(file) {
+    return this.loadScoreFromFile(file);
+  }
+
+  /**
+   * Parse external MIDI or MusicXML file and load into practice trainer.
+   * Prompts user with channel / part selector modal if multiple tracks or parts are detected.
+   */
+  async loadScoreFromFile(file) {
     if (!file) return;
     const nameLower = file.name.toLowerCase();
-    if (!nameLower.endsWith('.mid') && !nameLower.endsWith('.midi')) {
-      this.showToast('Please select a valid Standard MIDI File (.mid or .midi)', 'error');
+    const isMidiExt = nameLower.endsWith('.mid') || nameLower.endsWith('.midi');
+    const isXmlExt = nameLower.endsWith('.musicxml') || nameLower.endsWith('.xml') || nameLower.endsWith('.mxl');
+
+    if (!isMidiExt && !isXmlExt) {
+      this.showToast('Please select a valid MIDI (.mid) or MusicXML (.musicxml, .xml, .mxl) file', 'error');
       return;
     }
 
     try {
       this.showToast(`Analyzing ${file.name}...`, 'info');
       const arrayBuffer = await file.arrayBuffer();
-      const channelInfo = inspectMidiChannels(arrayBuffer, file.name);
 
-      if (!channelInfo.channels || channelInfo.channels.length === 0) {
-        throw new Error('No playable note events found in this MIDI file.');
-      }
+      // Check format signatures
+      const bytes = new Uint8Array(arrayBuffer);
+      const isMidiMagic = bytes.length >= 4 && bytes[0] === 0x4D && bytes[1] === 0x54 && bytes[2] === 0x68 && bytes[3] === 0x64; // MThd
 
-      if (channelInfo.channels.length === 1) {
-        // Single channel present: load directly without interrupting user
-        const targetCh = channelInfo.channels[0].channelNumber;
-        const melody = parseMidiFile(arrayBuffer, file.name, targetCh);
-        this.finishLoadingCustomMelody(melody);
+      const treatAsMidi = (isMidiExt || isMidiMagic) && !nameLower.endsWith('.musicxml') && !nameLower.endsWith('.mxl') && !nameLower.endsWith('.xml');
+
+      if (treatAsMidi) {
+        // Standard MIDI file
+        const channelInfo = inspectMidiChannels(arrayBuffer, file.name);
+
+        if (!channelInfo.channels || channelInfo.channels.length === 0) {
+          throw new Error('No playable note events found in this MIDI file.');
+        }
+
+        if (channelInfo.channels.length === 1) {
+          // Single channel present: load directly without interrupting user
+          const targetCh = channelInfo.channels[0].channelNumber;
+          const melody = parseMidiFile(arrayBuffer, file.name, targetCh);
+          this.finishLoadingCustomMelody(melody);
+        } else {
+          // Multiple channels found: show channel selector modal
+          this.showChannelSelectModal(channelInfo, arrayBuffer, file.name);
+        }
       } else {
-        // Multiple channels found: show channel selector modal
-        this.showChannelSelectModal(channelInfo, arrayBuffer, file.name);
+        // MusicXML file (.musicxml, .xml, or compressed .mxl)
+        const xmlInfo = await inspectMusicXml(arrayBuffer, file.name);
+
+        if (!xmlInfo.parts || xmlInfo.parts.length === 0) {
+          throw new Error('No playable musical parts found in this MusicXML file.');
+        }
+
+        if (xmlInfo.parts.length === 1) {
+          // Single part present: load directly without interrupting user
+          const melody = await parseMusicXml(arrayBuffer, file.name, xmlInfo.parts[0].partId);
+          this.finishLoadingCustomMelody(melody);
+        } else {
+          // Multiple parts found: show part selector modal
+          this.showPartSelectModal(xmlInfo, arrayBuffer, file.name);
+        }
       }
     } catch (err) {
-      console.error('Failed to parse MIDI file:', err);
-      this.showToast(`⚠️ Could not load MIDI: ${err.message}`, 'error');
+      console.error('Failed to parse file:', err);
+      this.showToast(`⚠️ Could not load score: ${err.message}`, 'error');
     }
   }
 
@@ -2468,6 +2554,17 @@ class App {
   showChannelSelectModal(channelInfo, arrayBuffer, fileName) {
     this.pendingMidiBuffer = arrayBuffer;
     this.pendingMidiFileName = fileName;
+    this.pendingXmlBuffer = null;
+    this.pendingXmlFileName = '';
+    this.isPendingXml = false;
+
+    if (this.channelModalTitle) {
+      this.channelModalTitle.innerText = 'Select MIDI Channel';
+    }
+
+    if (this.channelModalSubtitle) {
+      this.channelModalSubtitle.innerText = 'Choose which instrument channel to practice and score';
+    }
 
     if (this.channelModalFilename) {
       this.channelModalFilename.innerText = fileName;
@@ -2560,10 +2657,121 @@ class App {
     this.modalChannelSelect?.classList.add('open');
   }
 
+  /**
+   * Display interactive modal asking user which MusicXML part to load
+   */
+  showPartSelectModal(xmlInfo, arrayBuffer, fileName) {
+    this.pendingXmlBuffer = arrayBuffer;
+    this.pendingXmlFileName = fileName;
+    this.pendingMidiBuffer = null;
+    this.pendingMidiFileName = '';
+    this.isPendingXml = true;
+
+    if (this.channelModalTitle) {
+      this.channelModalTitle.innerText = 'Select Score Part (MusicXML)';
+    }
+
+    if (this.channelModalSubtitle) {
+      this.channelModalSubtitle.innerText = `Choose which instrument part to practice and score (${xmlInfo.parts.length} parts found)`;
+    }
+
+    if (this.channelModalFilename) {
+      this.channelModalFilename.innerText = fileName;
+      this.channelModalFilename.title = fileName;
+    }
+
+    if (this.channelModalMeta) {
+      const timeSigStr = xmlInfo.timeSignature ? `${xmlInfo.timeSignature[0]}/${xmlInfo.timeSignature[1]}` : '4/4';
+      this.channelModalMeta.innerHTML = `
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">${xmlInfo.tempoBpm} BPM</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">${timeSigStr}</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-sky-400 font-mono font-medium">${xmlInfo.detectedKey}</span>
+      `;
+    }
+
+    if (this.channelListContainer) {
+      this.channelListContainer.innerHTML = '';
+
+      // 1. "All Parts (Merged)" Option
+      const totalNotes = xmlInfo.parts.reduce((sum, p) => sum + p.noteCount, 0);
+      const allCard = document.createElement('div');
+      allCard.className = 'channel-card flex items-center justify-between gap-3';
+      allCard.innerHTML = `
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center font-black text-emerald-400 text-base shrink-0">
+            🎼
+          </div>
+          <div class="truncate">
+            <div class="flex items-center gap-2">
+              <h4 class="font-bold text-white text-sm">All Parts (Merged)</h4>
+              <span class="text-[9px] font-black px-1.5 py-0.5 rounded border uppercase bg-emerald-500/20 text-emerald-300 border-emerald-500/40">FULL SCORE</span>
+            </div>
+            <p class="text-xs text-slate-400 truncate">Extracts lead melody across all ${xmlInfo.parts.length} parts</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <div class="text-right">
+            <span class="text-xs font-mono font-bold text-emerald-400 block">${totalNotes} notes</span>
+            <span class="text-[10px] text-slate-400 font-medium">All parts</span>
+          </div>
+          <button class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors">
+            Select
+          </button>
+        </div>
+      `;
+      allCard.addEventListener('click', () => {
+        this.loadPendingPart(null);
+      });
+      this.channelListContainer.appendChild(allCard);
+
+      // 2. Individual Part Cards
+      xmlInfo.parts.forEach(part => {
+        const card = document.createElement('div');
+        card.className = 'channel-card flex items-center justify-between gap-3';
+        const displayName = part.name || part.instrumentName;
+        const subtext = `${part.instrumentName} • Range: ${part.pitchRange}`;
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex flex-col items-center justify-center font-bold text-sky-400 shrink-0">
+              <span class="text-[9px] text-slate-400 font-semibold leading-none">PART</span>
+              <span class="text-sm font-black leading-tight">${part.partNumber}</span>
+            </div>
+            <div class="truncate">
+              <div class="flex items-center gap-2">
+                <h4 class="font-bold text-white text-sm truncate">${displayName}</h4>
+              </div>
+              <p class="text-xs text-slate-400 truncate">${subtext}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <div class="text-right">
+              <span class="text-xs font-mono font-bold text-sky-400 block">${part.noteCount} notes</span>
+              <span class="text-[10px] text-slate-400 font-medium">Single Part</span>
+            </div>
+            <button class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition-colors">
+              Select
+            </button>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          this.loadPendingPart(part.partId);
+        });
+        this.channelListContainer.appendChild(card);
+      });
+    }
+
+    this.modalChannelSelect?.classList.add('open');
+  }
+
   closeChannelModal() {
     this.modalChannelSelect?.classList.remove('open');
     this.pendingMidiBuffer = null;
     this.pendingMidiFileName = '';
+    this.pendingXmlBuffer = null;
+    this.pendingXmlFileName = '';
+    this.isPendingXml = false;
   }
 
   loadPendingChannel(targetChannel) {
@@ -2578,9 +2786,36 @@ class App {
     }
   }
 
+  async loadPendingPart(targetPartId) {
+    if (!this.pendingXmlBuffer) return;
+    try {
+      const melody = await parseMusicXml(this.pendingXmlBuffer, this.pendingXmlFileName, targetPartId);
+      this.closeChannelModal();
+      this.finishLoadingCustomMelody(melody);
+    } catch (err) {
+      console.error('Failed to parse selected MusicXML part:', err);
+      this.showToast(`⚠️ Could not load part: ${err.message}`, 'error');
+    }
+  }
+
   finishLoadingCustomMelody(melody) {
     if (!melody || !melody.notes || melody.notes.length === 0) {
       throw new Error('No notes found in selected channel.');
+    }
+
+    if (melody.key) {
+      const selectKey = document.getElementById('select-key-signature');
+      if (selectKey) {
+        let opt = Array.from(selectKey.options).find(o => o.value === melody.key);
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = melody.key;
+          opt.textContent = melody.key;
+          selectKey.appendChild(opt);
+        }
+        selectKey.value = melody.key;
+      }
+      this.notation.setOption('keySignature', melody.key);
     }
 
     this.trainer.addCustomMelody(melody);
@@ -2589,7 +2824,7 @@ class App {
     this.populateMelodyModal();
 
     const timeSigStr = melody.timeSignature ? `${melody.timeSignature[0]}/${melody.timeSignature[1]}` : '4/4';
-    this.showToast(`✨ Loaded "${melody.title}" (${melody.notes.length} notes • ${melody.bpm} BPM • ${timeSigStr})`, 'success');
+    this.showToast(`✨ Loaded "${melody.title}" (${melody.notes.length} notes • ${melody.key || ''} • ${melody.bpm} BPM • ${timeSigStr})`, 'success');
   }
 
   /**
@@ -2768,6 +3003,143 @@ class App {
   }
 
   /**
+   * Export Practice Performance Modal & Handlers
+   */
+  openExportModal() {
+    if (!this.modalExportSession) return;
+    const session = this.trainer.getSessionPerformance();
+
+    if (this.exportMelodyTitle && session.melody) {
+      this.exportMelodyTitle.innerText = `${session.melody.title} • ${session.melody.composer || 'Traditional'}`;
+    }
+    if (this.exportMelodyMeta && session.melody) {
+      this.exportMelodyMeta.innerText = `Key: ${session.melody.key || 'C Major'} • ${session.bpm || 108} BPM • ${session.melody.notes?.length || 0} Target Notes`;
+    }
+    if (this.exportAccuracyBadge) {
+      const acc = session.stats?.accuracy ?? 100;
+      this.exportAccuracyBadge.innerText = `${acc}% Accuracy`;
+      this.exportAccuracyBadge.className = acc >= 90
+        ? 'text-sm font-mono font-black text-emerald-400'
+        : acc >= 75
+          ? 'text-sm font-mono font-black text-amber-400'
+          : 'text-sm font-mono font-black text-rose-400';
+    }
+    if (this.exportMistakesBadge) {
+      const mistakes = session.stats?.mistakeCount ?? 0;
+      const missed = session.stats?.missedNotes ?? 0;
+      this.exportMistakesBadge.innerText = `${mistakes} Mistake${mistakes === 1 ? '' : 's'} • ${missed} Missed`;
+    }
+
+    this.updateExportModalView();
+    this.modalExportSession.classList.add('open');
+  }
+
+  closeExportModal() {
+    this.modalExportSession?.classList.remove('open');
+  }
+
+  setExportFormat(fmt) {
+    this.currentExportFormat = fmt;
+    if (this.exportFmtMidi && this.exportFmtMusicXml) {
+      if (fmt === 'midi') {
+        this.exportFmtMidi.classList.add('active', 'border-sky-500/50', 'bg-sky-500/10');
+        this.exportFmtMidi.classList.remove('border-slate-700/80', 'bg-slate-800/40');
+        this.exportFmtMusicXml.classList.remove('active', 'border-amber-500/50', 'bg-amber-500/10');
+        this.exportFmtMusicXml.classList.add('border-slate-700/80', 'bg-slate-800/40');
+      } else {
+        this.exportFmtMusicXml.classList.add('active', 'border-amber-500/50', 'bg-amber-500/10');
+        this.exportFmtMusicXml.classList.remove('border-slate-700/80', 'bg-slate-800/40');
+        this.exportFmtMidi.classList.remove('active', 'border-sky-500/50', 'bg-sky-500/10');
+        this.exportFmtMidi.classList.add('border-slate-700/80', 'bg-slate-800/40');
+      }
+    }
+    this.updateExportModalView();
+  }
+
+  setExportScope(scope) {
+    this.currentExportScope = scope;
+    const scopeOptions = document.querySelectorAll('.export-scope-option');
+    scopeOptions.forEach(opt => {
+      const radio = opt.querySelector('input[name="export-scope"]');
+      if (radio && radio.value === scope) {
+        radio.checked = true;
+        opt.classList.add('border-sky-500/50', 'bg-sky-500/10');
+        opt.classList.remove('border-slate-700/80', 'bg-slate-800/40');
+      } else {
+        opt.classList.remove('border-sky-500/50', 'bg-sky-500/10');
+        opt.classList.add('border-slate-700/80', 'bg-slate-800/40');
+      }
+    });
+    this.updateExportModalView();
+  }
+
+  updateExportModalView() {
+    const session = this.trainer.getSessionPerformance();
+    const isMidi = this.currentExportFormat === 'midi';
+
+    if (this.btnDownloadLabel) {
+      this.btnDownloadLabel.innerText = isMidi ? 'Download .MID File' : 'Download .MusicXML File';
+    }
+
+    if (this.exportAiPromptBox) {
+      this.exportAiPromptBox.value = generateAiPrompt(session, this.currentExportFormat);
+    }
+  }
+
+  downloadExportFile() {
+    const session = this.trainer.getSessionPerformance();
+    const title = (session.melody?.title || 'practice_melody').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const isMidi = this.currentExportFormat === 'midi';
+    const includeAnnotations = this.exportCheckAnnotations ? this.exportCheckAnnotations.checked : true;
+    const ext = isMidi ? 'mid' : 'musicxml';
+    const filename = `${title}_${this.currentExportScope}_performance.${ext}`;
+
+    try {
+      if (isMidi) {
+        const midiBytes = exportToMidi(session, {
+          scope: this.currentExportScope,
+          includeAnnotations
+        });
+        downloadFile(midiBytes, filename, 'audio/midi');
+        this.showToast(`Exported ${filename} (${midiBytes.length} bytes)`, 'success');
+      } else {
+        const xmlString = exportToMusicXml(session, {
+          scope: this.currentExportScope,
+          includeAnnotations
+        });
+        downloadFile(xmlString, filename, 'application/vnd.recordare.musicxml+xml');
+        this.showToast(`Exported ${filename} (MusicXML score)`, 'success');
+      }
+    } catch (err) {
+      console.error('Failed to export practice session:', err);
+      this.showToast(`Export failed: ${err.message}`, 'error');
+    }
+  }
+
+  async copyAiPromptToClipboard() {
+    if (!this.exportAiPromptBox) return;
+    const text = this.exportAiPromptBox.value;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        this.exportAiPromptBox.select();
+        document.execCommand('copy');
+      }
+
+      if (this.copyAiPromptText) {
+        this.copyAiPromptText.innerText = '✓ Copied!';
+        setTimeout(() => {
+          if (this.copyAiPromptText) this.copyAiPromptText.innerText = 'Copy Prompt';
+        }, 2000);
+      }
+      this.showToast('AI prompt copied! Paste into ChatGPT or Claude with your downloaded file.', 'success');
+    } catch (err) {
+      this.showToast('Failed to copy prompt to clipboard', 'error');
+    }
+  }
+
+  /**
    * Updates chord name, quality, and active note pill badges
    */
   updateChordDisplay() {
@@ -2935,6 +3307,111 @@ class App {
       this.octaveDisplay.innerText = `C${this.midi.keyboardOctave}`;
     }
     this.updatePianoKeyLabels();
+  }
+
+  setKeyboardVisible(visible) {
+    this.showKeyboard = !!visible;
+    localStorage.setItem('midiscope_show_keyboard', this.showKeyboard ? 'true' : 'false');
+    const pianoSec = document.getElementById('piano-keyboard-section');
+    const toggleKb = document.getElementById('toggle-show-keyboard');
+    const quickText = document.getElementById('quick-keyboard-text');
+    const quickBtn = document.getElementById('btn-quick-toggle-keyboard');
+    const staffCard = document.querySelector('.staff-card');
+
+    if (pianoSec) {
+      if (this.showKeyboard) {
+        pianoSec.classList.remove('hidden');
+      } else {
+        pianoSec.classList.add('hidden');
+      }
+    }
+    if (toggleKb) {
+      toggleKb.checked = this.showKeyboard;
+    }
+    if (quickText) {
+      quickText.innerText = this.showKeyboard ? 'Keys' : 'Show Keys';
+    }
+    if (quickBtn) {
+      if (this.showKeyboard) {
+        quickBtn.classList.add('bg-sky-500/20', 'text-sky-300', 'border-sky-500/40');
+        quickBtn.classList.remove('bg-slate-800', 'text-slate-200', 'border-slate-700');
+      } else {
+        quickBtn.classList.remove('bg-sky-500/20', 'text-sky-300', 'border-sky-500/40');
+        quickBtn.classList.add('bg-slate-800', 'text-slate-200', 'border-slate-700');
+      }
+    }
+    if (staffCard) {
+      staffCard.classList.toggle('keyboard-hidden', !this.showKeyboard);
+    }
+    if (this.notation) {
+      setTimeout(() => this.notation.resize(), 60);
+    }
+  }
+
+  setMidiStreamVisible(visible) {
+    this.showMidiStream = !!visible;
+    localStorage.setItem('midiscope_show_events', this.showMidiStream ? 'true' : 'false');
+    const inspector = document.getElementById('midi-event-inspector-section');
+    const quickEventsBtn = document.getElementById('btn-quick-toggle-events');
+    const settingsToggle = document.getElementById('toggle-show-midi-stream');
+
+    if (inspector) {
+      if (this.showMidiStream) {
+        inspector.classList.remove('hidden');
+        inspector.open = true;
+      } else {
+        inspector.classList.add('hidden');
+      }
+    }
+    if (quickEventsBtn) {
+      if (this.showMidiStream) {
+        quickEventsBtn.classList.add('bg-sky-500/20', 'text-sky-300', 'border-sky-500/40');
+        quickEventsBtn.classList.remove('bg-slate-800', 'text-slate-200', 'border-slate-700');
+      } else {
+        quickEventsBtn.classList.remove('bg-sky-500/20', 'text-sky-300', 'border-sky-500/40');
+        quickEventsBtn.classList.add('bg-slate-800', 'text-slate-200', 'border-slate-700');
+      }
+    }
+    if (settingsToggle) {
+      settingsToggle.checked = this.showMidiStream;
+    }
+  }
+
+  setStaffLayout(layout) {
+    this.staffLayout = layout === 'horizontal' ? 'horizontal' : 'vertical';
+    localStorage.setItem('midiscope_staff_layout', this.staffLayout);
+    const select1 = document.getElementById('select-staff-layout');
+    const select2 = document.getElementById('settings-staff-layout');
+    if (select1 && select1.value !== this.staffLayout) select1.value = this.staffLayout;
+    if (select2 && select2.value !== this.staffLayout) select2.value = this.staffLayout;
+
+    const staffCard = document.querySelector('.staff-card');
+    if (staffCard) {
+      staffCard.classList.toggle('vertical-staves', this.staffLayout === 'vertical');
+    }
+
+    if (this.notation) {
+      this.notation.setOption('staffLayout', this.staffLayout);
+      setTimeout(() => this.notation.resize(), 60);
+    }
+  }
+
+  setTheme(theme) {
+    this.theme = theme === 'light' ? 'light' : 'dark';
+    localStorage.setItem('midiscope_theme', this.theme);
+    const html = document.documentElement;
+    const isDark = this.theme === 'dark';
+    html.classList.toggle('dark', isDark);
+    html.classList.toggle('light', !isDark);
+    const btnTheme = document.getElementById('btn-toggle-theme');
+    if (btnTheme) {
+      btnTheme.innerHTML = isDark ? '🌙' : '☀️';
+      btnTheme.title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+    }
+    if (this.notation) {
+      this.notation.setOption('theme', this.theme);
+      setTimeout(() => this.notation.resize(), 60);
+    }
   }
 
   populateDeviceList(devices) {
@@ -3698,9 +4175,13 @@ class App {
         }
       }
 
-      // Universal Master Metronome shortcuts (M: Metronome toggle, T: Tap Tempo) across ALL modes
+      // Universal keyboard shortcuts (K: Toggle Keyboard, M: Metronome, T: Tap Tempo)
       if (!isInput) {
-        if (e.key === 'm' || e.key === 'M') {
+        if (e.key === 'k' || e.key === 'K') {
+          e.preventDefault();
+          this.setKeyboardVisible(!this.showKeyboard);
+          this.showToast(this.showKeyboard ? 'Piano keyboard visible.' : 'Piano keyboard hidden.', 'info');
+        } else if (e.key === 'm' || e.key === 'M') {
           e.preventDefault();
           this.toggleMasterMetronome();
         } else if (e.key === 't' || e.key === 'T') {
@@ -3787,6 +4268,40 @@ class App {
     });
     this.modalScorecard?.addEventListener('click', (e) => {
       if (e.target === this.modalScorecard) this.closeScorecard();
+    });
+
+    // Export Performance Modal Controls
+    this.btnExportPractice?.addEventListener('click', () => {
+      this.openExportModal();
+    });
+    this.btnScoreExport?.addEventListener('click', () => {
+      this.openExportModal();
+    });
+    this.btnCloseExportModal?.addEventListener('click', () => {
+      this.closeExportModal();
+    });
+    this.btnCancelExport?.addEventListener('click', () => {
+      this.closeExportModal();
+    });
+    this.modalExportSession?.addEventListener('click', (e) => {
+      if (e.target === this.modalExportSession) this.closeExportModal();
+    });
+    this.exportFmtMidi?.addEventListener('click', () => {
+      this.setExportFormat('midi');
+    });
+    this.exportFmtMusicXml?.addEventListener('click', () => {
+      this.setExportFormat('musicxml');
+    });
+    document.querySelectorAll('input[name="export-scope"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        if (e.target.checked) this.setExportScope(e.target.value);
+      });
+    });
+    this.btnDownloadExport?.addEventListener('click', () => {
+      this.downloadExportFile();
+    });
+    this.btnCopyAiPrompt?.addEventListener('click', () => {
+      this.copyAiPromptToClipboard();
     });
 
     // Settings Modal
@@ -3964,12 +4479,16 @@ class App {
     this.btnCalibPlus?.addEventListener('click', () => {
       this.setLatencyCalibration(this.trainer.latencyCompensationMs + 10);
     });
-    this.btnModalCalibMinus?.addEventListener('click', () => {
-      this.setLatencyCalibration(this.trainer.latencyCompensationMs - 10);
-    });
-    this.btnModalCalibPlus?.addEventListener('click', () => {
-      this.setLatencyCalibration(this.trainer.latencyCompensationMs + 10);
-    });
+    if (this.btnModalCalibMinus && this.btnModalCalibMinus !== this.btnCalibMinus) {
+      this.btnModalCalibMinus.addEventListener('click', () => {
+        this.setLatencyCalibration(this.trainer.latencyCompensationMs - 10);
+      });
+    }
+    if (this.btnModalCalibPlus && this.btnModalCalibPlus !== this.btnCalibPlus) {
+      this.btnModalCalibPlus.addEventListener('click', () => {
+        this.setLatencyCalibration(this.trainer.latencyCompensationMs + 10);
+      });
+    }
 
     document.querySelectorAll('.btn-calib-preset').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -4118,6 +4637,62 @@ class App {
       });
     }
 
+    // Piano Keyboard Hide / Show Controls
+    document.getElementById('btn-hide-keyboard')?.addEventListener('click', () => {
+      this.setKeyboardVisible(false);
+      this.showToast('Piano keyboard hidden.', 'info');
+    });
+    document.getElementById('btn-quick-toggle-keyboard')?.addEventListener('click', () => {
+      this.setKeyboardVisible(!this.showKeyboard);
+      this.showToast(this.showKeyboard ? 'Piano keyboard shown.' : 'Piano keyboard hidden.', 'info');
+    });
+    document.getElementById('toggle-show-keyboard')?.addEventListener('change', (e) => {
+      this.setKeyboardVisible(e.target.checked);
+    });
+
+    // Live MIDI Event Stream Inspector Controls
+    document.getElementById('btn-quick-toggle-events')?.addEventListener('click', () => {
+      this.setMidiStreamVisible(!this.showMidiStream);
+      this.showToast(this.showMidiStream ? 'Live MIDI Event Stream inspector shown.' : 'Live MIDI Event Stream inspector hidden.', 'info');
+      if (this.showMidiStream) {
+        document.getElementById('midi-event-inspector-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+    document.getElementById('btn-close-midi-events')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      this.setMidiStreamVisible(false);
+      this.showToast('Live MIDI Event Stream inspector hidden.', 'info');
+    });
+    document.getElementById('toggle-show-midi-stream')?.addEventListener('change', (e) => {
+      this.setMidiStreamVisible(e.target.checked);
+    });
+
+    // Staff Layout Selector (Vertical 2-Staves vs Horizontal)
+    document.getElementById('select-staff-layout')?.addEventListener('change', (e) => {
+      this.setStaffLayout(e.target.value);
+      this.showToast(`Staff layout: ${this.staffLayout === 'vertical' ? 'Vertical (2 Staves)' : 'Horizontal (Single Staff)'}`, 'info');
+    });
+    document.getElementById('settings-staff-layout')?.addEventListener('change', (e) => {
+      this.setStaffLayout(e.target.value);
+    });
+
+    // Bass Clef Visibility in Settings
+    const bassClefSelect = document.getElementById('settings-bass-clef');
+    if (bassClefSelect) {
+      bassClefSelect.value = this.showBassClef || 'auto';
+      bassClefSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        this.showBassClef = val;
+        localStorage.setItem('midiscope_bass_clef', val);
+        if (this.notation) {
+          this.notation.setOption('showBassClef', val);
+          this.notation.resize();
+        }
+        this.showToast(`Bass clef: ${val === 'auto' ? 'Auto (hides when unused)' : val === 'never' ? 'Never show' : 'Always show'}`, 'info');
+      });
+    }
+
     // Octave Up / Down
     document.getElementById('btn-octave-down')?.addEventListener('click', () => {
       this.midi.setKeyboardOctave(this.midi.keyboardOctave - 1);
@@ -4132,10 +4707,19 @@ class App {
 
     // Volume Slider & Mute
     const volSlider = document.getElementById('volume-slider');
+    const volText = document.getElementById('volume-percent-text');
     if (volSlider) {
+      // Initialize with current audio master volume
+      const currentVol = (this.audio && typeof this.audio.masterGain?.gain?.value === 'number') 
+        ? this.audio.masterGain.gain.value 
+        : 0.8;
+      volSlider.value = currentVol;
+      if (volText) volText.innerText = `${Math.round(currentVol * 100)}%`;
+
       volSlider.addEventListener('input', (e) => {
         const val = parseFloat(e.target.value);
         this.audio.setVolume(val);
+        if (volText) volText.innerText = `${Math.round(val * 100)}%`;
       });
     }
 
@@ -4145,7 +4729,7 @@ class App {
         const isMuted = !this.audio.isMuted;
         this.audio.setMute(isMuted);
         btnMute.innerHTML = isMuted ? '🔇' : '🔊';
-        btnMute.classList.toggle('text-red-400', isMuted);
+        btnMute.classList.toggle('text-rose-400', isMuted);
       });
     }
 
@@ -4229,10 +4813,9 @@ class App {
     const btnTheme = document.getElementById('btn-toggle-theme');
     if (btnTheme) {
       btnTheme.addEventListener('click', () => {
-        const html = document.documentElement;
-        const isDark = html.classList.toggle('dark');
-        this.notation.setOption('theme', isDark ? 'dark' : 'light');
-        btnTheme.innerHTML = isDark ? '🌙' : '☀️';
+        const nextTheme = this.theme === 'dark' ? 'light' : 'dark';
+        this.setTheme(nextTheme);
+        this.showToast(`Switched to ${nextTheme === 'dark' ? 'Dark' : 'Light'} Mode.`, 'info');
       });
     }
   }

@@ -67,20 +67,40 @@ const CHORD_FORMULAS = [
 
 // Key Signatures definitions with diatonic pitch classes and accidentals
 export const KEY_SIGNATURES = {
-  'C Major': { name: 'C Major', type: 'major', accidentals: 0, sharps: [], flats: [], diatonicPitchClasses: [0, 2, 4, 5, 7, 9, 11] },
-  'G Major': { name: 'G Major', type: 'major', accidentals: 1, sharps: ['F#'], flats: [], diatonicPitchClasses: [7, 9, 11, 0, 2, 4, 6] },
-  'D Major': { name: 'D Major', type: 'major', accidentals: 2, sharps: ['F#', 'C#'], flats: [], diatonicPitchClasses: [2, 4, 6, 7, 9, 11, 1] },
-  'A Major': { name: 'A Major', type: 'major', accidentals: 3, sharps: ['F#', 'C#', 'G#'], flats: [], diatonicPitchClasses: [9, 11, 1, 2, 4, 6, 8] },
-  'E Major': { name: 'E Major', type: 'major', accidentals: 4, sharps: ['F#', 'C#', 'G#', 'D#'], flats: [], diatonicPitchClasses: [4, 6, 8, 9, 11, 1, 3] },
-  'B Major': { name: 'B Major', type: 'major', accidentals: 5, sharps: ['F#', 'C#', 'G#', 'D#', 'A#'], flats: [], diatonicPitchClasses: [11, 1, 3, 4, 6, 8, 10] },
-  'F Major': { name: 'F Major', type: 'major', accidentals: 1, sharps: [], flats: ['Bb'], diatonicPitchClasses: [5, 7, 9, 10, 0, 2, 4] },
-  'Bb Major': { name: 'Bb Major', type: 'major', accidentals: 2, sharps: [], flats: ['Bb', 'Eb'], diatonicPitchClasses: [10, 0, 2, 3, 5, 7, 9] },
-  'Eb Major': { name: 'Eb Major', type: 'major', accidentals: 3, sharps: [], flats: ['Bb', 'Eb', 'Ab'], diatonicPitchClasses: [3, 5, 7, 8, 10, 0, 2] },
-  'Ab Major': { name: 'Ab Major', type: 'major', accidentals: 4, sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'], diatonicPitchClasses: [8, 10, 0, 1, 3, 5, 7] },
-  'A Minor': { name: 'A Minor', type: 'minor', accidentals: 0, sharps: [], flats: [], diatonicPitchClasses: [9, 11, 0, 2, 4, 5, 7] },
-  'E Minor': { name: 'E Minor', type: 'minor', accidentals: 1, sharps: ['F#'], flats: [], diatonicPitchClasses: [4, 6, 7, 9, 11, 0, 2] },
-  'D Minor': { name: 'D Minor', type: 'minor', accidentals: 1, sharps: [], flats: ['Bb'], diatonicPitchClasses: [2, 4, 5, 7, 9, 10, 0] },
-  'D Dorian': { name: 'D Dorian', type: 'modal', accidentals: 0, sharps: [], flats: [], diatonicPitchClasses: [2, 4, 5, 7, 9, 11, 0] }
+  // Major Keys
+  'C Major':  { name: 'C Major',  type: 'major', fifths: 0,  accidentals: 0, sharps: [], flats: [], diatonicPitchClasses: [0, 2, 4, 5, 7, 9, 11] },
+  'G Major':  { name: 'G Major',  type: 'major', fifths: 1,  accidentals: 1, sharps: ['F#'], flats: [], diatonicPitchClasses: [7, 9, 11, 0, 2, 4, 6] },
+  'D Major':  { name: 'D Major',  type: 'major', fifths: 2,  accidentals: 2, sharps: ['F#', 'C#'], flats: [], diatonicPitchClasses: [2, 4, 6, 7, 9, 11, 1] },
+  'A Major':  { name: 'A Major',  type: 'major', fifths: 3,  accidentals: 3, sharps: ['F#', 'C#', 'G#'], flats: [], diatonicPitchClasses: [9, 11, 1, 2, 4, 6, 8] },
+  'E Major':  { name: 'E Major',  type: 'major', fifths: 4,  accidentals: 4, sharps: ['F#', 'C#', 'G#', 'D#'], flats: [], diatonicPitchClasses: [4, 6, 8, 9, 11, 1, 3] },
+  'B Major':  { name: 'B Major',  type: 'major', fifths: 5,  accidentals: 5, sharps: ['F#', 'C#', 'G#', 'D#', 'A#'], flats: [], diatonicPitchClasses: [11, 1, 3, 4, 6, 8, 10] },
+  'F# Major': { name: 'F# Major', type: 'major', fifths: 6,  accidentals: 6, sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#'], flats: [], diatonicPitchClasses: [6, 8, 10, 11, 1, 3, 5] },
+  'C# Major': { name: 'C# Major', type: 'major', fifths: 7,  accidentals: 7, sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#', 'B#'], flats: [], diatonicPitchClasses: [1, 3, 5, 6, 8, 10, 0] },
+  'F Major':  { name: 'F Major',  type: 'major', fifths: -1, accidentals: 1, sharps: [], flats: ['Bb'], diatonicPitchClasses: [5, 7, 9, 10, 0, 2, 4] },
+  'Bb Major': { name: 'Bb Major', type: 'major', fifths: -2, accidentals: 2, sharps: [], flats: ['Bb', 'Eb'], diatonicPitchClasses: [10, 0, 2, 3, 5, 7, 9] },
+  'Eb Major': { name: 'Eb Major', type: 'major', fifths: -3, accidentals: 3, sharps: [], flats: ['Bb', 'Eb', 'Ab'], diatonicPitchClasses: [3, 5, 7, 8, 10, 0, 2] },
+  'Ab Major': { name: 'Ab Major', type: 'major', fifths: -4, accidentals: 4, sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'], diatonicPitchClasses: [8, 10, 0, 1, 3, 5, 7] },
+  'Db Major': { name: 'Db Major', type: 'major', fifths: -5, accidentals: 5, sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'], diatonicPitchClasses: [1, 3, 5, 6, 8, 10, 0] },
+  'Gb Major': { name: 'Gb Major', type: 'major', fifths: -6, accidentals: 6, sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'], diatonicPitchClasses: [6, 8, 10, 11, 1, 3, 5] },
+  'Cb Major': { name: 'Cb Major', type: 'major', fifths: -7, accidentals: 7, sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb', 'Fb'], diatonicPitchClasses: [11, 1, 3, 4, 6, 8, 10] },
+
+  // Minor Keys
+  'A Minor':  { name: 'A Minor',  type: 'minor', fifths: 0,  accidentals: 0, sharps: [], flats: [], diatonicPitchClasses: [9, 11, 0, 2, 4, 5, 7, 8] },
+  'E Minor':  { name: 'E Minor',  type: 'minor', fifths: 1,  accidentals: 1, sharps: ['F#'], flats: [], diatonicPitchClasses: [4, 6, 7, 9, 11, 0, 2, 3] },
+  'B Minor':  { name: 'B Minor',  type: 'minor', fifths: 2,  accidentals: 2, sharps: ['F#', 'C#'], flats: [], diatonicPitchClasses: [11, 1, 2, 4, 6, 7, 9, 10] },
+  'F# Minor': { name: 'F# Minor', type: 'minor', fifths: 3,  accidentals: 3, sharps: ['F#', 'C#', 'G#'], flats: [], diatonicPitchClasses: [6, 8, 9, 11, 1, 2, 4, 5] },
+  'C# Minor': { name: 'C# Minor', type: 'minor', fifths: 4,  accidentals: 4, sharps: ['F#', 'C#', 'G#', 'D#'], flats: [], diatonicPitchClasses: [1, 3, 4, 6, 8, 9, 11, 0] },
+  'G# Minor': { name: 'G# Minor', type: 'minor', fifths: 5,  accidentals: 5, sharps: ['F#', 'C#', 'G#', 'D#', 'A#'], flats: [], diatonicPitchClasses: [8, 10, 11, 1, 3, 4, 6, 7] },
+  'D# Minor': { name: 'D# Minor', type: 'minor', fifths: 6,  accidentals: 6, sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#'], flats: [], diatonicPitchClasses: [3, 5, 6, 8, 10, 11, 1, 2] },
+  'A# Minor': { name: 'A# Minor', type: 'minor', fifths: 7,  accidentals: 7, sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#', 'B#'], flats: [], diatonicPitchClasses: [10, 0, 1, 3, 5, 6, 8, 9] },
+  'D Minor':  { name: 'D Minor',  type: 'minor', fifths: -1, accidentals: 1, sharps: [], flats: ['Bb'], diatonicPitchClasses: [2, 4, 5, 7, 9, 10, 0, 1] },
+  'G Minor':  { name: 'G Minor',  type: 'minor', fifths: -2, accidentals: 2, sharps: [], flats: ['Bb', 'Eb'], diatonicPitchClasses: [7, 9, 10, 0, 2, 3, 5, 6] },
+  'C Minor':  { name: 'C Minor',  type: 'minor', fifths: -3, accidentals: 3, sharps: [], flats: ['Bb', 'Eb', 'Ab'], diatonicPitchClasses: [0, 2, 3, 5, 7, 8, 10, 11] },
+  'F Minor':  { name: 'F Minor',  type: 'minor', fifths: -4, accidentals: 4, sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'], diatonicPitchClasses: [5, 7, 8, 10, 0, 1, 3, 4] },
+  'Bb Minor': { name: 'Bb Minor', type: 'minor', fifths: -5, accidentals: 5, sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'], diatonicPitchClasses: [10, 0, 1, 3, 5, 6, 8, 9] },
+  'Eb Minor': { name: 'Eb Minor', type: 'minor', fifths: -6, accidentals: 6, sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'], diatonicPitchClasses: [3, 5, 6, 8, 10, 11, 1, 2] },
+  'Ab Minor': { name: 'Ab Minor', type: 'minor', fifths: -7, accidentals: 7, sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb', 'Fb'], diatonicPitchClasses: [8, 10, 11, 1, 3, 4, 6, 7] },
+  'D Dorian': { name: 'D Dorian', type: 'modal', fifths: 0,  accidentals: 0, sharps: [], flats: [], diatonicPitchClasses: [2, 4, 5, 7, 9, 11, 0] }
 };
 
 
@@ -127,6 +147,7 @@ export class MusicTheory {
       accidental,
       fullName,
       displayName,
+      name: fullName,
       diatonicStep,
       clef,
       frequency: 440 * Math.pow(2, (safeMidi - 69) / 12)
@@ -260,7 +281,69 @@ export class MusicTheory {
    * Get Key Signature details by name
    */
   static getKeySignature(name = 'C Major') {
-    return KEY_SIGNATURES[name] || KEY_SIGNATURES['C Major'];
+    if (!name) return KEY_SIGNATURES['C Major'];
+    const normalized = String(name).replace(/♭/g, 'b').replace(/♯/g, '#').trim();
+    return KEY_SIGNATURES[normalized] || KEY_SIGNATURES[name] || KEY_SIGNATURES['C Major'];
+  }
+
+  /**
+   * Determine the exact accidental symbol ('#', 'b', '♮', or null) that should be printed
+   * before a note on the score staff according to standard musical engraving rules.
+   * If the note is already altered by the Key Signature (e.g. Bb in Bb Major or G Minor),
+   * no accidental is printed (returns null).
+   */
+  static getNoteAccidentalForScore(midi, keySignatureName = 'C Major', explicitAccidental = null) {
+    if (explicitAccidental) {
+      if (explicitAccidental === 'sharp') return '#';
+      if (explicitAccidental === 'flat') return 'b';
+      if (explicitAccidental === 'natural') return '♮';
+      if (explicitAccidental === 'double-sharp') return '##';
+      if (explicitAccidental === 'flat-flat') return 'bb';
+    }
+
+    if (typeof midi !== 'number' || isNaN(midi) || !isFinite(midi)) {
+      return null;
+    }
+
+    const key = this.getKeySignature(keySignatureName);
+    const preferFlats = key.flats && key.flats.length > 0;
+    const safeMidi = Math.max(0, Math.min(127, Math.round(midi)));
+    const pc = ((safeMidi % 12) + 12) % 12;
+
+    // Special harmonic minor leading tone handling:
+    // In G Minor (fifths -2), F# (pc 6) is written as F# (not Gb)
+    if (key.name === 'G Minor' && pc === 6) {
+      return '#';
+    }
+    if (key.name === 'D Minor' && pc === 1) { // C#
+      return '#';
+    }
+    if (key.name === 'C Minor' && pc === 11) { // B natural
+      return '♮';
+    }
+
+    const info = this.getNoteInfo(safeMidi, preferFlats);
+    const letter = info.letter;
+    const noteAcc = info.accidental || '';
+
+    let keyAlt = '';
+    if (key.flats && key.flats.some(f => f.startsWith(letter))) {
+      keyAlt = 'b';
+    } else if (key.sharps && key.sharps.some(s => s.startsWith(letter))) {
+      keyAlt = '#';
+    }
+
+    // If note's accidental matches the key signature alteration, no accidental is printed!
+    if (noteAcc === keyAlt) {
+      return null;
+    }
+
+    // If note is natural, but key signature altered this letter, a natural (♮) must be printed
+    if (noteAcc === '') {
+      return '♮';
+    }
+
+    return noteAcc;
   }
 
   /**

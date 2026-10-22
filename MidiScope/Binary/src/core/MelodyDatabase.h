@@ -46,6 +46,7 @@ struct MidiChannelInfo
     int lowestMidi = 127;
     int highestMidi = 0;
     bool isDrum = false; // channel 10
+    juce::String partId; // For MusicXML parts
 };
 
 class MelodyDatabase
@@ -55,6 +56,9 @@ public:
     static const Melody* getMelodyById(const juce::String& id);
     static std::vector<MidiChannelInfo> inspectMidiChannels(const juce::File& file);
     static bool loadMidiFile(const juce::File& file, juce::String& outMelodyId, int targetChannel = -1);
+    static std::vector<MidiChannelInfo> inspectMusicXmlParts(const juce::File& file);
+    static bool loadMusicXmlFile(const juce::File& file, juce::String& outMelodyId, const juce::String& targetPartId = {});
+    static bool isMusicXmlFile(const juce::File& file);
     static void addCustomMelody(const Melody& melody);
     static void removeCustomMelody(const juce::String& id);
 

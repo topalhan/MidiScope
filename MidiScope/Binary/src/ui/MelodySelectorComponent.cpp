@@ -13,7 +13,7 @@ MelodySelectorComponent::MelodySelectorComponent()
     listBox.setColour(juce::ListBox::backgroundColourId, juce::Colour::fromRGB(15, 23, 42)); // Slate 900
     addAndMakeVisible(listBox);
 
-    loadMidiButton.setButtonText("+ Load .MID File");
+    loadMidiButton.setButtonText("+ Load File (MID / XML)");
     loadMidiButton.setColour(juce::TextButton::buttonColourId, juce::Colour::fromRGB(16, 185, 129)); // Emerald
     loadMidiButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
     loadMidiButton.onClick = [this]() { openFileChooser(); };
@@ -66,9 +66,9 @@ void MelodySelectorComponent::switchToMelodiesView()
 void MelodySelectorComponent::openFileChooser()
 {
     fileChooser = std::make_unique<juce::FileChooser>(
-        "Select a Standard MIDI File (.mid) to score...",
+        "Select a Score File (.mid, .midi, .musicxml, .xml, .mxl) to score...",
         juce::File::getSpecialLocation(juce::File::userHomeDirectory),
-        "*.mid;*.midi");
+        "*.mid;*.midi;*.musicxml;*.xml;*.mxl");
 
     auto folderChooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
 
@@ -77,35 +77,58 @@ void MelodySelectorComponent::openFileChooser()
         auto file = chooser.getResult();
         if (file.existsAsFile())
         {
-            auto channels = MelodyDatabase::inspectMidiChannels(file);
-            if (channels.empty())
+            if (MelodyDatabase::isMusicXmlFile(file))
             {
-                // Fallback: try loading directly
-                juce::String newMelodyId;
-                if (MelodyDatabase::loadMidiFile(file, newMelodyId, -1))
+                auto parts = MelodyDatabase::inspectMusicXmlParts(file);
+                if (parts.size() <= 1)
                 {
-                    listBox.updateContent();
-                    listBox.repaint();
-                    if (onMelodySelected)
-                        onMelodySelected(newMelodyId);
+                    juce::String newMelodyId;
+                    juce::String targetPartId = parts.empty() ? juce::String() : parts[0].partId;
+                    if (MelodyDatabase::loadMusicXmlFile(file, newMelodyId, targetPartId))
+                    {
+                        listBox.updateContent();
+                        listBox.repaint();
+                        if (onMelodySelected)
+                            onMelodySelected(newMelodyId);
+                    }
                 }
-            }
-            else if (channels.size() == 1)
-            {
-                // Only 1 channel: load directly without prompt
-                juce::String newMelodyId;
-                if (MelodyDatabase::loadMidiFile(file, newMelodyId, channels[0].channelNumber))
+                else
                 {
-                    listBox.updateContent();
-                    listBox.repaint();
-                    if (onMelodySelected)
-                        onMelodySelected(newMelodyId);
+                    switchToChannelsView(file, parts);
                 }
             }
             else
             {
-                // Multiple channels: prompt user to pick channel
-                switchToChannelsView(file, channels);
+                auto channels = MelodyDatabase::inspectMidiChannels(file);
+                if (channels.empty())
+                {
+                    // Fallback: try loading directly
+                    juce::String newMelodyId;
+                    if (MelodyDatabase::loadMidiFile(file, newMelodyId, -1))
+                    {
+                        listBox.updateContent();
+                        listBox.repaint();
+                        if (onMelodySelected)
+                            onMelodySelected(newMelodyId);
+                    }
+                }
+                else if (channels.size() == 1)
+                {
+                    // Only 1 channel: load directly without prompt
+                    juce::String newMelodyId;
+                    if (MelodyDatabase::loadMidiFile(file, newMelodyId, channels[0].channelNumber))
+                    {
+                        listBox.updateContent();
+                        listBox.repaint();
+                        if (onMelodySelected)
+                            onMelodySelected(newMelodyId);
+                    }
+                }
+                else
+                {
+                    // Multiple channels: prompt user to pick channel
+                    switchToChannelsView(file, channels);
+                }
             }
         }
     });
@@ -137,7 +160,7 @@ void MelodySelectorComponent::paint(juce::Graphics& g)
 
     if (currentMode == ViewMode::Channels)
     {
-        juce::String title = "Select Channel: " + pendingFile.getFileName();
+        juce::String title = (MelodyDatabase::isMusicXmlFile(pendingFile) ? "Select Score Part: " : "Select Channel: ") + pendingFile.getFileName();
         g.drawText(title, bounds.getX() + 16, bounds.getY() + 12, bounds.getWidth() - 190.0f, 24.0f, juce::Justification::centredLeft, true);
     }
     else
@@ -338,7 +361,8 @@ void MelodySelectorComponent::ChannelListBoxModel::paintListBoxItem(int rowNumbe
         g.setColour(juce::Colour::fromRGB(56, 189, 248));
         g.drawRoundedRectangle(x, y + 4.0f, 36.0f, 24.0f, 6.0f, 1.0f);
         g.setFont(juce::FontOptions(10.0f, juce::Font::bold));
-        g.drawText("CH " + juce::String(ch.channelNumber), x, y + 4.0f, 36.0f, 24.0f, juce::Justification::centred);
+        juce::String badgePrefix = MelodyDatabase::isMusicXmlFile(owner.pendingFile) ? "PT " : "CH ";
+        g.drawText(badgePrefix + juce::String(ch.channelNumber), x, y + 4.0f, 36.0f, 24.0f, juce::Justification::centred);
 
         // Title: Track Name or Instrument Name
         juce::String title = ch.trackName.isNotEmpty() ? ch.trackName : ch.instrumentName;
@@ -372,18 +396,36 @@ void MelodySelectorComponent::ChannelListBoxModel::listBoxItemClicked(int rowNum
     juce::ignoreUnused(event);
 
     juce::String newMelodyId;
-    int targetChannel = -1;
+    bool success = false;
 
-    if (rowNumber > 0)
+    if (MelodyDatabase::isMusicXmlFile(owner.pendingFile))
     {
-        const size_t chIdx = static_cast<size_t>(rowNumber - 1);
-        if (chIdx < owner.pendingChannels.size())
+        juce::String targetPartId;
+        if (rowNumber > 0)
         {
-            targetChannel = owner.pendingChannels[chIdx].channelNumber;
+            const size_t ptIdx = static_cast<size_t>(rowNumber - 1);
+            if (ptIdx < owner.pendingChannels.size())
+            {
+                targetPartId = owner.pendingChannels[ptIdx].partId;
+            }
         }
+        success = MelodyDatabase::loadMusicXmlFile(owner.pendingFile, newMelodyId, targetPartId);
+    }
+    else
+    {
+        int targetChannel = -1;
+        if (rowNumber > 0)
+        {
+            const size_t chIdx = static_cast<size_t>(rowNumber - 1);
+            if (chIdx < owner.pendingChannels.size())
+            {
+                targetChannel = owner.pendingChannels[chIdx].channelNumber;
+            }
+        }
+        success = MelodyDatabase::loadMidiFile(owner.pendingFile, newMelodyId, targetChannel);
     }
 
-    if (MelodyDatabase::loadMidiFile(owner.pendingFile, newMelodyId, targetChannel))
+    if (success)
     {
         owner.switchToMelodiesView();
         if (owner.onMelodySelected)

@@ -619,4 +619,415 @@ std::vector<Melody> MelodyDatabase::createMelodyLibrary()
     return list;
 }
 
+bool MelodyDatabase::isMusicXmlFile(const juce::File& file)
+{
+    auto ext = file.getFileExtension().toLowerCase();
+    return (ext == ".musicxml" || ext == ".xml" || ext == ".mxl");
+}
+
+static std::unique_ptr<juce::XmlElement> parseMusicXmlRoot(const juce::File& file)
+{
+    if (file.getFileExtension().equalsIgnoreCase(".mxl"))
+    {
+        juce::ZipFile zip(file);
+        int targetIdx = -1;
+
+        int containerIdx = zip.getIndexOfFileName("META-INF/container.xml");
+        if (containerIdx >= 0)
+        {
+            std::unique_ptr<juce::InputStream> cStream(zip.createStreamForEntry(containerIdx));
+            if (cStream != nullptr)
+            {
+                juce::XmlDocument cDoc(cStream->readEntireStreamAsString());
+                auto cXml = cDoc.getDocumentElement();
+                if (cXml != nullptr)
+                {
+                    if (auto* rootfiles = cXml->getChildByName("rootfiles"))
+                    {
+                        if (auto* rootfile = rootfiles->getChildByName("rootfile"))
+                        {
+                            auto fullPath = rootfile->getStringAttribute("full-path");
+                            if (fullPath.isNotEmpty())
+                                targetIdx = zip.getIndexOfFileName(fullPath);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (targetIdx < 0)
+        {
+            for (int i = 0; i < zip.getNumEntries(); ++i)
+            {
+                auto entryName = zip.getEntry(i)->filename;
+                if ((entryName.endsWithIgnoreCase(".xml") || entryName.endsWithIgnoreCase(".musicxml"))
+                    && !entryName.startsWithIgnoreCase("META-INF/"))
+                {
+                    targetIdx = i;
+                    break;
+                }
+            }
+        }
+
+        if (targetIdx >= 0)
+        {
+            std::unique_ptr<juce::InputStream> s(zip.createStreamForEntry(targetIdx));
+            if (s != nullptr)
+            {
+                juce::XmlDocument doc(s->readEntireStreamAsString());
+                return doc.getDocumentElement();
+            }
+        }
+        return nullptr;
+    }
+    else
+    {
+        juce::XmlDocument doc(file);
+        return doc.getDocumentElement();
+    }
+}
+
+static int parsePitchToMidi(const juce::XmlElement& pitchElem)
+{
+    auto step = pitchElem.getChildElementAllSubText("step", {}).trim().toUpperCase();
+    int octave = pitchElem.getChildElementAllSubText("octave", "4").getIntValue();
+    int alter = pitchElem.getChildElementAllSubText("alter", "0").getIntValue();
+
+    int base = 0;
+    if (step == "C") base = 0;
+    else if (step == "D") base = 2;
+    else if (step == "E") base = 4;
+    else if (step == "F") base = 5;
+    else if (step == "G") base = 7;
+    else if (step == "A") base = 9;
+    else if (step == "B") base = 11;
+    else return -1;
+
+    int midi = (octave + 1) * 12 + base + alter;
+    return juce::jlimit(0, 127, midi);
+}
+
+std::vector<MidiChannelInfo> MelodyDatabase::inspectMusicXmlParts(const juce::File& file)
+{
+    std::vector<MidiChannelInfo> result;
+    auto root = parseMusicXmlRoot(file);
+    if (root == nullptr)
+        return result;
+
+    auto* partListElem = root->getChildByName("part-list");
+    if (partListElem == nullptr)
+        return result;
+
+    int partNum = 1;
+    for (auto* sp : partListElem->getChildIterator())
+    {
+        if (sp->hasTagName("score-part"))
+        {
+            juce::String partId = sp->getStringAttribute("id");
+            juce::String partName = sp->getChildElementAllSubText("part-name", "Part " + juce::String(partNum)).trim();
+
+            juce::String instName = partName;
+            if (auto* scInst = sp->getChildByName("score-instrument"))
+            {
+                auto inText = scInst->getChildElementAllSubText("instrument-name", {}).trim();
+                if (inText.isNotEmpty())
+                    instName = inText;
+            }
+
+            int noteCount = 0;
+            int lowest = 127;
+            int highest = 0;
+
+            for (auto* p : root->getChildIterator())
+            {
+                if (p->hasTagName("part") && p->getStringAttribute("id") == partId)
+                {
+                    for (auto* m : p->getChildIterator())
+                    {
+                        if (m->hasTagName("measure"))
+                        {
+                            for (auto* n : m->getChildIterator())
+                            {
+                                if (n->hasTagName("note") && n->getChildByName("rest") == nullptr)
+                                {
+                                    if (auto* pitch = n->getChildByName("pitch"))
+                                    {
+                                        int midi = parsePitchToMidi(*pitch);
+                                        if (midi >= 0)
+                                        {
+                                            noteCount++;
+                                            lowest = std::min(lowest, midi);
+                                            highest = std::max(highest, midi);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (noteCount > 0)
+            {
+                MidiChannelInfo info;
+                info.channelNumber = partNum;
+                info.noteCount = noteCount;
+                info.trackName = partName;
+                info.instrumentName = instName;
+                info.lowestMidi = lowest;
+                info.highestMidi = highest;
+                info.isDrum = false;
+                info.partId = partId;
+                result.push_back(info);
+            }
+
+            partNum++;
+        }
+    }
+
+    return result;
+}
+
+bool MelodyDatabase::loadMusicXmlFile(const juce::File& file, juce::String& outMelodyId, const juce::String& targetPartId)
+{
+    auto root = parseMusicXmlRoot(file);
+    if (root == nullptr)
+        return false;
+
+    Melody m;
+    m.id = "custom-" + juce::String(juce::Time::currentTimeMillis());
+    m.title = file.getFileNameWithoutExtension();
+    m.composer = "Custom Import";
+    m.difficulty = "Medium";
+    m.bpm = 120;
+    m.timeSigNum = 4;
+    m.timeSigDen = 4;
+    m.key = "C Major";
+    m.isCustom = true;
+
+    // 1. Title
+    if (auto* work = root->getChildByName("work"))
+    {
+        auto wt = work->getChildElementAllSubText("work-title", {}).trim();
+        if (wt.isNotEmpty()) m.title = wt;
+    }
+    if (m.title == file.getFileNameWithoutExtension())
+    {
+        auto mt = root->getChildElementAllSubText("movement-title", {}).trim();
+        if (mt.isNotEmpty()) m.title = mt;
+    }
+
+    // 2. Composer
+    if (auto* idElem = root->getChildByName("identification"))
+    {
+        for (auto* cr : idElem->getChildIterator())
+        {
+            if (cr->hasTagName("creator"))
+            {
+                auto cText = cr->getAllSubText().trim();
+                if (cText.isNotEmpty())
+                {
+                    m.composer = cText;
+                    break;
+                }
+            }
+        }
+    }
+
+    // 3. Tempo & Time Sig & Key
+    for (auto* p : root->getChildIterator())
+    {
+        if (p->hasTagName("part"))
+        {
+            for (auto* measure : p->getChildIterator())
+            {
+                if (measure->hasTagName("measure"))
+                {
+                    if (auto* sound = measure->getChildByName("sound"))
+                    {
+                        double tempo = sound->getDoubleAttribute("tempo", 0.0);
+                        if (tempo > 0.0) m.bpm = juce::jlimit(40, 240, static_cast<int>(std::round(tempo)));
+                    }
+                    if (auto* attr = measure->getChildByName("attributes"))
+                    {
+                        if (auto* time = attr->getChildByName("time"))
+                        {
+                            int beats = time->getChildElementAllSubText("beats", "4").getIntValue();
+                            int beatType = time->getChildElementAllSubText("beat-type", "4").getIntValue();
+                            if (beats > 0 && beatType > 0)
+                            {
+                                m.timeSigNum = beats;
+                                m.timeSigDen = beatType;
+                            }
+                        }
+                        if (auto* key = attr->getChildByName("key"))
+                        {
+                            int fifths = key->getChildElementAllSubText("fifths", "0").getIntValue();
+                            auto mode = key->getChildElementAllSubText("mode", "major").toLowerCase();
+                            if (fifths == 0) m.key = (mode == "minor") ? "A Minor" : "C Major";
+                            else if (fifths == 1) m.key = (mode == "minor") ? "E Minor" : "G Major";
+                            else if (fifths == 2) m.key = (mode == "minor") ? "B Minor" : "D Major";
+                            else if (fifths == 3) m.key = (mode == "minor") ? "F# Minor" : "A Major";
+                            else if (fifths == 4) m.key = (mode == "minor") ? "C# Minor" : "E Major";
+                            else if (fifths == -1) m.key = (mode == "minor") ? "D Minor" : "F Major";
+                            else if (fifths == -2) m.key = (mode == "minor") ? "G Minor" : "Bb Major";
+                            else if (fifths == -3) m.key = (mode == "minor") ? "C Minor" : "Eb Major";
+                        }
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    // Part suffix if multiple parts and specific part chosen
+    auto allParts = inspectMusicXmlParts(file);
+    if (targetPartId.isNotEmpty() && allParts.size() > 1)
+    {
+        for (const auto& pt : allParts)
+        {
+            if (pt.partId == targetPartId)
+            {
+                m.title += " (" + pt.trackName + ")";
+                break;
+            }
+        }
+    }
+
+    struct RawXmlNote {
+        int midi = 60;
+        double startBeat = 0.0;
+        float duration = 1.0f;
+    };
+    std::vector<RawXmlNote> rawNotes;
+
+    for (auto* p : root->getChildIterator())
+    {
+        if (!p->hasTagName("part")) continue;
+        if (targetPartId.isNotEmpty() && p->getStringAttribute("id") != targetPartId)
+            continue;
+
+        double currentDivisions = 4.0;
+        double cumulativeBeats = 0.0;
+
+        for (auto* measure : p->getChildIterator())
+        {
+            if (!measure->hasTagName("measure")) continue;
+
+            if (auto* attr = measure->getChildByName("attributes"))
+            {
+                if (auto* div = attr->getChildByName("divisions"))
+                {
+                    double d = div->getAllSubText().getDoubleValue();
+                    if (d > 0.0) currentDivisions = d;
+                }
+            }
+
+            double localDivisions = 0.0;
+            double prevNoteStartDivisions = 0.0;
+            double maxLocalDivisions = 0.0;
+
+            for (auto* child : measure->getChildIterator())
+            {
+                if (child->hasTagName("backup"))
+                {
+                    double dur = child->getChildElementAllSubText("duration", "0").getDoubleValue();
+                    localDivisions = std::max(0.0, localDivisions - dur);
+                }
+                else if (child->hasTagName("forward"))
+                {
+                    double dur = child->getChildElementAllSubText("duration", "0").getDoubleValue();
+                    localDivisions += dur;
+                    maxLocalDivisions = std::max(maxLocalDivisions, localDivisions);
+                }
+                else if (child->hasTagName("note"))
+                {
+                    bool isChord = child->getChildByName("chord") != nullptr;
+                    bool isRest = child->getChildByName("rest") != nullptr;
+                    double durDiv = child->getChildElementAllSubText("duration", "0").getDoubleValue();
+
+                    double noteStartDiv = localDivisions;
+                    if (isChord)
+                    {
+                        noteStartDiv = prevNoteStartDivisions;
+                    }
+                    else
+                    {
+                        prevNoteStartDivisions = localDivisions;
+                        localDivisions += durDiv;
+                        maxLocalDivisions = std::max(maxLocalDivisions, localDivisions);
+                    }
+
+                    if (isRest || durDiv <= 0.0) continue;
+
+                    if (auto* pitch = child->getChildByName("pitch"))
+                    {
+                        int midi = parsePitchToMidi(*pitch);
+                        if (midi >= 0)
+                        {
+                            double noteStartBeat = cumulativeBeats + (noteStartDiv / currentDivisions);
+                            float rawDuration = static_cast<float>(durDiv / currentDivisions);
+                            float quantized = std::max(0.25f, std::round(rawDuration * 4.0f) / 4.0f);
+                            if (quantized > 4.0f) quantized = 4.0f;
+
+                            RawXmlNote rn;
+                            rn.midi = midi;
+                            rn.startBeat = noteStartBeat;
+                            rn.duration = quantized;
+                            rawNotes.push_back(rn);
+                        }
+                    }
+                }
+            }
+
+            double measureBeats = maxLocalDivisions > 0.0
+                ? (maxLocalDivisions / currentDivisions)
+                : (m.timeSigNum * (4.0 / m.timeSigDen));
+            cumulativeBeats += measureBeats;
+        }
+    }
+
+    if (rawNotes.empty())
+        return false;
+
+    // Sort chronologically; for chords, highest pitch first
+    std::sort(rawNotes.begin(), rawNotes.end(), [](const RawXmlNote& a, const RawXmlNote& b) {
+        if (std::abs(a.startBeat - b.startBeat) < 0.01)
+            return a.midi > b.midi;
+        return a.startBeat < b.startBeat;
+    });
+
+    double lastBeat = -9999.0;
+    const double beatTolerance = 0.05;
+
+    for (const auto& rn : rawNotes)
+    {
+        if (m.notes.size() >= 80) break;
+
+        if (!m.notes.empty() && std::abs(rn.startBeat - lastBeat) <= beatTolerance)
+        {
+            continue;
+        }
+
+        MelodyNote note;
+        note.midi = rn.midi;
+        note.duration = rn.duration;
+        note.name = MusicTheory::getNoteInfo(rn.midi, false).fullName;
+        note.startBeat = rn.startBeat;
+        m.notes.push_back(note);
+        lastBeat = rn.startBeat;
+    }
+
+    if (m.notes.empty())
+        return false;
+
+    m.timeSignature.numerator = m.timeSigNum;
+    m.timeSignature.denominator = m.timeSigDen;
+
+    addCustomMelody(m);
+    outMelodyId = m.id;
+    return true;
+}
+
 } // namespace MidiSheet
