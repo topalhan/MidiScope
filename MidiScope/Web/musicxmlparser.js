@@ -603,6 +603,16 @@ export async function parseMusicXml(source, fileName = 'score.musicxml', targetP
           const accidentalElem = child.querySelector('accidental');
           const explicitAccidental = accidentalElem ? accidentalElem.textContent.trim().toLowerCase() : null;
 
+          const notationsElem = child.querySelector('notations');
+          let slurStart = false;
+          let slurStop = false;
+          let isStaccato = false;
+          if (notationsElem) {
+            if (notationsElem.querySelector('slur[type="start"]')) slurStart = true;
+            if (notationsElem.querySelector('slur[type="stop"]')) slurStop = true;
+            if (notationsElem.querySelector('staccato')) isStaccato = true;
+          }
+
           const startBeat = cumulativeBeats + (noteStartDivisions / currentDivisions);
           const durationBeats = durDivisions / currentDivisions;
 
@@ -626,7 +636,10 @@ export async function parseMusicXml(source, fileName = 'score.musicxml', targetP
             isTieStart,
             explicitAccidental,
             step,
-            alter
+            alter,
+            slurStart,
+            slurStop,
+            staccato: isStaccato
           });
         }
       }
@@ -680,7 +693,10 @@ export async function parseMusicXml(source, fileName = 'score.musicxml', targetP
       name: noteInfo ? noteInfo.name : `Note ${n.midi}`,
       explicitAccidental: n.explicitAccidental || null,
       step: n.step || null,
-      alter: n.alter !== undefined ? n.alter : null
+      alter: n.alter !== undefined ? n.alter : null,
+      slurStart: !!n.slurStart,
+      slurStop: !!n.slurStop,
+      staccato: !!n.staccato
     };
   });
 

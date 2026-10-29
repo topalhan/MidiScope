@@ -24,7 +24,8 @@
   <script>
     (function() {
       try {
-        var savedTheme = localStorage.getItem('midiscope_theme');
+        var urlParams = new URLSearchParams(window.location.search);
+        var savedTheme = urlParams.get('theme') || localStorage.getItem('midiscope_theme');
         if (savedTheme === 'light') {
           document.documentElement.classList.remove('dark');
           document.documentElement.classList.add('light');
@@ -341,10 +342,6 @@
               <button id="btn-practice-guide" title="Melody Guide & Sight-Reading Objectives (Press ? or Click)" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 transition-colors flex items-center gap-1">
                 <span>💡 Guide</span>
               </button>
-              <button id="btn-load-midi" title="Load external MIDI (.mid) or MusicXML (.musicxml, .xml, .mxl) score to practice and score" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 transition-colors flex items-center gap-1.5">
-                <span>📁 Load Score</span>
-                <span class="text-[9px] font-mono px-1 py-0.5 rounded bg-emerald-500/30 text-emerald-200">MIDI/XML</span>
-              </button>
               <input type="file" id="midi-file-input" accept=".mid,.midi,.musicxml,.xml,.mxl" class="hidden">
             </div>
           </div>
@@ -606,15 +603,17 @@
             <option value="live">Live Grand Staff (Chords)</option>
             <option value="rhythm_trainer">Scrolling Rhythm Score (with ±ms)</option>
             <option value="scrolling">Scrolling Sheet Timeline</option>
+            <option value="waterfall">🌊 Waterfall (Falling Notes)</option>
           </select>
         </div>
 
         <!-- Practice Staff Layout (Vertical 2-Staves vs Horizontal) -->
-        <div class="flex items-center gap-1.5" title="Practice Staff Layout: Vertical 2-Line Scrolling Sheet vs Horizontal Single Staff">
+        <div class="flex items-center gap-1.5" title="Practice Staff Layout: Vertical 2-Line Scrolling Sheet vs Horizontal Single Staff vs Waterfall">
           <label class="text-slate-400 font-medium">Layout:</label>
           <select id="select-staff-layout" class="bg-slate-800 border border-slate-700 text-slate-200 rounded px-2 py-1 text-xs font-semibold">
             <option value="vertical" selected>Vertical (2 Staves)</option>
             <option value="horizontal">Horizontal (1 Staff)</option>
+            <option value="waterfall">🌊 Waterfall (Falling Notes)</option>
           </select>
         </div>
 
@@ -1757,6 +1756,7 @@
               <select id="settings-staff-layout" class="bg-slate-800 border border-slate-700 text-slate-200 rounded px-2 py-1 text-xs font-semibold">
                 <option value="vertical" selected>Vertical (2 Staves Scrolling)</option>
                 <option value="horizontal">Horizontal (Single Staff)</option>
+                <option value="waterfall">Waterfall (Falling Notes)</option>
               </select>
             </div>
             <div class="flex items-center justify-between pt-1">
@@ -1828,6 +1828,6 @@
     MidiSheet • Real-time Web MIDI Music Notation, Trainer & Synthesizer
   </footer>
 
-  <script type="module" src="./app.js?v=20261021.1340"></script>
+  <script type="module" src="./app.js?v=20261029.0825"></script>
 </body>
 </html>

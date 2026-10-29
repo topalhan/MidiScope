@@ -1,4 +1,4 @@
-export const BUILD_ID = '20261014.0820';
+export const BUILD_ID = '20261029.0825';
 /**
  * Main Application Coordinator
  * Integrates NotationRenderer, AudioEngine, MidiManager, Virtual Piano Keyboard,
@@ -6,7 +6,7 @@ export const BUILD_ID = '20261014.0820';
  */
 
 import { MusicTheory } from './chords.js';
-import { NotationRenderer } from './notation.js?v=20261014.0820';
+import { NotationRenderer } from './notation.js?v=20261029.0825';
 import { AudioEngine } from './audio.js';
 import { MidiManager } from './midi.js';
 import { MelodyTrainer } from './trainer.js?v=20261014.0820';
@@ -348,6 +348,17 @@ class App {
       this.updateReviewUI(index);
     };
 
+    // Waterfall canvas keyboard interactions
+    this.notation.onCanvasKeyNoteOn = (midi) => {
+      this.handleNoteOn(midi, 100, 'Virtual Piano');
+    };
+    this.notation.onCanvasKeyNoteOff = (midi) => {
+      this.handleNoteOff(midi, 'Virtual Piano');
+    };
+    this.notation.onWaterfallRestart = () => {
+      this.trainer.restart();
+    };
+
     window.addEventListener('resize', () => {
       this.notation.resize();
     });
@@ -358,7 +369,8 @@ class App {
     this.staffLayout = localStorage.getItem('midiscope_staff_layout') || 'vertical';
     this.showBassClef = localStorage.getItem('midiscope_bass_clef') || 'auto';
     this.showMidiStream = localStorage.getItem('midiscope_show_events') === 'true';
-    this.theme = localStorage.getItem('midiscope_theme') || 'dark';
+    const urlParams = new URLSearchParams(window.location.search);
+    this.theme = urlParams.get('theme') || localStorage.getItem('midiscope_theme') || 'dark';
     if (this.notation) this.notation.setOption('showBassClef', this.showBassClef);
     this.setKeyboardVisible(this.showKeyboard);
     this.setMidiStreamVisible(this.showMidiStream);
@@ -376,7 +388,14 @@ class App {
     this.setupMidiFileLoader();
     this.populateMelodyModal();
     this.setWindMode(true);
-    this.setAppMode('freeplay');
+    const initialMode = urlParams.get('mode') || 'freeplay';
+    this.setAppMode(initialMode);
+    if (urlParams.get('metronome') === '1' && this.toggleMasterMetronome) {
+      setTimeout(() => this.toggleMasterMetronome(), 300);
+    }
+    if (urlParams.get('export') === '1' && this.openExportModal) {
+      setTimeout(() => this.openExportModal(), 400);
+    }
 
     // 4. Connect Web MIDI & Enumerate Audio Interfaces
     await this.midi.requestAccess();
@@ -614,6 +633,9 @@ class App {
     };
 
     this.trainer.onNoteSuccess = (idx, targetNote, isFirstTry, timing) => {
+      if (this.notation && this.notation.triggerWaterfallHit) {
+        this.notation.triggerWaterfallHit(idx, targetNote, isFirstTry, timing);
+      }
       if (timing) {
         this.practiceFeedbackText.innerText = `✨ Hit ${targetNote.name} • ${timing.text}`;
       } else {
@@ -624,6 +646,9 @@ class App {
 
     this.trainer.onNoteMistake = (idx, expectedInfo, playedInfo) => {
       this.notation.triggerMistakeFlash();
+      if (this.notation && this.notation.triggerWaterfallMistake) {
+        this.notation.triggerWaterfallMistake(idx, expectedInfo, playedInfo);
+      }
       this.practiceFeedbackText.innerText = `❌ Played ${playedInfo.fullName} (Expected ${expectedInfo.fullName})`;
       this.practiceFeedbackText.className = 'text-xs font-semibold text-rose-400 animate-pulse';
     };
@@ -3378,20 +3403,42 @@ class App {
   }
 
   setStaffLayout(layout) {
-    this.staffLayout = layout === 'horizontal' ? 'horizontal' : 'vertical';
+    if (layout === 'waterfall') {
+      this.staffLayout = 'waterfall';
+    } else if (layout === 'horizontal') {
+      this.staffLayout = 'horizontal';
+    } else {
+      this.staffLayout = 'vertical';
+    }
     localStorage.setItem('midiscope_staff_layout', this.staffLayout);
     const select1 = document.getElementById('select-staff-layout');
     const select2 = document.getElementById('settings-staff-layout');
+    const selectView = document.getElementById('select-view-mode');
     if (select1 && select1.value !== this.staffLayout) select1.value = this.staffLayout;
     if (select2 && select2.value !== this.staffLayout) select2.value = this.staffLayout;
+    if (this.staffLayout === 'waterfall') {
+      if (selectView && selectView.value !== 'waterfall') selectView.value = 'waterfall';
+    } else {
+      if (selectView && selectView.value === 'waterfall') selectView.value = 'live';
+    }
 
     const staffCard = document.querySelector('.staff-card');
     if (staffCard) {
       staffCard.classList.toggle('vertical-staves', this.staffLayout === 'vertical');
+      staffCard.classList.toggle('waterfall-mode', this.staffLayout === 'waterfall');
     }
 
     if (this.notation) {
       this.notation.setOption('staffLayout', this.staffLayout);
+      if (this.staffLayout === 'waterfall') {
+        this.notation.setOption('mode', 'waterfall');
+      } else {
+        if (this.appMode === 'practice' || this.trainer?.currentMelody) {
+          this.notation.setOption('mode', 'practice');
+        } else {
+          this.notation.setOption('mode', selectView?.value || 'live');
+        }
+      }
       setTimeout(() => this.notation.resize(), 60);
     }
   }
@@ -4333,7 +4380,12 @@ class App {
     // Restart practice
     document.getElementById('btn-restart-practice')?.addEventListener('click', () => {
       this.clearReviewPianoKeys();
+      const wasMetronomeRunning = !!(this.trainer?.metronomeEnabled || this.trainer?.metronomeTimer);
       this.trainer.restart();
+      if (wasMetronomeRunning && !this.trainer.metronomeTimer) {
+        this.trainer.startMetronome();
+      }
+      this.updateMasterMetronomeUi();
     });
 
     // Metronome toggle button
@@ -4421,18 +4473,31 @@ class App {
       await this.midi.requestAccess();
     });
 
-    // Mode Toggle (Live vs Scrolling vs Rhythm Trainer in Free Play)
+    // Mode Toggle (Live vs Scrolling vs Rhythm Trainer vs Waterfall)
     const modeSelect = document.getElementById('select-view-mode');
     if (modeSelect) {
       modeSelect.addEventListener('change', (e) => {
-        if (this.appMode === 'freeplay') {
-          const val = e.target.value;
-          this.notation.setOption('mode', val);
-          if (val === 'rhythm_trainer') {
-            this.notation.setOption('rhythmTrainerActive', true);
-            if (!this.freePlayRhythmTrainer?.isActive) {
-              this.btnToggleFreeplayRhythm?.click();
+        const val = e.target.value;
+        if (val === 'waterfall') {
+          this.setStaffLayout('waterfall');
+          if (this.appMode !== 'practice') {
+            this.setAppMode('practice');
+          }
+          this.showToast('🌊 Waterfall Style Active! Play notes as they hit the keyboard.', 'info');
+        } else {
+          if (this.staffLayout === 'waterfall') {
+            this.setStaffLayout('vertical');
+          }
+          if (this.appMode === 'freeplay') {
+            this.notation.setOption('mode', val);
+            if (val === 'rhythm_trainer') {
+              this.notation.setOption('rhythmTrainerActive', true);
+              if (!this.freePlayRhythmTrainer?.isActive) {
+                this.btnToggleFreeplayRhythm?.click();
+              }
             }
+          } else {
+            this.notation.setOption('mode', 'practice');
           }
         }
       });
@@ -4668,10 +4733,11 @@ class App {
       this.setMidiStreamVisible(e.target.checked);
     });
 
-    // Staff Layout Selector (Vertical 2-Staves vs Horizontal)
+    // Staff Layout Selector (Vertical 2-Staves vs Horizontal vs Waterfall)
     document.getElementById('select-staff-layout')?.addEventListener('change', (e) => {
       this.setStaffLayout(e.target.value);
-      this.showToast(`Staff layout: ${this.staffLayout === 'vertical' ? 'Vertical (2 Staves)' : 'Horizontal (Single Staff)'}`, 'info');
+      const name = this.staffLayout === 'waterfall' ? '🌊 Waterfall (Falling Notes)' : (this.staffLayout === 'vertical' ? 'Vertical (2 Staves)' : 'Horizontal (Single Staff)');
+      this.showToast(`Display layout: ${name}`, 'info');
     });
     document.getElementById('settings-staff-layout')?.addEventListener('change', (e) => {
       this.setStaffLayout(e.target.value);

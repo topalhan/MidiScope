@@ -15,6 +15,13 @@ const BRAVURA_FLAT_PATH = 'M 17 245 C 22 251 26 252 30 252 C 35 252 39 249 39 24
 const BRAVURA_SHARP_PATH = 'M 341 -170 C 351 -174 359 -186 359 -194 L 359 -297 C 359 -304 354 -308 348 -308 C 346 -308 344 -308 341 -307 C 341 -307 312 -295 305 -294 C 295 -294 285 -301 285 -312 L 285 -488 C 285 -497 276 -504 265 -504 C 251 -504 242 -497 242 -488 L 242 -301 C 240 -287 236 -268 223 -259 C 206 -249 157 -229 132 -223 C 120 -223 115 -240 115 -252 L 115 -425 C 115 -433 105 -441 95 -441 C 81 -441 72 -433 72 -425 L 72 -230 C 72 -210 63 -196 55 -192 C 46 -187 17 -176 17 -176 C 7 -173 0 -161 0 -153 L 0 -50 C 0 -42 4 -37 13 -37 L 16 -39 C 17 -39 39 -48 50 -53 L 52 -55 C 63 -55 72 -40 72 -29 L 72 114 C 72 130 65 143 56 147 C 48 150 17 163 17 163 C 7 166 0 177 0 186 L 0 288 C 0 297 4 301 13 301 L 16 300 C 17 300 37 291 50 287 C 52 285 53 285 55 285 C 65 285 72 301 72 308 L 72 485 C 72 494 81 501 91 501 C 105 501 115 494 115 485 L 115 285 C 115 266 122 256 130 253 L 217 217 C 217 217 219 217 219 217 L 222 216 C 235 216 242 233 242 242 L 242 422 C 242 431 251 438 261 438 C 276 438 285 431 285 422 L 285 217 C 285 206 291 189 301 184 C 311 180 341 168 341 168 C 351 164 359 153 359 144 L 359 42 C 359 35 354 30 348 30 C 346 30 344 30 341 32 L 304 46 C 295 46 285 37 285 20 L 285 -114 C 285 -124 292 -151 304 -156 Z M 242 65 C 233 94 166 122 132 122 C 124 122 117 120 115 115 C 112 109 111 78 111 43 C 111 -1 112 -52 115 -63 C 118 -88 184 -118 220 -118 C 230 -118 239 -115 242 -109 C 245 -102 248 -66 248 -27 C 248 12 245 52 242 65 Z';
 const BRAVURA_NATURAL_PATH = 'M 203 -261 C 200 -261 199 -259 197 -259 C 197 -259 105 -226 68 -226 C 59 -226 53 -228 53 -233 L 53 -474 C 53 -484 45 -491 36 -491 L 17 -491 C 7 -491 0 -484 0 -474 L 0 268 C 0 276 4 281 13 281 L 16 279 C 17 279 20 279 22 278 C 42 269 122 235 164 235 C 179 235 189 239 189 251 L 189 465 C 189 475 196 482 206 482 L 225 482 C 233 482 242 475 242 465 L 242 -258 C 242 -265 236 -269 230 -269 C 229 -269 226 -269 225 -268 Z M 53 -56 C 53 -76 141 -114 176 -114 C 184 -114 189 -112 189 -107 L 189 42 C 189 68 107 101 71 101 C 60 101 53 98 53 92 Z';
 
+// Standard SMuFL Bravura Vector Noteheads and Flags
+const BRAVURA_NOTEHEADBLACK_PATH = 'M 140 180 C 268 180 425 62 425 -60 C 425 -134 367 -180 285 -180 C 127 -180 0 -63 0 60 C 0 135 62 180 140 180 Z';
+const BRAVURA_NOTEHEADHALF_PATH = 'M 140 180 C 377 180 425 -13 425 -60 C 425 -134 366 -180 282 -180 C 68 -180 0 -14 0 60 C 0 137 60 180 140 180 Z M 108 125 C 78 125 60 109 50 92 C 46 84 42 73 42 63 C 42 -7 251 -121 318 -121 C 346 -121 361 -108 372 -91 C 376 -82 380 -73 380 -63 C 380 -1 177 125 108 125 Z';
+const BRAVURA_NOTEHEADWHOLE_PATH = 'M 311 -180 C 120 -180 0 -101 0 -3 C 0 94 82 180 297 180 C 533 180 608 98 608 -3 C 608 -105 445 -180 311 -180 Z M 160 -91 C 176 -141 229 -148 274 -148 C 373 -148 452 -42 452 45 C 452 89 433 130 386 141 C 372 145 356 147 341 147 C 289 147 236 112 206 72 C 177 39 156 -10 156 -56 C 156 -68 157 -79 160 -91 Z';
+const BRAVURA_FLAG8THUP_PATH = 'M 343 1138 C 343 1138 380 1001 380 888 C 380 708 305 539 215 395 C 141 281 81 157 58 19 C 53 -4 42 -13 27 -13 C 12 -13 0 -9 0 9 L 0 353 C 95 370 232 566 284 688 C 305 737 318 819 318 904 C 318 969 308 1037 284 1102 C 281 1110 279 1117 279 1123 C 279 1146 294 1159 302 1165 C 311 1171 336 1162 343 1138 Z';
+const BRAVURA_FLAG8THDOWN_PATH = 'M 346 -1094 C 366 -1034 376 -962 376 -897 C 376 -812 340 -691 318 -642 C 265 -521 193 -405 0 -340 L 0 -1 C 0 13 12 20 23 20 C 36 20 55 12 58 -12 C 82 -148 189 -274 262 -387 C 353 -530 441 -701 441 -881 C 441 -994 412 -1096 400 -1142 C 396 -1158 387 -1164 377 -1164 C 356 -1164 331 -1136 346 -1094 Z';
+
 export class NotationRenderer {
   /**
    * @param {HTMLCanvasElement} canvas
@@ -90,6 +97,17 @@ export class NotationRenderer {
     this.playheadBeats = 0;
     this.flashRecoveryTimestamp = 0;
 
+    // Waterfall Mode State & Particle Systems
+    this.waterfallParticles = [];
+    this.waterfallFloatingTexts = [];
+    this.canvasWaterfallKeys = {};
+    this.canvasPressedMidi = null;
+    this.smoothWaitBeats = 0;
+    this.waterfallRestartBtnBounds = null;
+    this.onCanvasKeyNoteOn = null;
+    this.onCanvasKeyNoteOff = null;
+    this.onWaterfallRestart = null;
+
     this.initCanvas();
     this.setupInteractionEvents();
     this.startRenderLoop();
@@ -106,6 +124,10 @@ export class NotationRenderer {
 
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(this.dpr, this.dpr);
+
+    if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
+      this.setCanvasCursor('grab');
+    }
   }
 
   resize() {
@@ -114,6 +136,33 @@ export class NotationRenderer {
 
   setOption(key, value) {
     this.options[key] = value;
+    if (key === 'staffLayout') {
+      if (value !== 'waterfall' && this.options.mode === 'waterfall') {
+        this.options.mode = this.practiceData ? 'practice' : 'live';
+      }
+    } else if (key === 'mode') {
+      if (value !== 'waterfall' && this.options.staffLayout === 'waterfall') {
+        this.options.staffLayout = 'vertical';
+      }
+    }
+    if (key === 'mode' || key === 'staffLayout') {
+      if (this.isWaterfallActive() || this.options.mode === 'practice') {
+        this.setCanvasCursor('grab');
+      } else {
+        this.setCanvasCursor('default');
+      }
+    }
+  }
+
+  isWaterfallActive() {
+    if (this.options.staffLayout === 'waterfall') return true;
+    if (this.options.mode === 'waterfall') {
+      if (this.options.staffLayout === 'vertical' || this.options.staffLayout === 'horizontal') {
+        return false;
+      }
+      return true;
+    }
+    return false;
   }
 
   setKeySignature(key) {
@@ -147,6 +196,23 @@ export class NotationRenderer {
   }
 
   /**
+   * Set high-contrast theme-aware cursor on the staff canvas
+   */
+  setCanvasCursor(cursorType) {
+    if (!this.canvas) return;
+    this.canvas.dataset.cursor = cursorType;
+    if (cursorType === 'grab') {
+      this.canvas.style.cursor = 'var(--cursor-canvas-grab, grab)';
+    } else if (cursorType === 'grabbing') {
+      this.canvas.style.cursor = 'var(--cursor-canvas-grabbing, grabbing)';
+    } else if (cursorType === 'pointer') {
+      this.canvas.style.cursor = 'var(--cursor-canvas-pointer, pointer)';
+    } else {
+      this.canvas.style.cursor = cursorType || 'default';
+    }
+  }
+
+  /**
    * Set up pointer and touch interaction for mistake review and score panning
    */
   setupInteractionEvents() {
@@ -162,6 +228,22 @@ export class NotationRenderer {
 
     this.canvas.addEventListener('pointerdown', (e) => {
       const pos = getPos(e);
+
+      // 0. Waterfall Mode Interactions (Clicking Keys or Restart Button)
+      if (this.isWaterfallActive()) {
+        if (this.waterfallRestartBtnBounds && isInside(pos, this.waterfallRestartBtnBounds)) {
+          e.preventDefault();
+          this.onWaterfallRestart?.();
+          return;
+        }
+        const hitMidi = this.getWaterfallKeyAtPos(pos);
+        if (hitMidi !== null) {
+          e.preventDefault();
+          this.canvasPressedMidi = hitMidi;
+          this.onCanvasKeyNoteOn?.(hitMidi);
+          return;
+        }
+      }
 
       // 1. Check Prev Mistake Button click
       if (this.prevMistakeBtnBounds && isInside(pos, this.prevMistakeBtnBounds)) {
@@ -197,27 +279,71 @@ export class NotationRenderer {
         this.isUserDragging = true;
         this.dragStartX = pos.x;
         this.dragStartScroll = this.manualScrollOffset;
-        this.canvas.style.cursor = 'grabbing';
+        this.setCanvasCursor('grabbing');
         try { this.canvas.setPointerCapture?.(e.pointerId); } catch (_) {}
       }
     });
 
     this.canvas.addEventListener('pointermove', (e) => {
+      const pos = getPos(e);
+
+      if (this.isWaterfallActive()) {
+        if (this.canvasPressedMidi !== null) {
+          const hitMidi = this.getWaterfallKeyAtPos(pos);
+          if (hitMidi !== null && hitMidi !== this.canvasPressedMidi) {
+            this.onCanvasKeyNoteOff?.(this.canvasPressedMidi);
+            this.canvasPressedMidi = hitMidi;
+            this.onCanvasKeyNoteOn?.(hitMidi);
+          }
+        }
+        const hoverMidi = this.getWaterfallKeyAtPos(pos);
+        if (hoverMidi !== null || (this.waterfallRestartBtnBounds && isInside(pos, this.waterfallRestartBtnBounds))) {
+          this.setCanvasCursor('pointer');
+        } else {
+          this.setCanvasCursor('default');
+        }
+        return;
+      }
+
       if (this.isUserDragging) {
-        const pos = getPos(e);
         const deltaX = pos.x - this.dragStartX;
         this.manualScrollOffset = this.dragStartScroll - deltaX;
       } else if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
-        this.canvas.style.cursor = 'grab';
+        let isClickable = false;
+        if ((this.prevMistakeBtnBounds && isInside(pos, this.prevMistakeBtnBounds)) ||
+            (this.nextMistakeBtnBounds && isInside(pos, this.nextMistakeBtnBounds))) {
+          isClickable = true;
+        } else if (this.practiceData && this.practiceData.isFinished && this.noteHitboxes) {
+          for (const hb of this.noteHitboxes) {
+            if (isInside(pos, hb.bounds)) {
+              const res = (this.practiceData.noteResults || [])[hb.index];
+              if (res && (res.mistakes > 0 || res.status === 'mistake' || res.status === 'missed')) {
+                isClickable = true;
+                break;
+              }
+            }
+          }
+        }
+        if (isClickable) {
+          this.setCanvasCursor('pointer');
+        } else {
+          this.setCanvasCursor('grab');
+        }
       }
     });
 
     const endDrag = (e) => {
       this.isUserDragging = false;
-      if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
-        this.canvas.style.cursor = 'grab';
+      if (this.canvasPressedMidi !== null) {
+        this.onCanvasKeyNoteOff?.(this.canvasPressedMidi);
+        this.canvasPressedMidi = null;
+      }
+      if (this.isWaterfallActive()) {
+        this.setCanvasCursor('default');
+      } else if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
+        this.setCanvasCursor('grab');
       } else {
-        this.canvas.style.cursor = 'default';
+        this.setCanvasCursor('default');
       }
       try { this.canvas.releasePointerCapture?.(e.pointerId); } catch (_) {}
     };
@@ -229,6 +355,7 @@ export class NotationRenderer {
 
     // Mouse wheel / trackpad scrolling
     this.canvas.addEventListener('wheel', (e) => {
+      if (this.isWaterfallActive()) return;
       if (this.options.mode === 'practice' || this.practiceData || this.options.rhythmTrainerActive) {
         e.preventDefault();
         if (this.options.staffLayout === 'vertical') {
@@ -682,10 +809,16 @@ export class NotationRenderer {
     // Clean canvas
     ctx.clearRect(0, 0, w, h);
 
+    // If Waterfall mode is active, render Waterfall directly and return
+    if (this.isWaterfallActive()) {
+      this.renderWaterfallMode(ctx, w, h, timestamp);
+      return;
+    }
+
     // Colors according to theme
     const isDark = this.options.theme === 'dark';
-    const staffLineColor = isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(15, 23, 42, 0.3)';
-    const staffBarColor  = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(15, 23, 42, 0.55)';
+    const staffLineColor = isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(15, 23, 42, 0.42)';
+    const staffBarColor  = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(15, 23, 42, 0.65)';
     const clefColor      = isDark ? '#e2e8f0' : '#1e293b';
 
     const showBass = this.shouldShowBassClef();
@@ -1372,20 +1505,25 @@ export class NotationRenderer {
     if (notes.length === 0) return;
 
     ctx.save();
-    ctx.lineWidth = 2.0;
+    ctx.lineWidth = Math.max(1.1, spacing * 0.095);
     ctx.strokeStyle = this.options.theme === 'dark' ? '#f8fafc' : '#0f172a';
 
-    const rx = spacing * 0.62;
-    const ry = spacing * 0.44;
+    const scale = spacing / 355.0;
+    const headHalfW = 212.5 * scale;
 
     const minY = Math.min(...notes.map(n => n.y));
     const maxY = Math.max(...notes.map(n => n.y));
     const stemLength = spacing * 3.4;
 
+    if (!this.flag8thUpPath2D && typeof Path2D !== 'undefined') {
+      this.flag8thUpPath2D = new Path2D(BRAVURA_FLAG8THUP_PATH);
+      this.flag8thDownPath2D = new Path2D(BRAVURA_FLAG8THDOWN_PATH);
+    }
+
     let stemX, startY, endY;
     if (direction === 'up') {
       // Stem on right edge of notehead
-      stemX = notes[0].x + rx * 0.88;
+      stemX = notes[0].x + headHalfW - 0.6;
       startY = maxY;
       endY = minY - stemLength;
 
@@ -1394,47 +1532,20 @@ export class NotationRenderer {
       ctx.lineTo(stemX, endY);
       ctx.stroke();
 
-      // Flags for Eighth Note (<= 0.55) & Sixteenth Note (<= 0.28)
+      // Flag for Eighth Note (<= 0.55)
       if (duration <= 0.55) {
         ctx.fillStyle = ctx.strokeStyle;
-        ctx.beginPath();
-        ctx.moveTo(stemX, endY);
-        ctx.bezierCurveTo(
-          stemX + spacing * 1.1, endY + spacing * 0.8,
-          stemX + spacing * 0.9, endY + spacing * 2.0,
-          stemX, endY + spacing * 2.2
-        );
-        ctx.lineTo(stemX, endY + spacing * 1.7);
-        ctx.bezierCurveTo(
-          stemX + spacing * 0.6, endY + spacing * 1.4,
-          stemX + spacing * 0.7, endY + spacing * 0.7,
-          stemX, endY + spacing * 0.5
-        );
-        ctx.closePath();
-        ctx.fill();
-
-        if (duration <= 0.28) {
-          const f2Y = endY + spacing * 0.75;
-          ctx.beginPath();
-          ctx.moveTo(stemX, f2Y);
-          ctx.bezierCurveTo(
-            stemX + spacing * 1.1, f2Y + spacing * 0.8,
-            stemX + spacing * 0.9, f2Y + spacing * 2.0,
-            stemX, f2Y + spacing * 2.2
-          );
-          ctx.lineTo(stemX, f2Y + spacing * 1.7);
-          ctx.bezierCurveTo(
-            stemX + spacing * 0.6, f2Y + spacing * 1.4,
-            stemX + spacing * 0.7, f2Y + spacing * 0.7,
-            stemX, f2Y + spacing * 0.5
-          );
-          ctx.closePath();
-          ctx.fill();
+        if (this.flag8thUpPath2D) {
+          ctx.save();
+          ctx.translate(stemX, endY);
+          ctx.scale(scale, scale);
+          ctx.fill(this.flag8thUpPath2D);
+          ctx.restore();
         }
       }
     } else {
       // Stem on left edge of notehead
-      stemX = notes[0].x - rx * 0.88;
+      stemX = notes[0].x - headHalfW + 0.6;
       startY = minY;
       endY = maxY + stemLength;
 
@@ -1443,42 +1554,15 @@ export class NotationRenderer {
       ctx.lineTo(stemX, endY);
       ctx.stroke();
 
-      // Flags for downward stem
+      // Flag for downward stem
       if (duration <= 0.55) {
         ctx.fillStyle = ctx.strokeStyle;
-        ctx.beginPath();
-        ctx.moveTo(stemX, endY);
-        ctx.bezierCurveTo(
-          stemX + spacing * 1.1, endY - spacing * 0.8,
-          stemX + spacing * 0.9, endY - spacing * 2.0,
-          stemX, endY - spacing * 2.2
-        );
-        ctx.lineTo(stemX, endY - spacing * 1.7);
-        ctx.bezierCurveTo(
-          stemX + spacing * 0.6, endY - spacing * 1.4,
-          stemX + spacing * 0.7, endY - spacing * 0.7,
-          stemX, endY - spacing * 0.5
-        );
-        ctx.closePath();
-        ctx.fill();
-
-        if (duration <= 0.28) {
-          const f2Y = endY - spacing * 0.75;
-          ctx.beginPath();
-          ctx.moveTo(stemX, f2Y);
-          ctx.bezierCurveTo(
-            stemX + spacing * 1.1, f2Y - spacing * 0.8,
-            stemX + spacing * 0.9, f2Y - spacing * 2.0,
-            stemX, f2Y - spacing * 2.2
-          );
-          ctx.lineTo(stemX, f2Y - spacing * 1.7);
-          ctx.bezierCurveTo(
-            stemX + spacing * 0.6, f2Y - spacing * 1.4,
-            stemX + spacing * 0.7, f2Y - spacing * 0.7,
-            stemX, f2Y - spacing * 0.5
-          );
-          ctx.closePath();
-          ctx.fill();
+        if (this.flag8thDownPath2D) {
+          ctx.save();
+          ctx.translate(stemX, endY);
+          ctx.scale(scale, scale);
+          ctx.fill(this.flag8thDownPath2D);
+          ctx.restore();
         }
       }
     }
@@ -1662,12 +1746,9 @@ export class NotationRenderer {
 
     // Compute musical duration (Whole, Dotted Half, Half, Quarter, Eighth, Sixteenth)
     const dur = note.duration || this.computeNoteDuration(note, timestamp);
-    const isHollow = dur >= 1.45; // Half note (2 beats) or Whole note (4 beats)
+    const isWhole = dur >= 3.5;
+    const isHollow = dur >= 1.45 && !isWhole;
     const isDotted = (dur >= 2.4 && dur < 3.25) || (dur >= 1.2 && dur < 1.45);
-
-    // Main notehead body
-    ctx.beginPath();
-    ctx.ellipse(note.x, note.y, rx, ry, rot, 0, Math.PI * 2);
 
     let headColor;
     if (note.active) {
@@ -1677,31 +1758,49 @@ export class NotationRenderer {
                           : (this.options.theme === 'dark' ? '#f8fafc' : '#0f172a');
     }
 
-    if (isHollow) {
-      ctx.lineWidth = 2.4;
-      ctx.strokeStyle = headColor;
-      ctx.fillStyle = this.options.theme === 'dark' ? '#0b1120' : '#fcfbf9';
-      ctx.fill();
-      ctx.stroke();
-    } else {
-      ctx.fillStyle = headColor;
-      ctx.fill();
-
-      // Subtle inner 3D highlight (for solid noteheads)
-      ctx.shadowBlur = 0;
-      ctx.beginPath();
-      ctx.ellipse(note.x - rx * 0.2, note.y - ry * 0.2, rx * 0.55, ry * 0.35, rot, 0, Math.PI * 2);
-      ctx.fillStyle = isAlert ? 'rgba(255, 255, 255, 0.65)' : 'rgba(255, 255, 255, 0.45)';
-      ctx.fill();
+    if (!this.noteheadBlackPath2D && typeof Path2D !== 'undefined') {
+      this.noteheadBlackPath2D = new Path2D(BRAVURA_NOTEHEADBLACK_PATH);
+      this.noteheadHalfPath2D = new Path2D(BRAVURA_NOTEHEADHALF_PATH);
+      this.noteheadWholePath2D = new Path2D(BRAVURA_NOTEHEADWHOLE_PATH);
+      this.flag8thUpPath2D = new Path2D(BRAVURA_FLAG8THUP_PATH);
+      this.flag8thDownPath2D = new Path2D(BRAVURA_FLAG8THDOWN_PATH);
     }
+
+    const scale = spacing / 355.0;
+    ctx.save();
+    ctx.fillStyle = headColor;
+    if (isWhole && this.noteheadWholePath2D) {
+      ctx.translate(note.x - 304 * scale, note.y);
+      ctx.scale(scale, scale);
+      ctx.fill(this.noteheadWholePath2D);
+    } else if (isHollow && this.noteheadHalfPath2D) {
+      ctx.translate(note.x - 212.5 * scale, note.y);
+      ctx.scale(scale, scale);
+      ctx.fill(this.noteheadHalfPath2D);
+    } else if (this.noteheadBlackPath2D) {
+      ctx.translate(note.x - 212.5 * scale, note.y);
+      ctx.scale(scale, scale);
+      ctx.fill(this.noteheadBlackPath2D);
+    } else {
+      ctx.beginPath();
+      ctx.ellipse(note.x, note.y, rx, ry, rot, 0, Math.PI * 2);
+      if (isHollow) {
+        ctx.lineWidth = 2.0;
+        ctx.strokeStyle = headColor;
+        ctx.stroke();
+      } else {
+        ctx.fill();
+      }
+    }
+    ctx.restore();
 
     // Augmentation Dot if dotted note
     if (isDotted) {
       ctx.save();
-      const dotRadius = spacing * 0.20;
-      const dotX = note.x + rx * 1.55;
+      const dotRadius = Math.round(spacing * 0.18);
+      const dotX = note.x + (212.5 * scale) + spacing * 0.38;
       const isLine = Math.abs(note.staffPos % 2) === 0;
-      const dotY = isLine ? note.y - spacing * 0.28 : note.y;
+      const dotY = isLine ? (note.y - spacing * 0.5) : note.y;
       ctx.beginPath();
       ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
       ctx.fillStyle = headColor;
@@ -2226,7 +2325,10 @@ export class NotationRenderer {
 
     this.practiceData = data;
     if (data) {
-      this.options.mode = 'practice';
+      if (this.options.staffLayout !== 'waterfall') {
+        this.options.mode = 'practice';
+      }
+      this.setCanvasCursor('grab');
       if (data.melody && data.melody.key) {
         this.options.keySignature = data.melody.key;
       }
@@ -2240,6 +2342,9 @@ export class NotationRenderer {
       this.playheadBeats = 0;
       this.smoothScrollX = 0;
       this.scrollX = 0;
+      this.waterfallParticles = [];
+      this.waterfallFloatingTexts = [];
+      this.smoothWaitBeats = 0;
       this.prevMistakeBtnBounds = null;
       this.nextMistakeBtnBounds = null;
       this.reviewPillBounds = null;
@@ -2376,11 +2481,816 @@ export class NotationRenderer {
   }
 
   /**
+   * Compute exact horizontal geometry for each piano key and note lane
+   */
+  computeWaterfallLayout(startMidi, endMidi, marginX, usableW, hitY, keyboardH) {
+    const isBlack = (midi) => [1, 3, 6, 8, 10].includes(midi % 12);
+    const whiteMidis = [];
+    for (let m = startMidi; m <= endMidi; m++) {
+      if (!isBlack(m)) whiteMidis.push(m);
+    }
+    const numWhite = Math.max(1, whiteMidis.length);
+    const whiteKeyW = usableW / numWhite;
+    const blackKeyW = Math.max(9, whiteKeyW * 0.62);
+    const blackKeyH = keyboardH * 0.62;
+
+    const keys = {};
+    whiteMidis.forEach((m, idx) => {
+      const x = marginX + idx * whiteKeyW;
+      keys[m] = {
+        midi: m,
+        x,
+        y: hitY,
+        width: whiteKeyW,
+        height: keyboardH,
+        isBlack: false,
+        laneX: x + 1,
+        laneW: Math.max(2, whiteKeyW - 2)
+      };
+    });
+
+    for (let m = startMidi; m <= endMidi; m++) {
+      if (isBlack(m)) {
+        const prevW = keys[m - 1];
+        const nextW = keys[m + 1];
+        let x = marginX;
+        if (prevW && nextW) {
+          x = (prevW.x + prevW.width) - blackKeyW / 2;
+        } else if (prevW) {
+          x = (prevW.x + prevW.width) - blackKeyW / 2;
+        } else if (nextW) {
+          x = nextW.x - blackKeyW / 2;
+        }
+        keys[m] = {
+          midi: m,
+          x,
+          y: hitY,
+          width: blackKeyW,
+          height: blackKeyH,
+          isBlack: true,
+          laneX: x + 1,
+          laneW: Math.max(2, blackKeyW - 2)
+        };
+      }
+    }
+    return { keys, whiteKeyW, blackKeyW, numWhite };
+  }
+
+  /**
+   * Find MIDI key under pointer position on canvas keyboard
+   */
+  getWaterfallKeyAtPos(pos) {
+    if (!this.canvasWaterfallKeys) return null;
+    // Check black keys first because they layer on top
+    for (const [mStr, key] of Object.entries(this.canvasWaterfallKeys)) {
+      if (key.isBlack && pos.x >= key.x && pos.x <= key.x + key.width && pos.y >= key.y && pos.y <= key.y + key.height) {
+        return Number(mStr);
+      }
+    }
+    // Then check white keys
+    for (const [mStr, key] of Object.entries(this.canvasWaterfallKeys)) {
+      if (!key.isBlack && pos.x >= key.x && pos.x <= key.x + key.width && pos.y >= key.y && pos.y <= key.y + key.height) {
+        return Number(mStr);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Trigger celebratory hit sparks and floating rating badge
+   */
+  triggerWaterfallHit(noteIndex, targetNote, isFirstTry, timing) {
+    const midi = (targetNote && typeof targetNote.midi === 'number') ? targetNote.midi : null;
+    if (midi === null) return;
+    const lane = this.canvasWaterfallKeys?.[midi];
+    const spawnX = lane ? (lane.x + lane.width / 2) : (this.width / 2);
+    const spawnY = this.height - (this.width < 640 ? 68 : 84);
+
+    const rating = timing?.rating || (isFirstTry ? 'perfect' : 'good');
+    const colors = rating === 'perfect' 
+      ? ['#fde047', '#facc15', '#38bdf8', '#4ade80', '#fbbf24']
+      : ['#38bdf8', '#818cf8', '#a7f3d0', '#60a5fa'];
+
+    for (let i = 0; i < 20; i++) {
+      const angle = Math.PI * 1.5 + (Math.random() - 0.5) * 1.5;
+      const speed = Math.random() * 7 + 3;
+      this.waterfallParticles.push({
+        x: spawnX + (Math.random() - 0.5) * 10,
+        y: spawnY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: Math.random() * 3.5 + 2,
+        life: 0,
+        maxLife: Math.floor(Math.random() * 25 + 30)
+      });
+    }
+
+    let badgeText = 'GOOD! 👍';
+    let badgeColor = '#34d399';
+    if (rating === 'perfect') {
+      badgeText = timing?.text ? `PERFECT! ${timing.text}` : 'PERFECT! ✨';
+      badgeColor = '#fbbf24';
+    } else if (rating === 'early') {
+      badgeText = timing?.text || 'EARLY ⚡';
+      badgeColor = '#38bdf8';
+    } else if (rating === 'late') {
+      badgeText = timing?.text || 'LATE ⏳';
+      badgeColor = '#c084fc';
+    }
+
+    this.waterfallFloatingTexts.push({
+      x: spawnX,
+      y: spawnY - 14,
+      vy: -1.4,
+      text: badgeText,
+      color: badgeColor,
+      life: 0,
+      maxLife: 45
+    });
+  }
+
+  /**
+   * Trigger mistake warning sparks and error badge
+   */
+  triggerWaterfallMistake(noteIndex, expectedInfo, playedInfo) {
+    const midi = (playedInfo && typeof playedInfo.midi === 'number') ? playedInfo.midi : null;
+    const lane = midi !== null ? this.canvasWaterfallKeys?.[midi] : null;
+    const spawnX = lane ? (lane.x + lane.width / 2) : (this.width / 2);
+    const spawnY = this.height - (this.width < 640 ? 68 : 84);
+
+    for (let i = 0; i < 14; i++) {
+      const angle = Math.PI * 1.5 + (Math.random() - 0.5) * 1.8;
+      const speed = Math.random() * 5 + 2;
+      this.waterfallParticles.push({
+        x: spawnX + (Math.random() - 0.5) * 8,
+        y: spawnY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        color: '#f43f5e',
+        size: Math.random() * 3 + 2,
+        life: 0,
+        maxLife: 25
+      });
+    }
+
+    this.waterfallFloatingTexts.push({
+      x: spawnX,
+      y: spawnY - 14,
+      vy: -1.2,
+      text: 'MISTAKE ❌',
+      color: '#f43f5e',
+      life: 0,
+      maxLife: 40
+    });
+  }
+
+  /**
+   * Render Interactive Waterfall Synthesia Mode:
+   * Notes cascade vertically downward onto an interactive piano keyboard.
+   * As notes reach the target line, the player strikes the corresponding keys.
+   */
+  renderWaterfallMode(ctx, w, h, timestamp) {
+    const isDark = this.options.theme === 'dark';
+    const isMobile = w < 640;
+    const keyboardH = isMobile ? 68 : 84;
+    const hitY = h - keyboardH;
+    const marginX = isMobile ? 8 : 16;
+    const usableW = w - marginX * 2;
+
+    const melody = this.practiceData?.melody;
+    const notes = melody?.notes || [];
+    const noteCount = notes.length;
+    const results = this.practiceData?.noteResults || [];
+    const currentIdx = this.practiceData?.noteIndex ?? 0;
+    const isFinished = !!this.practiceData?.isFinished;
+    const isTimeDriven = (this.practiceData?.mode === 'tempo' || this.practiceData?.mode === 'strict' || this.practiceData?.mode === 'first_read');
+
+    // 1. Determine MIDI Range for Keyboard & Lanes
+    let startMidi = 36; // C2
+    let endMidi = 96;   // C7 (61 keys standard)
+
+    if (w < 768 && noteCount > 0) {
+      // Dynamic framing on small mobile screens
+      const midis = notes.map(n => n.midi).filter(m => typeof m === 'number');
+      if (midis.length > 0) {
+        const minM = Math.min(...midis);
+        const maxM = Math.max(...midis);
+        startMidi = Math.max(36, Math.floor((minM - 2) / 12) * 12);
+        endMidi = Math.min(96, Math.ceil((maxM + 3) / 12) * 12);
+        if (endMidi - startMidi < 36) {
+          if (startMidi > 36) startMidi = Math.max(36, startMidi - 12);
+          if (endMidi < 96) endMidi = Math.min(96, endMidi + 12);
+        }
+      }
+    }
+
+    const layout = this.computeWaterfallLayout(startMidi, endMidi, marginX, usableW, hitY, keyboardH);
+    this.canvasWaterfallKeys = layout.keys;
+
+    // 2. Clear & Draw Deep Atmospheric Background
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+    if (isDark) {
+      bgGrad.addColorStop(0, '#090d16');
+      bgGrad.addColorStop(0.7, '#0f172a');
+      bgGrad.addColorStop(1, '#020617');
+    } else {
+      bgGrad.addColorStop(0, '#f1f5f9');
+      bgGrad.addColorStop(0.7, '#e2e8f0');
+      bgGrad.addColorStop(1, '#cbd5e1');
+    }
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // 3. Draw Vertical Lanes
+    for (const [mStr, key] of Object.entries(layout.keys)) {
+      const midi = Number(mStr);
+      if (key.isBlack) {
+        ctx.fillStyle = isDark ? 'rgba(0, 0, 0, 0.28)' : 'rgba(0, 0, 0, 0.04)';
+      } else {
+        ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.015)' : 'rgba(255, 255, 255, 0.4)';
+      }
+      ctx.fillRect(key.laneX, 0, key.laneW, hitY);
+
+      // Lane separator
+      ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.035)' : 'rgba(0, 0, 0, 0.04)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(key.laneX + key.laneW, 0);
+      ctx.lineTo(key.laneX + key.laneW, hitY);
+      ctx.stroke();
+
+      // Octave C markers at top
+      if (midi % 12 === 0) {
+        const octave = Math.floor(midi / 12) - 1;
+        ctx.font = '700 9px "Inter", sans-serif';
+        ctx.fillStyle = isDark ? 'rgba(56, 189, 248, 0.35)' : 'rgba(14, 165, 233, 0.4)';
+        ctx.textAlign = 'center';
+        ctx.fillText(`C${octave}`, key.laneX + key.laneW / 2, 14);
+      }
+    }
+
+    // 4. Calculate Beat Progression & Timing
+    const noteBeats = [];
+    let cumulativeBeats = 0;
+    for (let i = 0; i < noteCount; i++) {
+      noteBeats.push(cumulativeBeats);
+      cumulativeBeats += Math.max(0.1, notes[i].duration || 1);
+    }
+
+    let currentBeats = 0;
+    if (isTimeDriven) {
+      if (this.practiceData?.isCountingIn) {
+        const cBeat = this.practiceData.countInBeat || 1;
+        const cTot = this.practiceData.countInTotal || 4;
+        currentBeats = -(cTot - cBeat + 1);
+      } else {
+        currentBeats = this.playheadBeats || this.practiceData?.playheadBeats || 0;
+      }
+    } else {
+      // Wait-for-note mode: smooth gliding towards current target note
+      const targetBeat = noteBeats[currentIdx] || 0;
+      if (typeof this.smoothWaitBeats !== 'number' || Math.abs(this.smoothWaitBeats - targetBeat) > 5) {
+        this.smoothWaitBeats = targetBeat;
+      } else {
+        this.smoothWaitBeats += (targetBeat - this.smoothWaitBeats) * 0.14;
+      }
+      currentBeats = this.smoothWaitBeats;
+    }
+
+    const lookaheadBeats = isMobile ? 5.0 : 6.0;
+    const pixelsPerBeat = hitY / lookaheadBeats;
+
+    // 5. Draw Horizontal Beat & Measure Grid Lines
+    const beatsPerMeasure = melody?.timeSignature?.[0] || 4;
+    const minGridBeat = Math.floor(currentBeats - 1);
+    const maxGridBeat = Math.ceil(currentBeats + lookaheadBeats + 1);
+
+    for (let b = Math.max(0, minGridBeat); b <= maxGridBeat; b++) {
+      const lineY = hitY - (b - currentBeats) * pixelsPerBeat;
+      if (lineY < 0 || lineY > hitY) continue;
+
+      const isMeasure = (b % beatsPerMeasure === 0);
+      ctx.strokeStyle = isMeasure
+        ? (isDark ? 'rgba(56, 189, 248, 0.24)' : 'rgba(14, 165, 233, 0.28)')
+        : (isDark ? 'rgba(255, 255, 255, 0.045)' : 'rgba(0, 0, 0, 0.05)');
+      ctx.lineWidth = isMeasure ? 1.5 : 1.0;
+      ctx.beginPath();
+      ctx.moveTo(marginX, lineY);
+      ctx.lineTo(marginX + usableW, lineY);
+      ctx.stroke();
+
+      if (isMeasure && b >= 0) {
+        const mNum = Math.floor(b / beatsPerMeasure) + 1;
+        ctx.font = '600 10px "Inter", sans-serif';
+        ctx.fillStyle = isDark ? 'rgba(56, 189, 248, 0.45)' : 'rgba(14, 165, 233, 0.6)';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Bar ${mNum}`, marginX + 4, lineY - 3);
+      }
+    }
+
+    // 6. Draw Active Laser Beams from pressed keys upward
+    const pressedMidis = new Set(this.activeNotes.keys());
+    if (this.canvasPressedMidi !== null) pressedMidis.add(this.canvasPressedMidi);
+
+    for (const midi of pressedMidis) {
+      const key = layout.keys[midi];
+      if (!key) continue;
+      const isTreble = midi >= 60;
+      const flareGrad = ctx.createLinearGradient(0, hitY, 0, 0);
+      flareGrad.addColorStop(0, isTreble ? 'rgba(56, 189, 248, 0.45)' : 'rgba(168, 85, 247, 0.45)');
+      flareGrad.addColorStop(0.4, isTreble ? 'rgba(56, 189, 248, 0.15)' : 'rgba(168, 85, 247, 0.15)');
+      flareGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+      ctx.fillStyle = flareGrad;
+      ctx.fillRect(key.laneX, 0, key.laneW, hitY);
+    }
+
+    // 7. Draw Falling Notes
+    const currentTargetNote = (!isFinished && notes[currentIdx]) ? notes[currentIdx] : null;
+
+    if (noteCount > 0) {
+      for (let i = 0; i < noteCount; i++) {
+        const note = notes[i];
+        if (typeof note.midi !== 'number') continue;
+        const lane = layout.keys[note.midi];
+        if (!lane) continue;
+
+        const startBeat = noteBeats[i];
+        const dur = Math.max(0.25, note.duration || 1);
+        const bottomY = hitY - (startBeat - currentBeats) * pixelsPerBeat;
+        const barH = Math.max(16, dur * pixelsPerBeat);
+        const topY = bottomY - barH;
+
+        if (topY > h + 10 || bottomY < -20) continue;
+
+        const isCurrentTarget = (i === currentIdx && !isFinished);
+        const res = results[i];
+        const isPastHit = bottomY > hitY + 5;
+
+        let strokeCol = '#38bdf8';
+        let topCol = '#38bdf8';
+        let botCol = '#0284c7';
+        let shadowCol = '#38bdf8';
+
+        if (res) {
+          if (res.status === 'correct') {
+            topCol = '#34d399';
+            botCol = '#059669';
+            strokeCol = '#6ee7b7';
+            shadowCol = '#10b981';
+          } else if (res.status === 'mistake') {
+            topCol = '#fb7185';
+            botCol = '#e11d48';
+            strokeCol = '#fda4af';
+            shadowCol = '#f43f5e';
+          } else if (res.status === 'missed') {
+            topCol = 'rgba(244, 63, 94, 0.4)';
+            botCol = 'rgba(159, 18, 57, 0.3)';
+            strokeCol = 'rgba(244, 63, 94, 0.5)';
+            shadowCol = 'transparent';
+          }
+        } else if (isCurrentTarget) {
+          const pulse = (Math.sin(timestamp * 0.008) + 1) * 0.5;
+          topCol = pulse > 0.5 ? '#fde047' : '#38bdf8';
+          botCol = pulse > 0.5 ? '#eab308' : '#0284c7';
+          strokeCol = '#ffffff';
+          shadowCol = pulse > 0.5 ? '#fde047' : '#38bdf8';
+        } else {
+          const isTreble = note.midi >= 60;
+          if (isTreble) {
+            topCol = '#38bdf8';
+            botCol = '#2563eb';
+            strokeCol = '#7dd3fc';
+            shadowCol = '#0284c7';
+          } else {
+            topCol = '#c084fc';
+            botCol = '#7c3aed';
+            strokeCol = '#e9d5ff';
+            shadowCol = '#9333ea';
+          }
+        }
+
+        ctx.save();
+        if (isPastHit && res) {
+          ctx.globalAlpha = 0.55;
+        }
+
+        if (isCurrentTarget || (!isPastHit && Math.abs(bottomY - hitY) < 40)) {
+          ctx.shadowColor = shadowCol;
+          ctx.shadowBlur = isCurrentTarget ? 16 : 8;
+        }
+
+        const noteGrad = ctx.createLinearGradient(0, topY, 0, bottomY);
+        noteGrad.addColorStop(0, topCol);
+        noteGrad.addColorStop(1, botCol);
+        ctx.fillStyle = noteGrad;
+
+        const cornerRadius = Math.min(6, Math.floor(lane.laneW / 3));
+        if (ctx.roundRect) {
+          ctx.beginPath();
+          ctx.roundRect(lane.laneX, topY, lane.laneW, barH, cornerRadius);
+          ctx.fill();
+          ctx.strokeStyle = strokeCol;
+          ctx.lineWidth = isCurrentTarget ? 2 : 1;
+          ctx.stroke();
+        } else {
+          ctx.fillRect(lane.laneX, topY, lane.laneW, barH);
+        }
+
+        // Inner glass highlight
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillRect(lane.laneX + 1, topY + 2, 2, Math.max(4, barH - 4));
+
+        // Note Name Label
+        if (barH >= 16 && lane.laneW >= 12) {
+          ctx.font = `800 ${Math.min(12, Math.max(9, Math.floor(lane.laneW * 0.42)))}px "Inter", sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+          ctx.shadowBlur = 4;
+          const labelY = Math.min(bottomY - 10, topY + barH / 2);
+          ctx.fillText(note.name || MusicTheory.getNoteInfo(note.midi, this.options.preferFlats).displayName, lane.laneX + lane.laneW / 2, labelY);
+        }
+
+        // Target chevron pointer
+        if (isCurrentTarget) {
+          const distToHit = bottomY - hitY;
+          if (Math.abs(distToHit) < 45) {
+            ctx.save();
+            ctx.fillStyle = '#fde047';
+            ctx.shadowColor = '#fde047';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            const ax = lane.laneX + lane.laneW / 2;
+            const ay = Math.min(hitY - 2, bottomY + 3);
+            ctx.moveTo(ax, ay + 6);
+            ctx.lineTo(ax - 5, ay);
+            ctx.lineTo(ax + 5, ay);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+
+        ctx.restore();
+      }
+    } else {
+      // Free play prompt
+      ctx.save();
+      ctx.font = '600 14px "Inter", sans-serif';
+      ctx.fillStyle = isDark ? 'rgba(148, 163, 184, 0.75)' : 'rgba(71, 85, 105, 0.85)';
+      ctx.textAlign = 'center';
+      ctx.fillText('🌊 Waterfall Mode • Play any key on your keyboard below to see notes illuminate!', w / 2, hitY * 0.45);
+      ctx.restore();
+    }
+
+    // 8. Draw Glowing Hit Baseline (Target Zone)
+    ctx.save();
+    ctx.shadowColor = '#38bdf8';
+    ctx.shadowBlur = 12;
+
+    const hitGrad = ctx.createLinearGradient(marginX, 0, marginX + usableW, 0);
+    hitGrad.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
+    hitGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.95)');
+    hitGrad.addColorStop(1, 'rgba(168, 85, 247, 0.4)');
+
+    ctx.strokeStyle = hitGrad;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(marginX, hitY);
+    ctx.lineTo(marginX + usableW, hitY);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    ctx.moveTo(marginX, hitY);
+    ctx.lineTo(marginX + usableW, hitY);
+    ctx.stroke();
+    ctx.restore();
+
+    // 9. Draw Canvas Piano Keyboard
+    const qwertyHints = {};
+    if (this.options.qwertyKeyMap) {
+      Object.assign(qwertyHints, this.options.qwertyKeyMap);
+    }
+
+    // 9A. White Keys Pass
+    for (const [mStr, key] of Object.entries(layout.keys)) {
+      if (key.isBlack) continue;
+      const midi = Number(mStr);
+      const isPressed = pressedMidis.has(midi);
+      const isTarget = currentTargetNote && currentTargetNote.midi === midi;
+
+      const yOffset = isPressed ? 3 : 0;
+      const keyH = key.height - yOffset;
+      const keyY = key.y + yOffset;
+
+      ctx.save();
+      const whiteGrad = ctx.createLinearGradient(0, keyY, 0, keyY + keyH);
+      if (isPressed) {
+        whiteGrad.addColorStop(0, '#7dd3fc');
+        whiteGrad.addColorStop(0.5, '#38bdf8');
+        whiteGrad.addColorStop(1, '#0284c7');
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 14;
+      } else if (isTarget) {
+        const tPulse = (Math.sin(timestamp * 0.008) + 1) * 0.5;
+        whiteGrad.addColorStop(0, '#fef08a');
+        whiteGrad.addColorStop(0.5, '#fde047');
+        whiteGrad.addColorStop(1, isDark ? '#e2e8f0' : '#ffffff');
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 10 * tPulse;
+      } else if (isDark) {
+        whiteGrad.addColorStop(0, '#f8fafc');
+        whiteGrad.addColorStop(0.85, '#e2e8f0');
+        whiteGrad.addColorStop(1, '#cbd5e1');
+      } else {
+        whiteGrad.addColorStop(0, '#ffffff');
+        whiteGrad.addColorStop(0.85, '#f8fafc');
+        whiteGrad.addColorStop(1, '#f1f5f9');
+      }
+
+      ctx.fillStyle = whiteGrad;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(key.x, keyY, key.width - 1, keyH, [0, 0, 4, 4]);
+        ctx.fill();
+        ctx.strokeStyle = isPressed ? '#0284c7' : (isDark ? '#64748b' : '#94a3b8');
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else {
+        ctx.fillRect(key.x, keyY, key.width - 1, keyH);
+      }
+
+      // Middle C (60) marker dot
+      if (midi === 60) {
+        ctx.fillStyle = isPressed ? '#ffffff' : '#0284c7';
+        ctx.beginPath();
+        ctx.arc(key.x + key.width / 2, keyY + keyH - 24, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Key Note Label
+      ctx.font = '700 10.5px "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillStyle = isPressed ? '#ffffff' : '#334155';
+      const info = MusicTheory.getNoteInfo(midi, this.options.preferFlats);
+      ctx.fillText(info.displayName, key.x + key.width / 2, keyY + keyH - 6);
+
+      ctx.restore();
+    }
+
+    // 9B. Black Keys Pass
+    for (const [mStr, key] of Object.entries(layout.keys)) {
+      if (!key.isBlack) continue;
+      const midi = Number(mStr);
+      const isPressed = pressedMidis.has(midi);
+      const isTarget = currentTargetNote && currentTargetNote.midi === midi;
+
+      const yOffset = isPressed ? 2 : 0;
+      const keyH = key.height - yOffset;
+      const keyY = key.y + yOffset;
+
+      ctx.save();
+      const blackGrad = ctx.createLinearGradient(0, keyY, 0, keyY + keyH);
+      if (isPressed) {
+        blackGrad.addColorStop(0, '#a855f7');
+        blackGrad.addColorStop(0.5, '#7c3aed');
+        blackGrad.addColorStop(1, '#4f46e5');
+        ctx.shadowColor = '#a855f7';
+        ctx.shadowBlur = 14;
+      } else if (isTarget) {
+        const tPulse = (Math.sin(timestamp * 0.008) + 1) * 0.5;
+        blackGrad.addColorStop(0, '#fde047');
+        blackGrad.addColorStop(0.5, '#eab308');
+        blackGrad.addColorStop(1, '#713f12');
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 10 * tPulse;
+      } else {
+        blackGrad.addColorStop(0, '#27272a');
+        blackGrad.addColorStop(0.7, '#18181b');
+        blackGrad.addColorStop(1, '#09090b');
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetY = 3;
+      }
+
+      ctx.fillStyle = blackGrad;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(key.x, keyY, key.width, keyH, [0, 0, 3, 3]);
+        ctx.fill();
+        ctx.strokeStyle = isPressed ? '#c084fc' : '#3f3f46';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else {
+        ctx.fillRect(key.x, keyY, key.width, keyH);
+      }
+
+      // Top rim highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillRect(key.x + 1, keyY + 1, key.width - 2, 2);
+
+      // Black Key Label
+      ctx.font = '700 8.5px "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillStyle = isPressed ? '#ffffff' : (isTarget ? '#000000' : '#cbd5e1');
+      const info = MusicTheory.getNoteInfo(midi, this.options.preferFlats);
+      ctx.fillText(info.displayName.replace(/[0-9]/g, ''), key.x + key.width / 2, keyY + keyH - 4);
+
+      ctx.restore();
+    }
+
+    // 10. Update & Render Particle Bursts
+    for (let i = this.waterfallParticles.length - 1; i >= 0; i--) {
+      const p = this.waterfallParticles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.22;
+      p.life++;
+      p.alpha = Math.max(0, 1 - (p.life / p.maxLife));
+      if (p.life >= p.maxLife) {
+        this.waterfallParticles.splice(i, 1);
+        continue;
+      }
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 11. Update & Render Floating Hit Ratings
+    for (let i = this.waterfallFloatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.waterfallFloatingTexts[i];
+      ft.y += ft.vy;
+      ft.life++;
+      ft.alpha = Math.max(0, 1 - (ft.life / ft.maxLife));
+      if (ft.life >= ft.maxLife) {
+        this.waterfallFloatingTexts.splice(i, 1);
+        continue;
+      }
+      ctx.save();
+      ctx.globalAlpha = ft.alpha;
+      ctx.font = '800 12px "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = ft.color;
+      ctx.shadowColor = ft.color;
+      ctx.shadowBlur = 10;
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+
+    // 12. Top HUD Pill Overlays
+    ctx.save();
+    const hudY = 16;
+    const badgeW = isMobile ? 120 : 210;
+    const badgeH = 24;
+
+    ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)';
+    ctx.strokeStyle = isDark ? 'rgba(56, 189, 248, 0.4)' : 'rgba(14, 165, 233, 0.4)';
+    ctx.lineWidth = 1;
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(marginX, hudY, badgeW, badgeH, 6);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    ctx.font = '800 11px "Inter", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('🌊 WATERFALL', marginX + 8, hudY + badgeH / 2);
+
+    if (!isMobile && melody) {
+      ctx.font = '600 10.5px "Inter", sans-serif';
+      ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b';
+      const title = melody.title ? `• ${melody.title}` : '';
+      ctx.fillText(title, marginX + 90, hudY + badgeH / 2);
+    }
+
+    const modeName = this.practiceData?.mode === 'wait' ? 'Wait for Note' : (this.practiceData?.mode === 'strict' ? 'Strict Time' : 'In-Tempo');
+    const rightPillW = isMobile ? 90 : 160;
+    const rightPillX = marginX + usableW - rightPillW;
+
+    ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)';
+    ctx.strokeStyle = isDark ? 'rgba(71, 85, 105, 0.5)' : 'rgba(203, 213, 225, 0.8)';
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(rightPillX, hudY, rightPillW, badgeH, 6);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    ctx.font = '700 10px "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
+    const progressText = noteCount > 0 ? `${currentIdx + 1}/${noteCount} (${modeName})` : modeName;
+    ctx.fillText(progressText, rightPillX + rightPillW / 2, hudY + badgeH / 2);
+    ctx.restore();
+
+    // 13. Count-In Banner Overlay
+    if (this.practiceData?.isCountingIn) {
+      const count = this.practiceData.countInBeat || 1;
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+      ctx.fillRect(0, 0, w, hitY);
+
+      ctx.font = '900 48px "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fde047';
+      ctx.shadowColor = '#fde047';
+      ctx.shadowBlur = 20;
+      ctx.fillText(`${count}`, w / 2, hitY / 2 - 10);
+
+      ctx.font = '700 14px "Inter", sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowBlur = 0;
+      ctx.fillText('Get ready to play as notes reach the keys!', w / 2, hitY / 2 + 35);
+      ctx.restore();
+    }
+
+    // 14. Finished Celebration Card Overlay
+    if (isFinished) {
+      const cardW = Math.min(340, w - 40);
+      const cardH = 140;
+      const cardX = (w - cardW) / 2;
+      const cardY = (hitY - cardH) / 2;
+
+      ctx.save();
+      ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.92)' : 'rgba(255, 255, 255, 0.92)';
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
+      ctx.shadowBlur = 18;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(cardX, cardY, cardW, cardH, 12);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(cardX, cardY, cardW, cardH);
+      }
+
+      ctx.font = '900 16px "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = '#10b981';
+      ctx.fillText('🎉 Melody Complete!', w / 2, cardY + 16);
+
+      ctx.font = '600 12px "Inter", sans-serif';
+      ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b';
+      ctx.fillText(`Played ${noteCount} notes on Waterfall Keyboard`, w / 2, cardY + 44);
+
+      // Restart Button
+      const btnW = 140;
+      const btnH = 34;
+      const btnX = (w - btnW) / 2;
+      const btnY = cardY + cardH - 46;
+      this.waterfallRestartBtnBounds = { x: btnX, y: btnY, width: btnW, height: btnH };
+
+      const btnGrad = ctx.createLinearGradient(0, btnY, 0, btnY + btnH);
+      btnGrad.addColorStop(0, '#0284c7');
+      btnGrad.addColorStop(1, '#0369a1');
+      ctx.fillStyle = btnGrad;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(btnX, btnY, btnW, btnH, 8);
+        ctx.fill();
+      } else {
+        ctx.fillRect(btnX, btnY, btnW, btnH);
+      }
+
+      ctx.font = '700 12px "Inter", sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🔄 Play Again', w / 2, btnY + btnH / 2);
+
+      ctx.restore();
+    } else {
+      this.waterfallRestartBtnBounds = null;
+    }
+  }
+
+  /**
    * Render Interactive Melody Practice Sheet Music Mode
-   * Dispatches to either 2-Staff Vertical Scrolling layout or Single-Staff Horizontal layout
+   * Dispatches to either 2-Staff Vertical Scrolling layout, Single-Staff Horizontal layout, or Waterfall layout
    */
   renderPracticeMode(ctx, staffX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp) {
-    if (this.options.staffLayout === 'horizontal') {
+    if (this.options.staffLayout === 'waterfall') {
+      this.renderWaterfallMode(ctx, this.width, this.height, timestamp);
+    } else if (this.options.staffLayout === 'horizontal') {
       this.renderHorizontalPracticeMode(ctx, staffX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp);
     } else {
       this.renderVerticalPracticeMode(ctx, staffX, staffWidth, lineSpacing, timestamp);
@@ -2518,13 +3428,13 @@ export class NotationRenderer {
     const systemStaffHeight = showBass ? (staffHeight * 2 + staffGap) : staffHeight;
 
     const interSystemGap = showBass
-      ? Math.max(26, Math.min(48, Math.round(H * 0.085)))
-      : Math.max(34, Math.min(60, Math.round(H * 0.12)));
+      ? Math.max(38, Math.min(56, Math.round(H * 0.10)))
+      : Math.max(52, Math.min(78, Math.round(H * 0.16)));
     const slotHeight = systemStaffHeight + interSystemGap;
-    const topBaseY = Math.max(28, Math.round((H - (systemStaffHeight * 2 + interSystemGap)) / 2));
+    const topBaseY = Math.max(26, Math.round((H - (systemStaffHeight * 2 + interSystemGap)) / 2));
 
-    const staffLineColor = isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(15, 23, 42, 0.3)';
-    const staffBarColor  = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(15, 23, 42, 0.55)';
+    const staffLineColor = isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(15, 23, 42, 0.42)';
+    const staffBarColor  = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(15, 23, 42, 0.65)';
     const clefColor      = isDark ? '#e2e8f0' : '#1e293b';
 
     // 4. Render Visible Systems
@@ -2657,6 +3567,21 @@ export class NotationRenderer {
       }
 
       // F. Notes in this System
+      if (!this.noteheadBlackPath2D && typeof Path2D !== 'undefined') {
+        this.noteheadBlackPath2D = new Path2D(BRAVURA_NOTEHEADBLACK_PATH);
+        this.noteheadHalfPath2D = new Path2D(BRAVURA_NOTEHEADHALF_PATH);
+        this.noteheadWholePath2D = new Path2D(BRAVURA_NOTEHEADWHOLE_PATH);
+        this.flag8thUpPath2D = new Path2D(BRAVURA_FLAG8THUP_PATH);
+        this.flag8thDownPath2D = new Path2D(BRAVURA_FLAG8THDOWN_PATH);
+      }
+
+      const vScale = vSpacing / 355.0;
+      const headHalfW = 212.5 * vScale;
+      const rx = vSpacing * 0.62;
+      const ry = vSpacing * 0.44;
+
+      // 1. Collect and prepare note entries for this system
+      const sysNotes = [];
       melody.notes.forEach((note, i) => {
         if (noteToSystemMap[i] !== s) return;
         const pos = notePositions[i];
@@ -2689,13 +3614,12 @@ export class NotationRenderer {
           index: i
         });
 
-        // Ledger Lines
-        this.drawLedgerLines(ctx, noteX, staffPos, bottomY, vSpacing);
-
         // Note Color
         let noteColor;
-        const isHollow = note.duration >= 2;
-        const isWhole = note.duration >= 4;
+        const isHollow = note.duration >= 1.45 && note.duration < 3.5;
+        const isWhole = note.duration >= 3.5;
+        const isDotted = Math.abs(note.duration - 1.5) < 0.08 || Math.abs(note.duration - 3.0) < 0.08 || Math.abs(note.duration - 0.75) < 0.08;
+        const isEighth = note.duration <= 0.65;
 
         if (isReviewActive) {
           noteColor = '#f43f5e';
@@ -2714,6 +3638,181 @@ export class NotationRenderer {
         } else {
           noteColor = isDark ? '#e2e8f0' : '#1e293b';
         }
+
+        sysNotes.push({
+          note,
+          index: i,
+          noteX,
+          noteY,
+          mIdx: pos.measureIndex,
+          info,
+          clef,
+          staffPos,
+          bottomY,
+          isHollow,
+          isWhole,
+          isDotted,
+          isEighth,
+          isTarget,
+          isPast,
+          isReviewActive,
+          hadMistakes,
+          wrongName,
+          res,
+          noteColor
+        });
+      });
+
+      // 2. Compute Beam Groups for consecutive eighth notes in the same measure
+      const beamGroups = [];
+      let curGroup = [];
+      for (let k = 0; k < sysNotes.length; k++) {
+        const ent = sysNotes[k];
+        if (ent.isEighth) {
+          if (curGroup.length === 0) {
+            curGroup.push(ent);
+          } else {
+            const prevEnt = curGroup[curGroup.length - 1];
+            if (prevEnt.mIdx === ent.mIdx && ent.index === prevEnt.index + 1 && prevEnt.clef === ent.clef) {
+              curGroup.push(ent);
+            } else {
+              if (curGroup.length >= 2) beamGroups.push(curGroup);
+              curGroup = [ent];
+            }
+          }
+        } else {
+          if (curGroup.length >= 2) beamGroups.push(curGroup);
+          curGroup = [];
+        }
+      }
+      if (curGroup.length >= 2) beamGroups.push(curGroup);
+
+      const beamedNoteIndices = new Set();
+      beamGroups.forEach(grp => grp.forEach(e => beamedNoteIndices.add(e.index)));
+
+      // 3. Compute stem endpoints for beamed groups
+      beamGroups.forEach(grp => {
+        const avgStaffPos = grp.reduce((acc, e) => acc + e.staffPos, 0) / grp.length;
+        const stemDir = avgStaffPos >= 4 ? 'down' : 'up';
+        const first = grp[0];
+        const last = grp[grp.length - 1];
+        const baseStemLen = vSpacing * 3.4;
+
+        grp.forEach(e => {
+          e.stemDir = stemDir;
+          e.stemX = stemDir === 'up' ? (e.noteX + headHalfW - 0.6) : (e.noteX - headHalfW + 0.6);
+          e.stemStartY = e.noteY;
+        });
+
+        let beamY1 = stemDir === 'up' ? (first.noteY - baseStemLen) : (first.noteY + baseStemLen);
+        let beamY2 = stemDir === 'up' ? (last.noteY - baseStemLen) : (last.noteY + baseStemLen);
+        const maxSlope = 0.35;
+        const dx = Math.max(1, last.stemX - first.stemX);
+        const clampedSlope = Math.max(-maxSlope, Math.min(maxSlope, (beamY2 - beamY1) / dx));
+        beamY2 = beamY1 + clampedSlope * dx;
+
+        grp.forEach(e => {
+          e.stemEndY = beamY1 + clampedSlope * (e.stemX - first.stemX);
+        });
+
+        // Draw solid beam connecting the stem tips
+        const beamThick = Math.round(vSpacing * 0.28);
+        const beamOffset = stemDir === 'up' ? beamThick : -beamThick;
+        ctx.save();
+        ctx.fillStyle = isDark ? '#cbd5e1' : '#1e293b';
+        ctx.beginPath();
+        ctx.moveTo(first.stemX, beamY1);
+        ctx.lineTo(last.stemX, beamY2);
+        ctx.lineTo(last.stemX, beamY2 + beamOffset);
+        ctx.lineTo(first.stemX, beamY1 + beamOffset);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 4. Compute stems for isolated (non-beamed) notes
+      sysNotes.forEach(ent => {
+        if (!beamedNoteIndices.has(ent.index) && !ent.isWhole) {
+          ent.stemDir = ent.staffPos >= 4 ? 'down' : 'up';
+          ent.stemX = ent.stemDir === 'up' ? (ent.noteX + headHalfW - 0.6) : (ent.noteX - headHalfW + 0.6);
+          ent.stemStartY = ent.noteY;
+          ent.stemEndY = ent.stemDir === 'up' ? (ent.noteY - vSpacing * 3.4) : (ent.noteY + vSpacing * 3.4);
+        }
+      });
+
+      // 5. Draw Slurs (from XML annotations or phrasing)
+      for (let k = 0; k < sysNotes.length; k++) {
+        const n1 = sysNotes[k];
+        let n2 = null;
+        if (n1.note.slurStart) {
+          for (let m = k + 1; m < sysNotes.length; m++) {
+            if (sysNotes[m].note.slurStop) {
+              n2 = sysNotes[m];
+              break;
+            }
+          }
+        } else if (n1.isEighth && k < sysNotes.length - 1 && sysNotes[k + 1].isEighth && beamedNoteIndices.has(n1.index) && !sysNotes.some(x => x.note.slurStart)) {
+          if (n1.mIdx === sysNotes[k + 1].mIdx && k % 2 === 0) {
+            n2 = sysNotes[k + 1];
+          }
+        }
+
+        if (n2) {
+          const slurStemsUp = (n1.stemDir === 'up' && n2.stemDir === 'up');
+          ctx.save();
+          ctx.fillStyle = isDark ? 'rgba(203, 213, 225, 0.85)' : 'rgba(30, 41, 59, 0.85)';
+          if (slurStemsUp) {
+            const yStart = n1.noteY + vSpacing * 0.82;
+            const yEnd = n2.noteY + vSpacing * 0.82;
+            const midX = (n1.noteX + n2.noteX) / 2;
+            const midY = Math.max(yStart, yEnd) + vSpacing * 0.72;
+            ctx.beginPath();
+            ctx.moveTo(n1.noteX, yStart);
+            ctx.quadraticCurveTo(midX, midY, n2.noteX, yEnd);
+            ctx.quadraticCurveTo(midX, midY - 1.8, n1.noteX, yStart);
+            ctx.closePath();
+            ctx.fill();
+          } else {
+            const yStart = n1.noteY - vSpacing * 0.82;
+            const yEnd = n2.noteY - vSpacing * 0.82;
+            const midX = (n1.noteX + n2.noteX) / 2;
+            const midY = Math.min(yStart, yEnd) - vSpacing * 0.72;
+            ctx.beginPath();
+            ctx.moveTo(n1.noteX, yStart);
+            ctx.quadraticCurveTo(midX, midY, n2.noteX, yEnd);
+            ctx.quadraticCurveTo(midX, midY + 1.8, n1.noteX, yStart);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+      }
+
+      // 5.5 Pre-calculate clean pitch label baseline for this system so labels never cover notes/ledger lines
+      let sysContentBottomY = (showBass && sysBottomBassY) ? sysBottomBassY : sysBottomTrebleY;
+      sysNotes.forEach(ent => {
+        const nhBottom = ent.noteY + vSpacing * 0.65;
+        if (nhBottom > sysContentBottomY) sysContentBottomY = nhBottom;
+        if (ent.stemDir === 'down' && ent.stemEndY) {
+          if (ent.stemEndY > sysContentBottomY) sysContentBottomY = ent.stemEndY;
+        }
+        if (ent.staffPos <= -2) {
+          const lowestLine = (ent.staffPos % 2 === 0) ? ent.staffPos : ent.staffPos + 1;
+          const ledgerY = ent.bottomY - lowestLine * (vSpacing / 2) + 3;
+          if (ledgerY > sysContentBottomY) sysContentBottomY = ledgerY;
+        }
+        const ribbonBottom = ent.noteY + vSpacing * 0.95;
+        if (ribbonBottom > sysContentBottomY) sysContentBottomY = ribbonBottom;
+      });
+      const sysLabelLaneY = sysContentBottomY + Math.max(9, vSpacing * 0.7);
+
+      // 6. Render each note in this system
+      sysNotes.forEach(ent => {
+        const { note, index, noteX, noteY, info, clef, staffPos, bottomY, isHollow, isWhole, isDotted, isEighth, isTarget, isPast, isReviewActive, hadMistakes, wrongName, res, noteColor } = ent;
+        const i = index;
+
+        // Ledger Lines
+        this.drawLedgerLines(ctx, noteX, staffPos, bottomY, vSpacing);
 
         // Active Mistake Review Beacon Pulse
         if (isReviewActive) {
@@ -2756,96 +3855,78 @@ export class NotationRenderer {
           ctx.restore();
         }
 
-        // Stems & Flags
-        if (!isWhole) {
-          const stemDir = staffPos >= 4 ? 'down' : 'up';
-          const rx = vSpacing * 0.62;
-          const stemLen = vSpacing * 3.3;
-          const stemX = stemDir === 'up' ? (noteX + rx * 0.88) : (noteX - rx * 0.88);
-          const stemEndY = stemDir === 'up' ? (noteY - stemLen) : (noteY + stemLen);
-
+        // Draw Note Stem
+        if (!isWhole && ent.stemX !== undefined) {
           ctx.save();
-          ctx.lineWidth = 1.7;
+          ctx.lineWidth = Math.max(1.1, vSpacing * 0.095);
           ctx.strokeStyle = noteColor;
           ctx.beginPath();
-          ctx.moveTo(stemX, noteY);
-          ctx.lineTo(stemX, stemEndY);
+          ctx.moveTo(ent.stemX, ent.stemStartY);
+          ctx.lineTo(ent.stemX, ent.stemEndY);
           ctx.stroke();
 
-          if (note.duration <= 0.55) {
+          // Isolated 8th note flag
+          if (isEighth && !beamedNoteIndices.has(ent.index)) {
             ctx.fillStyle = noteColor;
-            ctx.beginPath();
-            if (stemDir === 'up') {
-              ctx.moveTo(stemX, stemEndY);
-              ctx.bezierCurveTo(
-                stemX + vSpacing * 1.0, stemEndY + vSpacing * 0.8,
-                stemX + vSpacing * 0.85, stemEndY + vSpacing * 1.9,
-                stemX, stemEndY + vSpacing * 2.1
-              );
-              ctx.lineTo(stemX, stemEndY + vSpacing * 1.6);
-              ctx.bezierCurveTo(
-                stemX + vSpacing * 0.55, stemEndY + vSpacing * 1.3,
-                stemX + vSpacing * 0.65, stemEndY + vSpacing * 0.65,
-                stemX, stemEndY + vSpacing * 0.45
-              );
-              ctx.closePath();
-              ctx.fill();
-            } else {
-              ctx.moveTo(stemX, stemEndY);
-              ctx.bezierCurveTo(
-                stemX + vSpacing * 1.0, stemEndY - vSpacing * 0.8,
-                stemX + vSpacing * 0.85, stemEndY - vSpacing * 1.9,
-                stemX, stemEndY - vSpacing * 2.1
-              );
-              ctx.lineTo(stemX, stemEndY - vSpacing * 1.6);
-              ctx.bezierCurveTo(
-                stemX + vSpacing * 0.55, stemEndY - vSpacing * 1.3,
-                stemX + vSpacing * 0.65, stemEndY - vSpacing * 0.65,
-                stemX, stemEndY - vSpacing * 0.45
-              );
-              ctx.closePath();
-              ctx.fill();
+            ctx.save();
+            ctx.translate(ent.stemX, ent.stemEndY);
+            ctx.scale(vScale, vScale);
+            if (ent.stemDir === 'up' && this.flag8thUpPath2D) {
+              ctx.fill(this.flag8thUpPath2D);
+            } else if (ent.stemDir === 'down' && this.flag8thDownPath2D) {
+              ctx.fill(this.flag8thDownPath2D);
             }
+            ctx.restore();
           }
           ctx.restore();
         }
 
-        // Notehead
+        // Draw Authentic Notehead (Bravura SMuFL vector)
         ctx.save();
-        const rx = vSpacing * 0.62;
-        const ry = vSpacing * 0.44;
-        const rot = -0.32;
-
-        ctx.beginPath();
-        ctx.ellipse(noteX, noteY, rx, ry, rot, 0, Math.PI * 2);
-
-        if (isHollow) {
-          ctx.lineWidth = 2.2;
-          ctx.strokeStyle = noteColor;
-          ctx.fillStyle = isDark ? '#0b1120' : '#fcfbf9';
-          ctx.fill();
-          ctx.stroke();
+        ctx.fillStyle = noteColor;
+        if (isWhole && this.noteheadWholePath2D) {
+          ctx.translate(noteX - 304 * vScale, noteY);
+          ctx.scale(vScale, vScale);
+          ctx.fill(this.noteheadWholePath2D);
+        } else if (isHollow && this.noteheadHalfPath2D) {
+          ctx.translate(noteX - 212.5 * vScale, noteY);
+          ctx.scale(vScale, vScale);
+          ctx.fill(this.noteheadHalfPath2D);
+        } else if (this.noteheadBlackPath2D) {
+          ctx.translate(noteX - 212.5 * vScale, noteY);
+          ctx.scale(vScale, vScale);
+          ctx.fill(this.noteheadBlackPath2D);
         } else {
-          ctx.fillStyle = noteColor;
-          ctx.fill();
-        }
-
-        if (!isHollow) {
           ctx.beginPath();
-          ctx.ellipse(noteX - rx * 0.2, noteY - ry * 0.2, rx * 0.5, ry * 0.3, rot, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-          ctx.fill();
+          ctx.ellipse(noteX, noteY, rx, ry, -0.32, 0, Math.PI * 2);
+          if (isHollow) {
+            ctx.lineWidth = 2.0;
+            ctx.strokeStyle = noteColor;
+            ctx.stroke();
+          } else {
+            ctx.fill();
+          }
         }
         ctx.restore();
 
+        // Staccato Dot
+        if (note.staccato) {
+          ctx.save();
+          const staccatoY = (ent.stemDir === 'up') ? (noteY + vSpacing * 0.8) : (noteY - vSpacing * 0.8);
+          ctx.fillStyle = noteColor;
+          ctx.beginPath();
+          ctx.arc(noteX, staccatoY, Math.round(vSpacing * 0.16), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
         // Augmentation Dot
-        const isDotted = Math.abs(note.duration - 1.5) < 0.05 || Math.abs(note.duration - 3.0) < 0.05 || Math.abs(note.duration - 0.75) < 0.05;
         if (isDotted) {
           ctx.save();
-          const dotRadius = vSpacing * 0.20;
-          const dotX = noteX + rx * 1.55;
+          const dotRadius = Math.round(vSpacing * 0.18);
+          const dotX = noteX + headHalfW + vSpacing * 0.38;
           const onLine = (staffPos % 2 === 0);
-          const dotY = onLine ? (noteY - vSpacing * 0.42) : noteY;
+          const dotY = onLine ? (noteY - vSpacing * 0.5) : noteY;
           ctx.fillStyle = noteColor;
           ctx.beginPath();
           ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
@@ -2856,7 +3937,7 @@ export class NotationRenderer {
         // Accidental
         const scoreAcc = MusicTheory.getNoteAccidentalForScore(note.midi, activeKey, note.explicitAccidental);
         if (scoreAcc) {
-          this.drawAccidental(ctx, { x: noteX, y: noteY, midi: note.midi, info, explicitAccidental: note.explicitAccidental, displayAccidental: scoreAcc, active: isTarget || isReviewActive, clef }, vSpacing, 1.0);
+          this.drawAccidental(ctx, { x: noteX, y: noteY, midi: note.midi, info: ent.info, explicitAccidental: note.explicitAccidental, displayAccidental: scoreAcc, active: isTarget || isReviewActive, clef: ent.clef }, vSpacing, 1.0);
         }
 
         // Pitch Name Label
@@ -2865,7 +3946,8 @@ export class NotationRenderer {
           const pillW = isReviewActive ? 38 : 30;
           const pillH = 15;
           const pillX = noteX - pillW / 2;
-          const pillY = (showBass ? sysBottomBassY : sysBottomTrebleY) + vSpacing * 0.8;
+          const pillY = sysLabelLaneY;
+          const noteName = (info && info.fullName) ? info.fullName : MusicTheory.getNoteInfo(note.midi, preferFlats).fullName;
 
           if (isReviewActive || isTarget) {
             ctx.fillStyle = isReviewActive ? '#f43f5e' : '#38bdf8';
@@ -2880,7 +3962,7 @@ export class NotationRenderer {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = '#0f172a';
-            ctx.fillText(info.fullName, noteX, pillY + pillH / 2);
+            ctx.fillText(noteName, noteX, pillY + pillH / 2);
           } else {
             ctx.fillStyle = isDark ? '#0f172a' : '#f1f5f9';
             ctx.strokeStyle = isPast ? (hadMistakes ? 'rgba(244, 63, 94, 0.5)' : 'rgba(34, 197, 94, 0.5)') : (isDark ? '#334155' : '#cbd5e1');
@@ -2898,7 +3980,7 @@ export class NotationRenderer {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = isPast ? (hadMistakes ? '#f87171' : '#4ade80') : (isDark ? '#94a3b8' : '#475569');
-            ctx.fillText(info.fullName, noteX, pillY + pillH / 2);
+            ctx.fillText(noteName, noteX, pillY + pillH / 2);
           }
           ctx.restore();
         }
@@ -3061,7 +4143,7 @@ export class NotationRenderer {
       } else {
         ctx.fillRect(this.prevMistakeBtnBounds.x, this.prevMistakeBtnBounds.y, btnW, btnH);
       }
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
       ctx.beginPath();
       const pcx = this.prevMistakeBtnBounds.x + btnW / 2;
       const pcy = this.prevMistakeBtnBounds.y + btnH / 2;
@@ -3071,8 +4153,8 @@ export class NotationRenderer {
       ctx.closePath();
       ctx.fill();
 
-      ctx.fillStyle = 'rgba(244, 63, 94, 0.2)';
-      ctx.strokeStyle = '#f43f5e';
+      ctx.fillStyle = isDark ? 'rgba(244, 63, 94, 0.2)' : 'rgba(244, 63, 94, 0.12)';
+      ctx.strokeStyle = isDark ? '#f43f5e' : '#e11d48';
       if (ctx.roundRect) {
         ctx.beginPath();
         ctx.roundRect(this.reviewPillBounds.x, this.reviewPillBounds.y, pillW, btnH, 4);
@@ -3082,7 +4164,7 @@ export class NotationRenderer {
         ctx.fillRect(this.reviewPillBounds.x, this.reviewPillBounds.y, pillW, btnH);
       }
       ctx.font = '700 10.5px "Inter", sans-serif';
-      ctx.fillStyle = '#fb7185';
+      ctx.fillStyle = isDark ? '#fb7185' : '#be123c';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`Review ${curOrder || 1} of ${totalM}`, this.reviewPillBounds.x + pillW / 2, this.reviewPillBounds.y + btnH / 2);
@@ -3097,7 +4179,7 @@ export class NotationRenderer {
       } else {
         ctx.fillRect(this.nextMistakeBtnBounds.x, this.nextMistakeBtnBounds.y, btnW, btnH);
       }
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
       ctx.beginPath();
       const ncx = this.nextMistakeBtnBounds.x + btnW / 2;
       const ncy = this.nextMistakeBtnBounds.y + btnH / 2;
@@ -3191,7 +4273,7 @@ export class NotationRenderer {
         ctx.fillRect(this.prevMistakeBtnBounds.x, this.prevMistakeBtnBounds.y, btnW, btnH);
       }
       // Left Arrow
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
       ctx.beginPath();
       const pcx = this.prevMistakeBtnBounds.x + btnW / 2;
       const pcy = this.prevMistakeBtnBounds.y + btnH / 2;
@@ -3202,8 +4284,8 @@ export class NotationRenderer {
       ctx.fill();
 
       // Review Pill Badge
-      ctx.fillStyle = 'rgba(244, 63, 94, 0.2)';
-      ctx.strokeStyle = '#f43f5e';
+      ctx.fillStyle = isDark ? 'rgba(244, 63, 94, 0.2)' : 'rgba(244, 63, 94, 0.12)';
+      ctx.strokeStyle = isDark ? '#f43f5e' : '#e11d48';
       ctx.lineWidth = 1;
       if (ctx.roundRect) {
         ctx.beginPath();
@@ -3214,7 +4296,7 @@ export class NotationRenderer {
         ctx.fillRect(this.reviewPillBounds.x, this.reviewPillBounds.y, pillW, btnH);
       }
       ctx.font = '700 10.5px "Inter", sans-serif';
-      ctx.fillStyle = '#fb7185';
+      ctx.fillStyle = isDark ? '#fb7185' : '#be123c';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`Review ${curOrder || 1} of ${totalM}`, this.reviewPillBounds.x + pillW / 2, this.reviewPillBounds.y + btnH / 2);
@@ -3231,7 +4313,7 @@ export class NotationRenderer {
         ctx.fillRect(this.nextMistakeBtnBounds.x, this.nextMistakeBtnBounds.y, btnW, btnH);
       }
       // Right Arrow
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
       ctx.beginPath();
       const ncx = this.nextMistakeBtnBounds.x + btnW / 2;
       const ncy = this.nextMistakeBtnBounds.y + btnH / 2;
@@ -3500,7 +4582,23 @@ export class NotationRenderer {
     }
     this.scrollX = scrollX;
 
-    const labelBaselineY = (showBass && bassBottomY) ? (bassBottomY + lineSpacing * 1.05) : (trebleBottomY + lineSpacing * 1.0);
+    let horizContentBottomY = (showBass && bassBottomY) ? bassBottomY : trebleBottomY;
+    melody.notes.forEach((note) => {
+      const clef = (showBass && note.midi < 60) ? 'bass' : 'treble';
+      const bottomY = clef === 'bass' ? bassBottomY : trebleBottomY;
+      const staffPos = MusicTheory.getStaffPosition(note.midi, clef, activeKey);
+      const noteY = bottomY - staffPos * (lineSpacing / 2);
+      const nhBottom = noteY + lineSpacing * 0.65;
+      if (nhBottom > horizContentBottomY) horizContentBottomY = nhBottom;
+      if (staffPos <= -2) {
+        const lowestLine = (staffPos % 2 === 0) ? staffPos : staffPos + 1;
+        const ledgerY = bottomY - lowestLine * (lineSpacing / 2) + 3;
+        if (ledgerY > horizContentBottomY) horizContentBottomY = ledgerY;
+      }
+      const ribbonBottom = noteY + lineSpacing * 0.95;
+      if (ribbonBottom > horizContentBottomY) horizContentBottomY = ribbonBottom;
+    });
+    const labelBaselineY = horizContentBottomY + Math.max(9, lineSpacing * 0.7);
 
     // Clip rendering area to prevent drawing over clefs or INPUT column
     ctx.save();
@@ -3595,7 +4693,35 @@ export class NotationRenderer {
       }
     }
 
-    // 6. Render Melody Notes & Mistake Feedback
+    // 6. Prepare Melody Notes & Beaming for Horizontal Practice Mode
+    let curMeasureBeatsAcc = 0;
+    let curMeasureIdx = 0;
+    const noteMeasureIndices = [];
+    melody.notes.forEach((note, i) => {
+      if (i > 0) {
+        const prevNote = melody.notes[i - 1];
+        if (curMeasureBeatsAcc + prevNote.duration >= beatsPerMeasure - 0.01) {
+          curMeasureIdx++;
+          curMeasureBeatsAcc = (curMeasureBeatsAcc + prevNote.duration) % beatsPerMeasure;
+        } else {
+          curMeasureBeatsAcc += prevNote.duration;
+        }
+      }
+      noteMeasureIndices.push(curMeasureIdx);
+    });
+
+    const vScale = lineSpacing / 355.0;
+    const headHalfW = 212.5 * vScale;
+    const renderedNotes = [];
+
+    if (!this.noteheadBlackPath2D && typeof Path2D !== 'undefined') {
+      this.noteheadBlackPath2D = new Path2D(BRAVURA_NOTEHEADBLACK_PATH);
+      this.noteheadHalfPath2D = new Path2D(BRAVURA_NOTEHEADHALF_PATH);
+      this.noteheadWholePath2D = new Path2D(BRAVURA_NOTEHEADWHOLE_PATH);
+      this.flag8thUpPath2D = new Path2D(BRAVURA_FLAG8THUP_PATH);
+      this.flag8thDownPath2D = new Path2D(BRAVURA_FLAG8THDOWN_PATH);
+    }
+
     melody.notes.forEach((note, i) => {
       const noteX = noteXPositions[i] - scrollX;
 
@@ -3629,14 +4755,14 @@ export class NotationRenderer {
       const wrongInfo = wrongMidi !== null ? MusicTheory.getNoteInfo(wrongMidi, preferFlats) : null;
       const wrongName = wrongInfo ? wrongInfo.fullName : '?';
 
-      // Draw Ledger Lines
-      this.drawLedgerLines(ctx, noteX, staffPos, bottomY, lineSpacing);
-
-      // Determine note color
-      let noteColor;
       const isHollow = note.duration >= 2;
       const isWhole = note.duration >= 4;
+      const isDotted = Math.abs(note.duration - 1.5) < 0.05 ||
+                       Math.abs(note.duration - 3.0) < 0.05 ||
+                       Math.abs(note.duration - 0.75) < 0.05;
+      const isEighth = note.duration <= 0.65;
 
+      let noteColor;
       if (isReviewActive) {
         noteColor = '#f43f5e'; // Vibrant Rose for active mistake review
       } else if (isTarget) {
@@ -3654,6 +4780,147 @@ export class NotationRenderer {
       } else {
         noteColor = isDark ? '#e2e8f0' : '#1e293b'; // Slate readable
       }
+
+      const mIdx = note.measureIndex !== undefined ? note.measureIndex : (noteMeasureIndices[i] || 0);
+
+      renderedNotes.push({
+        note, i, noteX, noteY, info, clef, staffPos, bottomY,
+        isTarget, isPast, isReviewActive, hadMistakes, wrongName, res,
+        noteColor, isHollow, isWhole, isDotted, isEighth, mIdx
+      });
+    });
+
+    // Automatic 8th-note beaming
+    const beamGroups = [];
+    let curGroup = [];
+    for (let k = 0; k < renderedNotes.length; k++) {
+      const ent = renderedNotes[k];
+      if (ent.isEighth && !ent.isWhole) {
+        if (curGroup.length === 0) {
+          curGroup.push(ent);
+        } else {
+          const prev = curGroup[curGroup.length - 1];
+          if (prev.mIdx === ent.mIdx && prev.clef === ent.clef && Math.abs(ent.noteX - prev.noteX) < lineSpacing * 10) {
+            curGroup.push(ent);
+          } else {
+            if (curGroup.length >= 2) beamGroups.push(curGroup);
+            curGroup = [ent];
+          }
+        }
+      } else {
+        if (curGroup.length >= 2) beamGroups.push(curGroup);
+        curGroup = [];
+      }
+    }
+    if (curGroup.length >= 2) beamGroups.push(curGroup);
+
+    const beamedNoteIndices = new Set();
+    beamGroups.forEach(grp => grp.forEach(e => beamedNoteIndices.add(e.i)));
+
+    // Compute stem endpoints for beamed groups
+    beamGroups.forEach(grp => {
+      const avgStaffPos = grp.reduce((acc, e) => acc + e.staffPos, 0) / grp.length;
+      const stemDir = avgStaffPos >= 4 ? 'down' : 'up';
+      const first = grp[0];
+      const last = grp[grp.length - 1];
+      const baseStemLen = lineSpacing * 3.4;
+
+      grp.forEach(e => {
+        e.stemDir = stemDir;
+        e.stemX = stemDir === 'up' ? (e.noteX + headHalfW - 0.6) : (e.noteX - headHalfW + 0.6);
+        e.stemStartY = e.noteY;
+      });
+
+      let beamY1 = stemDir === 'up' ? (first.noteY - baseStemLen) : (first.noteY + baseStemLen);
+      let beamY2 = stemDir === 'up' ? (last.noteY - baseStemLen) : (last.noteY + baseStemLen);
+      const maxSlope = 0.35;
+      const dx = Math.max(1, last.stemX - first.stemX);
+      const clampedSlope = Math.max(-maxSlope, Math.min(maxSlope, (beamY2 - beamY1) / dx));
+      beamY2 = beamY1 + clampedSlope * dx;
+
+      grp.forEach(e => {
+        e.stemEndY = beamY1 + clampedSlope * (e.stemX - first.stemX);
+      });
+
+      // Draw solid beam connecting the stem tips
+      const beamThick = Math.round(lineSpacing * 0.28);
+      const beamOffset = stemDir === 'up' ? beamThick : -beamThick;
+      ctx.save();
+      ctx.fillStyle = isDark ? '#cbd5e1' : '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(first.stemX, beamY1);
+      ctx.lineTo(last.stemX, beamY2);
+      ctx.lineTo(last.stemX, beamY2 + beamOffset);
+      ctx.lineTo(first.stemX, beamY1 + beamOffset);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Compute stems for isolated (non-beamed) notes
+    renderedNotes.forEach(ent => {
+      if (!beamedNoteIndices.has(ent.i) && !ent.isWhole) {
+        ent.stemDir = ent.staffPos >= 4 ? 'down' : 'up';
+        ent.stemX = ent.stemDir === 'up' ? (ent.noteX + headHalfW - 0.6) : (ent.noteX - headHalfW + 0.6);
+        ent.stemStartY = ent.noteY;
+        ent.stemEndY = ent.stemDir === 'up' ? (ent.noteY - lineSpacing * 3.4) : (ent.noteY + lineSpacing * 3.4);
+      }
+    });
+
+    // Draw Slurs (from XML annotations or phrasing)
+    for (let k = 0; k < renderedNotes.length; k++) {
+      const n1 = renderedNotes[k];
+      let n2 = null;
+      if (n1.note.slurStart) {
+        for (let m = k + 1; m < renderedNotes.length; m++) {
+          if (renderedNotes[m].note.slurStop) {
+            n2 = renderedNotes[m];
+            break;
+          }
+        }
+      } else if (n1.isEighth && k < renderedNotes.length - 1 && renderedNotes[k + 1].isEighth && beamedNoteIndices.has(n1.i) && !renderedNotes.some(x => x.note.slurStart)) {
+        if (n1.mIdx === renderedNotes[k + 1].mIdx && k % 2 === 0) {
+          n2 = renderedNotes[k + 1];
+        }
+      }
+
+      if (n2) {
+        const slurStemsUp = (n1.stemDir === 'up' && n2.stemDir === 'up');
+        ctx.save();
+        ctx.fillStyle = isDark ? 'rgba(203, 213, 225, 0.85)' : 'rgba(30, 41, 59, 0.85)';
+        if (slurStemsUp) {
+          const yStart = n1.noteY + lineSpacing * 0.82;
+          const yEnd = n2.noteY + lineSpacing * 0.82;
+          const midX = (n1.noteX + n2.noteX) / 2;
+          const midY = Math.max(yStart, yEnd) + lineSpacing * 0.72;
+          ctx.beginPath();
+          ctx.moveTo(n1.noteX, yStart);
+          ctx.quadraticCurveTo(midX, midY, n2.noteX, yEnd);
+          ctx.quadraticCurveTo(midX, midY - 1.8, n1.noteX, yStart);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          const yStart = n1.noteY - lineSpacing * 0.82;
+          const yEnd = n2.noteY - lineSpacing * 0.82;
+          const midX = (n1.noteX + n2.noteX) / 2;
+          const midY = Math.min(yStart, yEnd) - lineSpacing * 0.72;
+          ctx.beginPath();
+          ctx.moveTo(n1.noteX, yStart);
+          ctx.quadraticCurveTo(midX, midY, n2.noteX, yEnd);
+          ctx.quadraticCurveTo(midX, midY + 1.8, n1.noteX, yStart);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    // Render each note in horizontal mode
+    renderedNotes.forEach(ent => {
+      const { note, i, noteX, noteY, info, clef, staffPos, bottomY, isHollow, isWhole, isDotted, isEighth, isTarget, isPast, isReviewActive, hadMistakes, wrongName, res, noteColor } = ent;
+
+      // Draw Ledger Lines
+      this.drawLedgerLines(ctx, noteX, staffPos, bottomY, lineSpacing);
 
       // Review Active Beacon Pulse
       if (isReviewActive) {
@@ -3697,139 +4964,79 @@ export class NotationRenderer {
       }
 
       // Draw Note Stem
-      if (!isWhole) {
-        const stemDir = staffPos >= 4 ? 'down' : 'up';
-        const rx = lineSpacing * 0.62;
-        const stemLen = lineSpacing * 3.4;
-        const stemX = stemDir === 'up' ? (noteX + rx * 0.88) : (noteX - rx * 0.88);
-        const stemEndY = stemDir === 'up' ? (noteY - stemLen) : (noteY + stemLen);
-
+      if (!isWhole && ent.stemX !== undefined) {
         ctx.save();
-        ctx.lineWidth = 1.8;
+        ctx.lineWidth = Math.max(1.1, lineSpacing * 0.095);
         ctx.strokeStyle = noteColor;
         ctx.beginPath();
-        ctx.moveTo(stemX, noteY);
-        ctx.lineTo(stemX, stemEndY);
+        ctx.moveTo(ent.stemX, ent.stemStartY);
+        ctx.lineTo(ent.stemX, ent.stemEndY);
         ctx.stroke();
 
-        // Eighth Note Flag (duration <= 0.55) & 16th Note Double Flag (duration <= 0.28) - VST3 Parity
-        if (note.duration <= 0.55) {
+        // Isolated 8th note flag
+        if (isEighth && !beamedNoteIndices.has(ent.i)) {
           ctx.fillStyle = noteColor;
-          ctx.beginPath();
-          if (stemDir === 'up') {
-            ctx.moveTo(stemX, stemEndY);
-            ctx.bezierCurveTo(
-              stemX + lineSpacing * 1.1, stemEndY + lineSpacing * 0.8,
-              stemX + lineSpacing * 0.9, stemEndY + lineSpacing * 2.0,
-              stemX, stemEndY + lineSpacing * 2.2
-            );
-            ctx.lineTo(stemX, stemEndY + lineSpacing * 1.7);
-            ctx.bezierCurveTo(
-              stemX + lineSpacing * 0.6, stemEndY + lineSpacing * 1.4,
-              stemX + lineSpacing * 0.7, stemEndY + lineSpacing * 0.7,
-              stemX, stemEndY + lineSpacing * 0.5
-            );
-            ctx.closePath();
-            ctx.fill();
-
-            if (note.duration <= 0.28) {
-              const f2Y = stemEndY + lineSpacing * 0.75;
-              ctx.beginPath();
-              ctx.moveTo(stemX, f2Y);
-              ctx.bezierCurveTo(
-                stemX + lineSpacing * 1.1, f2Y + lineSpacing * 0.8,
-                stemX + lineSpacing * 0.9, f2Y + lineSpacing * 2.0,
-                stemX, f2Y + lineSpacing * 2.2
-              );
-              ctx.lineTo(stemX, f2Y + lineSpacing * 1.7);
-              ctx.bezierCurveTo(
-                stemX + lineSpacing * 0.6, f2Y + lineSpacing * 1.4,
-                stemX + lineSpacing * 0.7, f2Y + lineSpacing * 0.7,
-                stemX, f2Y + lineSpacing * 0.5
-              );
-              ctx.closePath();
-              ctx.fill();
-            }
-          } else {
-            ctx.moveTo(stemX, stemEndY);
-            ctx.bezierCurveTo(
-              stemX + lineSpacing * 1.1, stemEndY - lineSpacing * 0.8,
-              stemX + lineSpacing * 0.9, stemEndY - lineSpacing * 2.0,
-              stemX, stemEndY - lineSpacing * 2.2
-            );
-            ctx.lineTo(stemX, stemEndY - lineSpacing * 1.7);
-            ctx.bezierCurveTo(
-              stemX + lineSpacing * 0.6, stemEndY - lineSpacing * 1.4,
-              stemX + lineSpacing * 0.7, stemEndY - lineSpacing * 0.7,
-              stemX, stemEndY - lineSpacing * 0.5
-            );
-            ctx.closePath();
-            ctx.fill();
-
-            if (note.duration <= 0.28) {
-              const f2Y = stemEndY - lineSpacing * 0.75;
-              ctx.beginPath();
-              ctx.moveTo(stemX, f2Y);
-              ctx.bezierCurveTo(
-                stemX + lineSpacing * 1.1, f2Y - lineSpacing * 0.8,
-                stemX + lineSpacing * 0.9, f2Y - lineSpacing * 2.0,
-                stemX, f2Y - lineSpacing * 2.2
-              );
-              ctx.lineTo(stemX, f2Y - lineSpacing * 1.7);
-              ctx.bezierCurveTo(
-                stemX + lineSpacing * 0.6, f2Y - lineSpacing * 1.4,
-                stemX + lineSpacing * 0.7, f2Y - lineSpacing * 0.7,
-                stemX, f2Y - lineSpacing * 0.5
-              );
-              ctx.closePath();
-              ctx.fill();
-            }
+          ctx.save();
+          ctx.translate(ent.stemX, ent.stemEndY);
+          ctx.scale(vScale, vScale);
+          if (ent.stemDir === 'up' && this.flag8thUpPath2D) {
+            ctx.fill(this.flag8thUpPath2D);
+          } else if (ent.stemDir === 'down' && this.flag8thDownPath2D) {
+            ctx.fill(this.flag8thDownPath2D);
           }
+          ctx.restore();
         }
         ctx.restore();
       }
 
-      // Draw Notehead
+      // Draw Authentic Notehead (Bravura SMuFL vector)
       ctx.save();
-      const rx = lineSpacing * 0.62;
-      const ry = lineSpacing * 0.44;
-      const rot = -0.32;
-
-      ctx.beginPath();
-      ctx.ellipse(noteX, noteY, rx, ry, rot, 0, Math.PI * 2);
-
-      if (isHollow) {
-        ctx.lineWidth = 2.4;
-        ctx.strokeStyle = noteColor;
-        ctx.fillStyle = isDark ? '#0b1120' : '#fcfbf9';
-        ctx.fill();
-        ctx.stroke();
+      ctx.fillStyle = noteColor;
+      if (isWhole && this.noteheadWholePath2D) {
+        ctx.translate(noteX - 304 * vScale, noteY);
+        ctx.scale(vScale, vScale);
+        ctx.fill(this.noteheadWholePath2D);
+      } else if (isHollow && this.noteheadHalfPath2D) {
+        ctx.translate(noteX - 212.5 * vScale, noteY);
+        ctx.scale(vScale, vScale);
+        ctx.fill(this.noteheadHalfPath2D);
+      } else if (this.noteheadBlackPath2D) {
+        ctx.translate(noteX - 212.5 * vScale, noteY);
+        ctx.scale(vScale, vScale);
+        ctx.fill(this.noteheadBlackPath2D);
       } else {
-        ctx.fillStyle = noteColor;
-        ctx.fill();
-      }
-
-      // Subtle 3D shine
-      if (!isHollow) {
+        const rx = lineSpacing * 0.62;
+        const ry = lineSpacing * 0.44;
         ctx.beginPath();
-        ctx.ellipse(noteX - rx * 0.2, noteY - ry * 0.2, rx * 0.5, ry * 0.3, rot, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.fill();
+        ctx.ellipse(noteX, noteY, rx, ry, -0.32, 0, Math.PI * 2);
+        if (isHollow) {
+          ctx.lineWidth = 2.0;
+          ctx.strokeStyle = noteColor;
+          ctx.stroke();
+        } else {
+          ctx.fill();
+        }
       }
       ctx.restore();
 
-      // Augmentation Dot (for 1.5, 0.75, 3.0 durations, etc. - VST3 Parity)
-      const isDotted = Math.abs(note.duration - 1.5) < 0.05 ||
-                       Math.abs(note.duration - 3.0) < 0.05 ||
-                       Math.abs(note.duration - 0.75) < 0.05;
+      // Staccato Dot
+      if (note.staccato) {
+        ctx.save();
+        const staccatoY = (ent.stemDir === 'up') ? (noteY + lineSpacing * 0.8) : (noteY - lineSpacing * 0.8);
+        ctx.fillStyle = noteColor;
+        ctx.beginPath();
+        ctx.arc(noteX, staccatoY, Math.round(lineSpacing * 0.16), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Augmentation Dot
       if (isDotted) {
         ctx.save();
-        const dotRadius = lineSpacing * 0.20;
-        const dotX = noteX + rx * 1.55;
-        // If note is centered on a staff line (staffPos % 2 === 0), place dot in space above
+        const dotRadius = Math.round(lineSpacing * 0.18);
+        const dotX = noteX + headHalfW + lineSpacing * 0.38;
         const onLine = (staffPos % 2 === 0);
-        const dotY = onLine ? (noteY - lineSpacing * 0.42) : noteY;
-
+        const dotY = onLine ? (noteY - lineSpacing * 0.5) : noteY;
         ctx.fillStyle = noteColor;
         ctx.beginPath();
         ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
@@ -3850,6 +5057,7 @@ export class NotationRenderer {
         const pillH = 18;
         const pillX = noteX - pillW / 2;
         const pillY = labelBaselineY;
+        const noteName = (info && info.fullName) ? info.fullName : MusicTheory.getNoteInfo(note.midi, preferFlats).fullName;
 
         if (isReviewActive) {
           ctx.fillStyle = '#f43f5e'; // Rose 500
@@ -3864,7 +5072,7 @@ export class NotationRenderer {
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillStyle = '#0f172a'; // Deep slate contrast
-          ctx.fillText(info.fullName, noteX, pillY + pillH / 2);
+          ctx.fillText(noteName, noteX, pillY + pillH / 2);
         } else if (isTarget) {
           ctx.fillStyle = '#38bdf8';
           if (ctx.roundRect) {
@@ -3878,7 +5086,7 @@ export class NotationRenderer {
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillStyle = '#0f172a';
-          ctx.fillText(info.fullName, noteX, pillY + pillH / 2);
+          ctx.fillText(noteName, noteX, pillY + pillH / 2);
         } else {
           ctx.fillStyle = isDark ? '#0f172a' : '#f1f5f9';
           ctx.strokeStyle = isPast ? (hadMistakes ? 'rgba(244, 63, 94, 0.5)' : 'rgba(34, 197, 94, 0.5)') : (isDark ? '#334155' : '#cbd5e1');
@@ -3896,15 +5104,14 @@ export class NotationRenderer {
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillStyle = isPast ? (hadMistakes ? '#f87171' : '#4ade80') : (isDark ? '#94a3b8' : '#475569');
-          ctx.fillText(info.fullName, noteX, pillY + pillH / 2);
+          ctx.fillText(noteName, noteX, pillY + pillH / 2);
         }
         ctx.restore();
       }
 
-      // 7. Floating Mistake Callout Card & Flags
+      // Floating Mistake Callout Card & Flags
       if (hadMistakes) {
         if (isReviewActive) {
-          // Comprehensive Floating Callout Card above staff
           ctx.save();
           const calloutY = trebleTopY - lineSpacing * 1.8;
           let calloutText = `Played ${wrongName} (Expected ${info.fullName})`;
@@ -3924,9 +5131,8 @@ export class NotationRenderer {
           const cardH = 22;
           const cardX = noteX - cardW / 2;
 
-          // Card Background & Glowing Rose Border
-          ctx.fillStyle = '#0f172a'; // Deep slate
-          ctx.strokeStyle = '#f43f5e'; // Rose 500
+          ctx.fillStyle = '#0f172a';
+          ctx.strokeStyle = '#f43f5e';
           ctx.lineWidth = 1.5;
           if (ctx.roundRect) {
             ctx.beginPath();
@@ -3938,7 +5144,6 @@ export class NotationRenderer {
             ctx.strokeRect(cardX, calloutY - cardH, cardW, cardH);
           }
 
-          // Downward pointer arrow towards notehead
           ctx.fillStyle = '#f43f5e';
           ctx.beginPath();
           ctx.moveTo(noteX - 5, calloutY);
@@ -3947,7 +5152,6 @@ export class NotationRenderer {
           ctx.closePath();
           ctx.fill();
 
-          // Red badge circle with white X
           const iconX = cardX + padX;
           const iconY = calloutY - cardH + (cardH - iconSize) / 2;
           ctx.beginPath();
@@ -3964,14 +5168,12 @@ export class NotationRenderer {
           ctx.lineTo(iconX + ins, iconY + iconSize - ins);
           ctx.stroke();
 
-          // Callout Text
-          ctx.fillStyle = '#fecdd3'; // Rose 200
+          ctx.fillStyle = '#fecdd3';
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
           ctx.fillText(calloutText, iconX + iconSize + 6, calloutY - cardH / 2);
           ctx.restore();
         } else if (isFinished) {
-          // Compact mistake flag on other mistaken notes across the piece
           ctx.save();
           const flagY = trebleTopY - lineSpacing * 1.3;
           const flagText = wrongName;
@@ -3995,7 +5197,6 @@ export class NotationRenderer {
             ctx.fillRect(flagX, flagY - flagH, flagW, flagH);
           }
 
-          // Mini red circle with X
           const iconX = flagX + padX;
           const iconY = flagY - flagH + (flagH - iconSize) / 2;
           ctx.fillStyle = '#f43f5e';
@@ -4021,7 +5222,7 @@ export class NotationRenderer {
         }
       }
 
-      // 8. Per-Note Timing Accuracy Badge (Milliseconds Offset)
+      // Timing Accuracy Badge
       if (isPast && res && res.timing && res.timing.offsetMs !== undefined && res.timing.offsetMs !== null && (!hadMistakes || !isFinished)) {
         ctx.save();
         const ro = res.timing.offsetMs;

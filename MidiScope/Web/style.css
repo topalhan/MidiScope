@@ -12,6 +12,11 @@
   --accent-bass: #a855f7;
   --accent-pedal: #eab308;
   --staff-bg: #0b1120;
+
+  /* High-Contrast Interactive Hand Cursors (Dark Mode: luminous silver glove with dark outline) */
+  --cursor-canvas-grab: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2732%27%20height%3D%2732%27%20viewBox%3D%270%200%2032%2032%27%3E%20%3Cdefs%3E%20%3Cfilter%20id%3D%27sh%27%20x%3D%27-25%25%27%20y%3D%27-25%25%27%20width%3D%27150%25%27%20height%3D%27150%25%27%3E%20%3CfeDropShadow%20dx%3D%270.5%27%20dy%3D%271.5%27%20stdDeviation%3D%271.2%27%20flood-color%3D%27%23000000%27%20flood-opacity%3D%270.6%27/%3E%20%3C/filter%3E%20%3C/defs%3E%3Cg%20filter%3D%27url%28%23sh%29%27%3E%20%3Cpath%20d%3D%27M12.5%2014V4.5a2%202%200%200%201%204%200V13m0-6.5a2%202%200%200%201%204%200V13m0-4.5a2%202%200%200%201%204%200V15c0%205.5-3.5%209-8.5%209h-2.2c-3.5%200-6.2-1.8-8.2-4l-1.5-1.7a2%202%200%200%201%202.9-2.7l3%202.4V14a2%202%200%200%201%204%200z%27%20fill%3D%27%23f8fafc%27%20stroke%3D%27%230f172a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%20%3C/g%3E%3C/svg%3E') 14 14, grab;
+  --cursor-canvas-grabbing: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2732%27%20height%3D%2732%27%20viewBox%3D%270%200%2032%2032%27%3E%20%3Cdefs%3E%20%3Cfilter%20id%3D%27shg%27%20x%3D%27-25%25%27%20y%3D%27-25%25%27%20width%3D%27150%25%27%20height%3D%27150%25%27%3E%20%3CfeDropShadow%20dx%3D%270.5%27%20dy%3D%271.5%27%20stdDeviation%3D%271.2%27%20flood-color%3D%27%23000000%27%20flood-opacity%3D%270.6%27/%3E%20%3C/filter%3E%20%3C/defs%3E%3Cg%20filter%3D%27url%28%23shg%29%27%3E%20%3Cpath%20d%3D%27M11%2015V10.5a2%202%200%200%201%204%200v4m0-2.5a2%202%200%200%201%204%200v3m0-1.5a2%202%200%200%201%204%200v3c0%204.5-3%207.5-7.5%207.5h-2c-3%200-5.5-1.5-7-3.5a2%202%200%200%201%201-3.2l2.5-.8V15a2%202%200%200%201%204%200z%27%20fill%3D%27%2338bdf8%27%20stroke%3D%27%230f172a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%20%3C/g%3E%3C/svg%3E') 14 14, grabbing;
+  --cursor-canvas-pointer: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2732%27%20height%3D%2732%27%20viewBox%3D%270%200%2032%2032%27%3E%20%3Cdefs%3E%20%3Cfilter%20id%3D%27shp%27%20x%3D%27-25%25%27%20y%3D%27-25%25%27%20width%3D%27150%25%27%20height%3D%27150%25%27%3E%20%3CfeDropShadow%20dx%3D%270.5%27%20dy%3D%271.5%27%20stdDeviation%3D%271.2%27%20flood-color%3D%27%23000000%27%20flood-opacity%3D%270.6%27/%3E%20%3C/filter%3E%20%3C/defs%3E%3Cg%20filter%3D%27url%28%23shp%29%27%3E%20%3Cpath%20d%3D%27M10%2012V3a2%202%200%200%201%204%200v9m0%200a2%202%200%200%201%204%200v2m0%200a2%202%200%200%201%204%200v2m0%200a2%202%200%200%201%204%200v5c0%205-3.5%208.5-8.5%208.5h-2.5c-3.2%200-5.8-1.5-7.8-3.5L3.8%2020.2a2%202%200%200%201%202.8-2.8l3.4%202.6V12z%27%20fill%3D%27%23f8fafc%27%20stroke%3D%27%230f172a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%20%3C/g%3E%3C/svg%3E') 10 3, pointer;
 }
 
 html.light,
@@ -26,7 +31,12 @@ html:not(.dark) {
   --accent-treble: #0284c7;
   --accent-bass: #7e22ce;
   --accent-pedal: #ca8a04;
-  --staff-bg: #fcfbf9; /* subtle parchment off-white */
+  --staff-bg: #ffffff; /* crisp professional white sheet-music paper */
+
+  /* High-Contrast Interactive Hand Cursors (Light Mode: bold dark slate glove with crisp white outline) */
+  --cursor-canvas-grab: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2732%27%20height%3D%2732%27%20viewBox%3D%270%200%2032%2032%27%3E%20%3Cdefs%3E%20%3Cfilter%20id%3D%27sh%27%20x%3D%27-25%25%27%20y%3D%27-25%25%27%20width%3D%27150%25%27%20height%3D%27150%25%27%3E%20%3CfeDropShadow%20dx%3D%270.5%27%20dy%3D%271.5%27%20stdDeviation%3D%271.2%27%20flood-color%3D%27%23000000%27%20flood-opacity%3D%270.45%27/%3E%20%3C/filter%3E%20%3C/defs%3E%3Cg%20filter%3D%27url%28%23sh%29%27%3E%20%3Cpath%20d%3D%27M12.5%2014V4.5a2%202%200%200%201%204%200V13m0-6.5a2%202%200%200%201%204%200V13m0-4.5a2%202%200%200%201%204%200V15c0%205.5-3.5%209-8.5%209h-2.2c-3.5%200-6.2-1.8-8.2-4l-1.5-1.7a2%202%200%200%201%202.9-2.7l3%202.4V14a2%202%200%200%201%204%200z%27%20fill%3D%27%230f172a%27%20stroke%3D%27%23ffffff%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%20%3C/g%3E%3C/svg%3E') 14 14, grab;
+  --cursor-canvas-grabbing: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2732%27%20height%3D%2732%27%20viewBox%3D%270%200%2032%2032%27%3E%20%3Cdefs%3E%20%3Cfilter%20id%3D%27shg%27%20x%3D%27-25%25%27%20y%3D%27-25%25%27%20width%3D%27150%25%27%20height%3D%27150%25%27%3E%20%3CfeDropShadow%20dx%3D%270.5%27%20dy%3D%271.5%27%20stdDeviation%3D%271.2%27%20flood-color%3D%27%23000000%27%20flood-opacity%3D%270.45%27/%3E%20%3C/filter%3E%20%3C/defs%3E%3Cg%20filter%3D%27url%28%23shg%29%27%3E%20%3Cpath%20d%3D%27M11%2015V10.5a2%202%200%200%201%204%200v4m0-2.5a2%202%200%200%201%204%200v3m0-1.5a2%202%200%200%201%204%200v3c0%204.5-3%207.5-7.5%207.5h-2c-3%200-5.5-1.5-7-3.5a2%202%200%200%201%201-3.2l2.5-.8V15a2%202%200%200%201%204%200z%27%20fill%3D%27%230284c7%27%20stroke%3D%27%23ffffff%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%20%3C/g%3E%3C/svg%3E') 14 14, grabbing;
+  --cursor-canvas-pointer: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2732%27%20height%3D%2732%27%20viewBox%3D%270%200%2032%2032%27%3E%20%3Cdefs%3E%20%3Cfilter%20id%3D%27shp%27%20x%3D%27-25%25%27%20y%3D%27-25%25%27%20width%3D%27150%25%27%20height%3D%27150%25%27%3E%20%3CfeDropShadow%20dx%3D%270.5%27%20dy%3D%271.5%27%20stdDeviation%3D%271.2%27%20flood-color%3D%27%23000000%27%20flood-opacity%3D%270.45%27/%3E%20%3C/filter%3E%20%3C/defs%3E%3Cg%20filter%3D%27url%28%23shp%29%27%3E%20%3Cpath%20d%3D%27M10%2012V3a2%202%200%200%201%204%200v9m0%200a2%202%200%200%201%204%200v2m0%200a2%202%200%200%201%204%200v2m0%200a2%202%200%200%201%204%200v5c0%205-3.5%208.5-8.5%208.5h-2.5c-3.2%200-5.8-1.5-7.8-3.5L3.8%2020.2a2%202%200%200%201%202.8-2.8l3.4%202.6V12z%27%20fill%3D%27%230f172a%27%20stroke%3D%27%23ffffff%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%20%3C/g%3E%3C/svg%3E') 10 3, pointer;
 }
 
 /* Base Body in Light Mode */
@@ -54,17 +64,25 @@ html:not(.dark) h1, html:not(.dark) h2, html:not(.dark) h3, html:not(.dark) h4 {
 html.light .bg-slate-900\/60,
 html.light .bg-slate-900\/70,
 html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/95,
 html.light .bg-slate-900\/40,
 html.light .bg-slate-950\/70,
 html.light .bg-slate-950\/60,
+html.light .bg-slate-950\/80,
+html.light .bg-slate-950\/90,
+html.light .bg-slate-950\/95,
 html.light .bg-slate-900,
 html.light .bg-slate-950,
 html:not(.dark) .bg-slate-900\/60,
 html:not(.dark) .bg-slate-900\/70,
 html:not(.dark) .bg-slate-900\/80,
+html:not(.dark) .bg-slate-900\/95,
 html:not(.dark) .bg-slate-900\/40,
 html:not(.dark) .bg-slate-950\/70,
 html:not(.dark) .bg-slate-950\/60,
+html:not(.dark) .bg-slate-950\/80,
+html:not(.dark) .bg-slate-950\/90,
+html:not(.dark) .bg-slate-950\/95,
 html:not(.dark) .bg-slate-900,
 html:not(.dark) .bg-slate-950 {
   background-color: #ffffff !important;
@@ -110,7 +128,7 @@ html:not(.dark) .border-slate-700\/60 {
   border-color: #e2e8f0 !important;
 }
 
-/* Text Colors */
+/* Text Colors: Dark & High Contrast in Light Mode */
 html.light .text-white,
 html.light .text-slate-100,
 html.light .text-slate-200,
@@ -124,7 +142,7 @@ html.light .text-slate-300,
 html.light .text-slate-400,
 html:not(.dark) .text-slate-300,
 html:not(.dark) .text-slate-400 {
-  color: #475569 !important;
+  color: #334155 !important;
 }
 
 html.light .text-slate-500,
@@ -132,13 +150,609 @@ html:not(.dark) .text-slate-500 {
   color: #64748b !important;
 }
 
+/* Colored text utilities: High-contrast WCAG-compliant shades in Light Mode */
+html.light .text-emerald-200,
+html.light .text-emerald-300,
+html.light .text-emerald-400,
+html:not(.dark) .text-emerald-200,
+html:not(.dark) .text-emerald-300,
+html:not(.dark) .text-emerald-400 {
+  color: #065f46 !important; /* dark emerald green */
+}
+
+html.light .text-sky-200,
+html.light .text-sky-300,
+html.light .text-sky-400,
+html:not(.dark) .text-sky-200,
+html:not(.dark) .text-sky-300,
+html:not(.dark) .text-sky-400 {
+  color: #0369a1 !important; /* deep ocean blue */
+}
+
+html.light .text-indigo-200,
+html.light .text-indigo-300,
+html.light .text-indigo-400,
+html:not(.dark) .text-indigo-200,
+html:not(.dark) .text-indigo-300,
+html:not(.dark) .text-indigo-400 {
+  color: #3730a3 !important; /* deep indigo */
+}
+
+html.light .text-amber-200,
+html.light .text-amber-300,
+html.light .text-amber-400,
+html:not(.dark) .text-amber-200,
+html:not(.dark) .text-amber-300,
+html:not(.dark) .text-amber-400 {
+  color: #92400e !important; /* deep rich amber */
+}
+
+html.light .text-rose-200,
+html.light .text-rose-300,
+html.light .text-rose-400,
+html:not(.dark) .text-rose-200,
+html:not(.dark) .text-rose-300,
+html:not(.dark) .text-rose-400 {
+  color: #9f1239 !important; /* deep crimson */
+}
+
+html.light .text-purple-200,
+html.light .text-purple-300,
+html.light .text-purple-400,
+html:not(.dark) .text-purple-200,
+html:not(.dark) .text-purple-300,
+html:not(.dark) .text-purple-400 {
+  color: #6b21a8 !important; /* deep purple */
+}
+
+/* Translucent Colored Backgrounds & Borders in Light Mode */
+html.light .bg-emerald-500\/10,
+html.light .bg-emerald-500\/15,
+html.light .bg-emerald-500\/20,
+html.light .bg-emerald-500\/25,
+html.light .bg-emerald-500\/30,
+html:not(.dark) .bg-emerald-500\/10,
+html:not(.dark) .bg-emerald-500\/15,
+html:not(.dark) .bg-emerald-500\/20,
+html:not(.dark) .bg-emerald-500\/25,
+html:not(.dark) .bg-emerald-500\/30 {
+  background-color: #ecfdf5 !important;
+  border-color: #10b981 !important;
+}
+
+html.light .bg-sky-500\/10,
+html.light .bg-sky-500\/15,
+html.light .bg-sky-500\/20,
+html.light .bg-sky-500\/25,
+html.light .bg-sky-500\/30,
+html:not(.dark) .bg-sky-500\/10,
+html:not(.dark) .bg-sky-500\/15,
+html:not(.dark) .bg-sky-500\/20,
+html:not(.dark) .bg-sky-500\/25,
+html:not(.dark) .bg-sky-500\/30 {
+  background-color: #f0f9ff !important;
+  border-color: #0ea5e9 !important;
+}
+
+html.light .bg-indigo-500\/10,
+html.light .bg-indigo-500\/20,
+html.light .bg-indigo-600\/30,
+html.light .bg-indigo-600\/50,
+html:not(.dark) .bg-indigo-500\/10,
+html:not(.dark) .bg-indigo-500\/20,
+html:not(.dark) .bg-indigo-600\/30,
+html:not(.dark) .bg-indigo-600\/50 {
+  background-color: #eef2ff !important;
+  border-color: #6366f1 !important;
+}
+
+html.light .bg-amber-500\/10,
+html.light .bg-amber-500\/15,
+html.light .bg-amber-500\/20,
+html.light .bg-amber-500\/25,
+html.light .bg-amber-500\/30,
+html:not(.dark) .bg-amber-500\/10,
+html:not(.dark) .bg-amber-500\/15,
+html:not(.dark) .bg-amber-500\/20,
+html:not(.dark) .bg-amber-500\/25,
+html:not(.dark) .bg-amber-500\/30 {
+  background-color: #fffbeb !important;
+  border-color: #f59e0b !important;
+}
+
+html.light .bg-rose-500\/10,
+html.light .bg-rose-500\/15,
+html.light .bg-rose-500\/20,
+html.light .bg-rose-500\/25,
+html.light .bg-rose-500\/30,
+html:not(.dark) .bg-rose-500\/10,
+html:not(.dark) .bg-rose-500\/15,
+html:not(.dark) .bg-rose-500\/20,
+html:not(.dark) .bg-rose-500\/25,
+html:not(.dark) .bg-rose-500\/30 {
+  background-color: #fff1f2 !important;
+  border-color: #f43f5e !important;
+}
+
+/* Universal Master Metronome in Light Mode */
+html.light #universal-metronome-bar,
+html:not(.dark) #universal-metronome-bar {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Master Metronome Button OFF */
+html.light #btn-master-metronome,
+html:not(.dark) #btn-master-metronome {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+html.light #btn-master-metronome:hover,
+html:not(.dark) #btn-master-metronome:hover {
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Master Metronome Button ON */
+html.light #btn-master-metronome.bg-emerald-500\/20,
+html.light #btn-master-metronome[class*="bg-emerald"],
+html:not(.dark) #btn-master-metronome.bg-emerald-500\/20,
+html:not(.dark) #btn-master-metronome[class*="bg-emerald"] {
+  background-color: #ecfdf5 !important;
+  border-color: #059669 !important;
+  color: #065f46 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 0 1px #059669, 0 2px 5px rgba(5, 150, 105, 0.15) !important;
+}
+
+/* Master Metronome Status Tag */
+html.light #master-metronome-status,
+html:not(.dark) #master-metronome-status {
+  background-color: #e2e8f0 !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+html.light #btn-master-metronome[class*="bg-emerald"] #master-metronome-status,
+html.light #master-metronome-status[class*="bg-emerald"],
+html.light #master-metronome-status[class*="text-emerald"],
+html:not(.dark) #btn-master-metronome[class*="bg-emerald"] #master-metronome-status,
+html:not(.dark) #master-metronome-status[class*="bg-emerald"],
+html:not(.dark) #master-metronome-status[class*="text-emerald"] {
+  background-color: #a7f3d0 !important;
+  color: #064e3b !important;
+  border-color: #059669 !important;
+  font-weight: 900 !important;
+}
+
+/* Master Tempo Stepper */
+html.light #universal-metronome-bar .bg-slate-950\/70,
+html:not(.dark) #universal-metronome-bar .bg-slate-950\/70 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+html.light #btn-master-bpm-minus,
+html.light #btn-master-bpm-plus,
+html:not(.dark) #btn-master-bpm-minus,
+html:not(.dark) #btn-master-bpm-plus {
+  color: #334155 !important;
+}
+html.light #btn-master-bpm-minus:hover,
+html.light #btn-master-bpm-plus:hover,
+html:not(.dark) #btn-master-bpm-minus:hover,
+html:not(.dark) #btn-master-bpm-plus:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+html.light #master-bpm-display,
+html:not(.dark) #master-bpm-display {
+  color: #0284c7 !important;
+  font-weight: 900 !important;
+}
+
+/* Master Tap Button */
+html.light #btn-master-tap-tempo,
+html:not(.dark) #btn-master-tap-tempo {
+  background-color: #e0f2fe !important;
+  border-color: #38bdf8 !important;
+  color: #0369a1 !important;
+  font-weight: 700 !important;
+}
+html.light #btn-master-tap-tempo:hover,
+html:not(.dark) #btn-master-tap-tempo:hover {
+  background-color: #bae6fd !important;
+  border-color: #0284c7 !important;
+}
+
+/* Master Click Toggle */
+html.light #btn-master-click-toggle,
+html:not(.dark) #btn-master-click-toggle {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0284c7 !important;
+}
+html.light #btn-master-click-toggle:hover,
+html:not(.dark) #btn-master-click-toggle:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Beat Indicator Dots */
+html.light #master-beat-dots,
+html:not(.dark) #master-beat-dots {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+html.light .beat-dot,
+html:not(.dark) .beat-dot {
+  background-color: #cbd5e1;
+  border-color: #94a3b8;
+}
+html.light .beat-dot.active,
+html:not(.dark) .beat-dot.active {
+  background-color: #0284c7;
+  border-color: #0369a1;
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.6);
+}
+html.light .beat-dot.downbeat.active,
+html:not(.dark) .beat-dot.downbeat.active {
+  background-color: #d97706;
+  border-color: #b45309;
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.7);
+}
+
+/* Primary Trainer Buttons: Load Score, Export, Choose Melody, Guide, Restart */
+html.light #btn-load-midi,
+html:not(.dark) #btn-load-midi {
+  background-color: #ecfdf5 !important;
+  border-color: #10b981 !important;
+  color: #065f46 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.1) !important;
+}
+html.light #btn-load-midi:hover,
+html:not(.dark) #btn-load-midi:hover {
+  background-color: #d1fae5 !important;
+  border-color: #059669 !important;
+}
+html.light #btn-load-midi span,
+html:not(.dark) #btn-load-midi span {
+  color: #065f46 !important;
+}
+html.light #btn-load-midi .bg-emerald-500\/30,
+html:not(.dark) #btn-load-midi .bg-emerald-500\/30 {
+  background-color: #a7f3d0 !important;
+  color: #064e3b !important;
+  border: 1px solid #059669 !important;
+  font-weight: 800 !important;
+}
+
+html.light #btn-export-practice,
+html:not(.dark) #btn-export-practice {
+  background-color: #eef2ff !important;
+  border-color: #6366f1 !important;
+  color: #3730a3 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px rgba(99, 102, 241, 0.12) !important;
+}
+html.light #btn-export-practice:hover,
+html:not(.dark) #btn-export-practice:hover {
+  background-color: #e0e7ff !important;
+  border-color: #4f46e5 !important;
+  color: #312e81 !important;
+}
+html.light #btn-export-practice span,
+html:not(.dark) #btn-export-practice span {
+  color: #3730a3 !important;
+}
+
+html.light #btn-open-melody-modal,
+html:not(.dark) #btn-open-melody-modal {
+  background-color: #f0f9ff !important;
+  border-color: #0284c7 !important;
+  color: #0369a1 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px rgba(2, 132, 199, 0.1) !important;
+}
+html.light #btn-open-melody-modal:hover,
+html:not(.dark) #btn-open-melody-modal:hover {
+  background-color: #e0f2fe !important;
+  border-color: #0369a1 !important;
+}
+html.light #btn-open-melody-modal span,
+html:not(.dark) #btn-open-melody-modal span {
+  color: #0369a1 !important;
+}
+
+html.light #btn-practice-guide,
+html.light #btn-routine-guide,
+html:not(.dark) #btn-practice-guide,
+html:not(.dark) #btn-routine-guide {
+  background-color: #fffbeb !important;
+  border-color: #f59e0b !important;
+  color: #92400e !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.1) !important;
+}
+html.light #btn-practice-guide:hover,
+html.light #btn-routine-guide:hover,
+html:not(.dark) #btn-practice-guide:hover,
+html:not(.dark) #btn-routine-guide:hover {
+  background-color: #fef3c7 !important;
+  border-color: #d97706 !important;
+}
+html.light #btn-practice-guide span,
+html.light #btn-routine-guide span,
+html:not(.dark) #btn-practice-guide span,
+html:not(.dark) #btn-routine-guide span {
+  color: #92400e !important;
+}
+
+html.light #btn-restart-practice,
+html:not(.dark) #btn-restart-practice {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+html.light #btn-restart-practice:hover,
+html:not(.dark) #btn-restart-practice:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Practice HUD Elements & Tracker */
+html.light #practice-hud,
+html:not(.dark) #practice-hud {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.06) !important;
+}
+html.light #practice-hud .bg-slate-950\/70,
+html.light #practice-hud .bg-slate-950\/60,
+html:not(.dark) #practice-hud .bg-slate-950\/70,
+html:not(.dark) #practice-hud .bg-slate-950\/60 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+html.light #practice-target-note,
+html:not(.dark) #practice-target-note {
+  color: #0284c7 !important;
+  font-weight: 900 !important;
+}
+html.light #practice-played-note,
+html:not(.dark) #practice-played-note {
+  color: #0f172a !important;
+  font-weight: 900 !important;
+}
+html.light #practice-accuracy-display,
+html:not(.dark) #practice-accuracy-display {
+  color: #047857 !important;
+  font-weight: 900 !important;
+}
+html.light #practice-rhythm-display,
+html:not(.dark) #practice-rhythm-display {
+  color: #b45309 !important;
+  font-weight: 900 !important;
+}
+html.light #practice-recovery-display,
+html:not(.dark) #practice-recovery-display {
+  color: #047857 !important;
+  font-weight: 900 !important;
+}
+html.light #practice-streak-badge,
+html:not(.dark) #practice-streak-badge {
+  color: #b45309 !important;
+  font-weight: 800 !important;
+}
+html.light #practice-progress-text,
+html:not(.dark) #practice-progress-text {
+  color: #475569 !important;
+}
+html.light #practice-hud .bg-slate-950,
+html:not(.dark) #practice-hud .bg-slate-950 {
+  background-color: #e2e8f0 !important;
+}
+
+/* Difficulty Badge */
+html.light #practice-difficulty-badge,
+html:not(.dark) #practice-difficulty-badge {
+  font-weight: 800 !important;
+}
+
+/* Accidental & Notation Toolbar Controls */
+html.light #toggle-accidentals,
+html:not(.dark) #toggle-accidentals {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+html.light #toggle-accidentals:hover,
+html:not(.dark) #toggle-accidentals:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Header Action Buttons & Status */
+html.light #btn-quick-toggle-keyboard,
+html.light #btn-quick-toggle-events,
+html.light #btn-open-settings,
+html.light #btn-toggle-theme,
+html:not(.dark) #btn-quick-toggle-keyboard,
+html:not(.dark) #btn-quick-toggle-events,
+html:not(.dark) #btn-open-settings,
+html:not(.dark) #btn-toggle-theme {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+html.light #btn-quick-toggle-keyboard:hover,
+html.light #btn-quick-toggle-events:hover,
+html.light #btn-open-settings:hover,
+html.light #btn-toggle-theme:hover,
+html:not(.dark) #btn-quick-toggle-keyboard:hover,
+html:not(.dark) #btn-quick-toggle-events:hover,
+html:not(.dark) #btn-open-settings:hover,
+html:not(.dark) #btn-toggle-theme:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+html.light #midi-status-badge,
+html:not(.dark) #midi-status-badge {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+  font-weight: 700 !important;
+}
+
+/* Navigation Tabs in Light Mode */
+html.light .mode-tab:not(.active),
+html:not(.dark) .mode-tab:not(.active) {
+  color: #475569 !important;
+}
+html.light .mode-tab:not(.active):hover,
+html:not(.dark) .mode-tab:not(.active):hover {
+  color: #0f172a !important;
+  background-color: #e2e8f0 !important;
+}
+
+/* Daily Routine HUD Player Controls & Block Pills */
+html.light .routine-block-pill,
+html:not(.dark) .routine-block-pill {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+html.light .routine-block-pill.active,
+html:not(.dark) .routine-block-pill.active {
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2) !important;
+}
+html.light .routine-block-pill.completed,
+html:not(.dark) .routine-block-pill.completed {
+  background-color: #f0f9ff !important;
+  color: #0369a1 !important;
+  border-color: #0284c7 !important;
+}
+html.light #btn-routine-prev,
+html.light #btn-routine-skip,
+html.light #btn-routine-reset,
+html.light #btn-routine-restart-exercise,
+html:not(.dark) #btn-routine-prev,
+html:not(.dark) #btn-routine-skip,
+html:not(.dark) #btn-routine-reset,
+html:not(.dark) #btn-routine-restart-exercise {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+html.light #btn-routine-finish-exercise,
+html:not(.dark) #btn-routine-finish-exercise {
+  background-color: #ecfdf5 !important;
+  border-color: #10b981 !important;
+  color: #065f46 !important;
+  font-weight: 700 !important;
+}
+html.light #btn-routine-finish-exercise:hover,
+html:not(.dark) #btn-routine-finish-exercise:hover {
+  background-color: #d1fae5 !important;
+}
+html.light #routine-master-timer,
+html:not(.dark) #routine-master-timer {
+  color: #047857 !important;
+}
+html.light #routine-phase-timer,
+html:not(.dark) #routine-phase-timer {
+  color: #b45309 !important;
+}
+html.light #routine-phase-badge,
+html:not(.dark) #routine-phase-badge {
+  background-color: #ecfdf5 !important;
+  border-color: #10b981 !important;
+  color: #065f46 !important;
+}
+
+/* Modals & Dialogs in Light Mode */
+html.light .export-format-btn,
+html.light .export-scope-option,
+html:not(.dark) .export-format-btn,
+html:not(.dark) .export-scope-option {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+html.light .export-format-btn.active,
+html.light .export-scope-option:has(input:checked),
+html:not(.dark) .export-format-btn.active,
+html:not(.dark) .export-scope-option:has(input:checked) {
+  background-color: #f0f9ff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 1px #0284c7 !important;
+}
+html.light #export-ai-prompt-box,
+html:not(.dark) #export-ai-prompt-box {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+html.light #btn-cancel-export,
+html:not(.dark) #btn-cancel-export {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+html.light #btn-cancel-export:hover,
+html:not(.dark) #btn-cancel-export:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+html.light #btn-copy-ai-prompt,
+html:not(.dark) #btn-copy-ai-prompt {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0369a1 !important;
+  font-weight: 700 !important;
+}
+html.light #btn-copy-ai-prompt:hover,
+html:not(.dark) #btn-copy-ai-prompt:hover {
+  background-color: #e2e8f0 !important;
+  border-color: #0284c7 !important;
+}
+
+html.light .melody-card,
+html:not(.dark) .melody-card {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+html.light .melody-card:hover,
+html:not(.dark) .melody-card:hover {
+  background-color: #f8fafc !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+html.light .melody-card.selected,
+html:not(.dark) .melody-card.selected {
+  background-color: #f0f9ff !important;
+  border-color: #0284c7 !important;
+}
+
 /* Form Controls (Selects, Inputs) */
 html.light select,
 html.light input[type="text"],
 html.light input[type="number"],
+html.light input[type="checkbox"],
 html:not(.dark) select,
 html:not(.dark) input[type="text"],
-html:not(.dark) input[type="number"] {
+html:not(.dark) input[type="number"],
+html:not(.dark) input[type="checkbox"] {
   background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
@@ -151,12 +765,12 @@ html:not(.dark) kbd {
   color: #334155 !important;
 }
 
-/* Staff Card */
+/* Staff Card in Light Mode */
 html.light .staff-card,
 html:not(.dark) .staff-card {
-  background-color: #fcfbf9 !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.08);
+  background-color: var(--staff-bg) !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04), inset 0 1px 3px rgba(0, 0, 0, 0.02) !important;
 }
 
 /* Modals */
@@ -233,10 +847,32 @@ body {
   transition: height 0.25s ease;
 }
 
-/* Expanded height when piano keyboard is hidden or in vertical multi-line mode */
+/* High-Contrast Interactive Hand Cursors on Staff Canvas */
+#staff-canvas[data-cursor="grab"],
+#staff-canvas.cursor-grab {
+  cursor: var(--cursor-canvas-grab, grab) !important;
+}
+
+#staff-canvas[data-cursor="grabbing"],
+#staff-canvas.cursor-grabbing {
+  cursor: var(--cursor-canvas-grabbing, grabbing) !important;
+}
+
+#staff-canvas[data-cursor="pointer"],
+#staff-canvas.cursor-pointer {
+  cursor: var(--cursor-canvas-pointer, pointer) !important;
+}
+
+#staff-canvas[data-cursor="default"],
+#staff-canvas.cursor-default {
+  cursor: default !important;
+}
+
+/* Expanded height when piano keyboard is hidden, in vertical multi-line mode, or in waterfall mode */
 .keyboard-hidden #staff-canvas,
-.staff-card.vertical-staves #staff-canvas {
-  height: 480px;
+.staff-card.vertical-staves #staff-canvas,
+.staff-card.waterfall-mode #staff-canvas {
+  height: 490px;
 }
 
 /* Status Badge */
@@ -739,8 +1375,9 @@ body {
   }
 
   .keyboard-hidden #staff-canvas,
-  .staff-card.vertical-staves #staff-canvas {
-    height: 380px;
+  .staff-card.vertical-staves #staff-canvas,
+  .staff-card.waterfall-mode #staff-canvas {
+    height: 400px;
   }
 
   .piano-container {

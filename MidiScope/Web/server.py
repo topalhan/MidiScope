@@ -1,10 +1,15 @@
 import http.server
+import os
 import socket
 import sys
 
 PORT = 8001
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=BASE_DIR, **kwargs)
+
     def end_headers(self):
         self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.send_header('Pragma', 'no-cache')
@@ -15,13 +20,31 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         super().log_message(format, *args)
         sys.stdout.flush()
 
+# Comprehensive MIME mappings for sheet music files, audio, and web assets
+NoCacheHandler.extensions_map.update({
+    '.mxl': 'application/vnd.recordare.musicxml',
+    '.musicxml': 'application/vnd.recordare.musicxml+xml',
+    '.xml': 'application/xml',
+    '.mid': 'audio/midi',
+    '.midi': 'audio/midi',
+    '.js': 'application/javascript',
+    '.css': 'text/css',
+    '.html': 'text/html',
+    '.json': 'application/json',
+    '.svg': 'image/svg+xml',
+    '.woff2': 'font/woff2',
+    '.woff': 'font/woff',
+    '.ttf': 'font/ttf',
+})
+
 class DualStackServer(http.server.ThreadingHTTPServer):
-    allow_reuse_address = True
+    # Keep allow_reuse_address False on Windows to prevent duplicate processes
+    # from hijacking the port and corrupting TCP connections.
+    allow_reuse_address = False
     daemon_threads = True
 
     def __init__(self, server_address, RequestHandlerClass):
-        # Try dual stack IPv6 (which handles IPv4 mapped addresses on Windows)
-        # If not supported, fallback to IPv4
+        # Try dual-stack IPv6 (handles IPv4 mapped connections on modern Windows)
         try:
             self.address_family = socket.AF_INET6
             super().__init__(server_address, RequestHandlerClass)
@@ -38,18 +61,32 @@ class DualStackServer(http.server.ThreadingHTTPServer):
         super().server_bind()
 
 if __name__ == '__main__':
-    # Listen on all interfaces with ThreadingHTTPServer
-    http.server.ThreadingHTTPServer.allow_reuse_address = True
-    try:
-        httpd = http.server.ThreadingHTTPServer(("0.0.0.0", PORT), NoCacheHandler)
-    except Exception:
-        httpd = DualStackServer(("", PORT), NoCacheHandler)
+    os.chdir(BASE_DIR)
+    httpd = None
 
-    print(f"MidiSheet server running at http://localhost:{PORT}/ and http://127.0.0.1:{PORT}/")
+    try:
+        httpd = DualStackServer(("", PORT), NoCacheHandler)
+    except Exception as e:
+        try:
+            http.server.ThreadingHTTPServer.allow_reuse_address = False
+            httpd = http.server.ThreadingHTTPServer(("0.0.0.0", PORT), NoCacheHandler)
+        except OSError as err:
+            print(f"Error starting server on port {PORT}: {err}")
+            print(f"Port {PORT} may already be in use by another instance.")
+            sys.exit(1)
+
+    print(f"========================================================")
+    print(f" MidiSheet Web Server is running!")
+    print(f"   URL: http://localhost:{PORT}/")
+    print(f"   URL: http://127.0.0.1:{PORT}/")
+    print(f" Serving directory: {BASE_DIR}")
+    print(f"========================================================")
     sys.stdout.flush()
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        pass
+        print("\nStopping MidiSheet server...")
     finally:
-        httpd.server_close()
+        if httpd:
+            httpd.server_close()

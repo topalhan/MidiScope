@@ -460,7 +460,7 @@ export class MelodyTrainer {
       } else {
         this.startSilentAnalysis(30);
       }
-    } else if (this.isTimeDrivenMode() || (this.metronomeEnabled && this.mode !== 'wait')) {
+    } else if (this.isTimeDrivenMode() || this.metronomeEnabled) {
       this.startMetronome();
     }
   }
