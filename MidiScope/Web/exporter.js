@@ -239,7 +239,7 @@ export function exportToMidi(session, options = {}) {
       bytes: [0xC0 | ch, 0x01]
     });
 
-    const isWaitMode = (session.mode === 'wait');
+    const isWaitMode = (session.mode === 'wait' || session.mode === 'pitch_perfect');
     const noteResults = session.noteResults || [];
     const targetNotes = melody.notes || [];
     const rawEvents = session.playedEvents || [];
@@ -765,7 +765,7 @@ export function generateAiPrompt(session, format = 'midi') {
   const melody = session?.melody || { title: 'Practice Excerpt', composer: 'Traditional', bpm: 108, key: 'C Major' };
   const bpm = session?.bpm || melody.bpm || 108;
   const key = melody.key || 'C Major';
-  const modeName = session?.mode === 'wait' ? 'Wait for Note (Practice)' : session?.mode === 'strict' ? 'Strict Time (No-Pause)' : (session?.mode || 'Wait for Note');
+  const modeName = session?.mode === 'pitch_perfect' ? 'Pitch Perfect (Must Hit Pitch)' : (session?.mode === 'wait' ? 'Wait for Note (Practice)' : session?.mode === 'strict' ? 'Strict Time (No-Pause)' : (session?.mode || 'Wait for Note'));
   const stats = session?.stats || {};
   const accuracy = stats.accuracy !== undefined ? `${stats.accuracy}%` : 'N/A';
   const rhythmAccuracy = stats.rhythmAccuracy !== undefined ? `${stats.rhythmAccuracy}%` : 'N/A';

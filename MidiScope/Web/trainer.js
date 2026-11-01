@@ -14,7 +14,7 @@ export class MelodyTrainer {
     this.currentMelody = null;
     this.noteIndex = 0;
     this.isFinished = false;
-    this.mode = 'wait'; // 'wait' (wait-for-note), 'tempo', 'strict' (no-pause sight-reading), 'first_read'
+    this.mode = 'wait'; // 'pitch_perfect' (must hit pitch before advancing), 'wait' (wait-for-note), 'tempo', 'strict' (no-pause sight-reading), 'first_read'
     this.bpm = 108;
     this.metronomeEnabled = false;
 
@@ -118,6 +118,10 @@ export class MelodyTrainer {
 
   isFirstReadMode() {
     return this.mode === 'first_read';
+  }
+
+  isPitchPerfectMode() {
+    return this.mode === 'pitch_perfect';
   }
 
   loadFirstReadRecords() {
@@ -483,7 +487,7 @@ export class MelodyTrainer {
 
   toggleMetronome(enabled = null) {
     this.metronomeEnabled = enabled !== null ? enabled : !this.metronomeEnabled;
-    if (!this.metronomeEnabled && this.mode === 'wait') {
+    if (!this.metronomeEnabled && (this.mode === 'wait' || this.mode === 'pitch_perfect')) {
       this.stopMetronome();
     } else if (this.metronomeEnabled && !this.metronomeTimer) {
       this.startMetronome();
@@ -727,7 +731,7 @@ export class MelodyTrainer {
     const targetDuration = target ? (target.duration || 1) : 1;
 
     // In Wait mode, Note 0 initiates phrase/song timing (exact VST3 MelodyScorer parity)
-    if (this.mode === 'wait' && this.noteIndex === 0) {
+    if ((this.mode === 'wait' || this.mode === 'pitch_perfect') && this.noteIndex === 0) {
       this.songStartTime = now;
       this.lastNoteTimestampMs = now;
       this.expectedCumulativeBeats = targetDuration;
@@ -1021,7 +1025,9 @@ export class MelodyTrainer {
           this.onTimingFeedback({
             rating: 'mistake',
             offsetMs: null,
-            text: `❌ Played ${playedInfo.fullName} (Expected ${expectedInfo.fullName})`
+            text: this.mode === 'pitch_perfect'
+              ? `❌ Played ${playedInfo.fullName} • Must play ${expectedInfo.fullName} to advance`
+              : `❌ Played ${playedInfo.fullName} (Expected ${expectedInfo.fullName})`
           });
         }
 
@@ -1035,7 +1041,9 @@ export class MelodyTrainer {
         const nextIndex = this.noteIndex + 1;
         const nextTarget = (nextIndex < this.currentMelody.notes.length) ? this.currentMelody.notes[nextIndex] : null;
 
-        if (nextTarget && midi === nextTarget.midi) {
+        // Forward progression check in Wait mode (disabled in Pitch Perfect mode):
+        // In Pitch Perfect mode, the user MUST play the pitch before being able to move to the next note.
+        if (this.mode !== 'pitch_perfect' && nextTarget && midi === nextTarget.midi) {
           // Advance to next note and register this strike as the hit for next note!
           this.noteIndex = nextIndex;
           const nextSlot = this.noteResults[this.noteIndex];

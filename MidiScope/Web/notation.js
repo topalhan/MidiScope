@@ -3179,7 +3179,7 @@ export class NotationRenderer {
       ctx.fillText(title, marginX + 90, hudY + badgeH / 2);
     }
 
-    const modeName = this.practiceData?.mode === 'wait' ? 'Wait for Note' : (this.practiceData?.mode === 'strict' ? 'Strict Time' : 'In-Tempo');
+    const modeName = this.practiceData?.mode === 'pitch_perfect' ? 'Pitch Perfect' : (this.practiceData?.mode === 'wait' ? 'Wait for Note' : (this.practiceData?.mode === 'strict' ? 'Strict Time' : 'In-Tempo'));
     const rightPillW = isMobile ? 90 : 160;
     const rightPillX = marginX + usableW - rightPillW;
 

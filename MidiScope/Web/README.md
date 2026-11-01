@@ -28,7 +28,8 @@ A modern, zero-dependency web application that accepts Web MIDI hardware input (
   - **Classical Note Engraving**: Vector augmentation dots with automatic staff-line collision avoidance and curved Bezier eighth/sixteenth note flags.
   - **"🔇 No Sound (Hardware / EWI Audio)" Preset**: Built-in option to mute the internal synth for players using hardware sound generators (e.g. EWI5000, Yamaha YDS, digital pianos) while maintaining full visual notation and scoring.
   - **Practice Modes**:
-    - *Wait for Note (Learn Mode)*: Pauses until the correct note is played before advancing.
+    - *Pitch Perfect (Must Hit Pitch)*: Requires the player to play the exact pitch of the current note before being able to advance to the next note. No time limits or skipping forward on accidental strikes.
+    - *Wait for Note (Learn Mode)*: Pauses until the note is played before advancing.
     - *In-Tempo (Challenge Mode)*: Evaluates performance rhythm and speed against an ongoing timeline.
     - *Strict Time (No-Pause Metronome)*: Relentless playhead advancing strictly by time; wrong notes do not halt playback; features downbeat tempo recovery bonuses.
     - *First-Read Challenge*: 30s silent inspection phase followed by a 4-beat count-in and a single-shot strict evaluation with permanent lockout.

@@ -9,7 +9,7 @@ import { MusicTheory } from './chords.js';
 import { NotationRenderer } from './notation.js?v=20261029.0825';
 import { AudioEngine } from './audio.js';
 import { MidiManager } from './midi.js';
-import { MelodyTrainer } from './trainer.js?v=20261014.0820';
+import { MelodyTrainer } from './trainer.js?v=20261030.2135';
 import { MELODIES } from './melodies.js';
 import { parseMidiFile, inspectMidiChannels } from './midiparser.js';
 import { parseMusicXml, inspectMusicXml } from './musicxmlparser.js';
@@ -636,7 +636,11 @@ class App {
       if (this.notation && this.notation.triggerWaterfallHit) {
         this.notation.triggerWaterfallHit(idx, targetNote, isFirstTry, timing);
       }
-      if (timing) {
+      if (this.trainer.mode === 'pitch_perfect') {
+        this.practiceFeedbackText.innerText = isFirstTry
+          ? `🎯 Pitch Perfect! Hit ${targetNote.name}`
+          : `✨ Correct! Got ${targetNote.name}`;
+      } else if (timing) {
         this.practiceFeedbackText.innerText = `✨ Hit ${targetNote.name} • ${timing.text}`;
       } else {
         this.practiceFeedbackText.innerText = isFirstTry ? '✨ Perfect!' : '👍 Good! Moving to next note';
@@ -649,7 +653,10 @@ class App {
       if (this.notation && this.notation.triggerWaterfallMistake) {
         this.notation.triggerWaterfallMistake(idx, expectedInfo, playedInfo);
       }
-      this.practiceFeedbackText.innerText = `❌ Played ${playedInfo.fullName} (Expected ${expectedInfo.fullName})`;
+      const isPitchPerfect = this.trainer.mode === 'pitch_perfect';
+      this.practiceFeedbackText.innerText = isPitchPerfect
+        ? `❌ Played ${playedInfo.fullName} • Play ${expectedInfo.fullName} to advance`
+        : `❌ Played ${playedInfo.fullName} (Expected ${expectedInfo.fullName})`;
       this.practiceFeedbackText.className = 'text-xs font-semibold text-rose-400 animate-pulse';
     };
 
@@ -1891,6 +1898,10 @@ class App {
           this.practicePlayedNote.className = 'text-xl sm:text-2xl font-black text-emerald-400';
         } else {
           this.practicePlayedNote.className = 'text-xl sm:text-2xl font-black text-rose-400';
+          const wrongKeyEl = this.pianoContainer.querySelector(`[data-midi="${midi}"]`);
+          if (wrongKeyEl) {
+            wrongKeyEl.style.setProperty('--press-glow', 'rgba(244, 63, 94, 0.95)');
+          }
         }
       }
       // In practice or routine mode, evaluate played note against expected melody note
@@ -2188,6 +2199,14 @@ class App {
       }
     } else {
       this.silentAnalysisBanner?.classList.add('hidden');
+    }
+
+    // Initial feedback text on fresh start
+    if (state.noteIndex === 0 && (state.stats?.mistakeCount || 0) === 0 && !state.isFinished && !this.trainer.rhythmTapMode) {
+      if (state.mode === 'pitch_perfect') {
+        this.practiceFeedbackText.innerText = '🎯 Pitch Perfect: Play each note to advance';
+        this.practiceFeedbackText.className = 'text-xs font-semibold text-sky-300';
+      }
     }
 
     // Forward to notation renderer
@@ -2938,7 +2957,16 @@ class App {
       }
     }
 
-    if (summary.stars === 3) {
+    if (summary.mode === 'pitch_perfect') {
+      titleEl.innerText = summary.stars === 3 ? 'Pitch Perfect Mastery!' : summary.stars === 2 ? 'Great Pitch Accuracy!' : 'Keep Practicing Pitches!';
+      if (summary.stars === 3) {
+        feedbackMsgEl.innerText = '🎯 Flawless Pitch Perfect! Every single pitch struck accurately with zero missed notes.';
+      } else if (summary.stars === 2) {
+        feedbackMsgEl.innerText = '👍 Solid pitch recognition! Review any tricky notes using the Review button.';
+      } else {
+        feedbackMsgEl.innerText = '💪 Good effort! Take your time to locate each pitch on the keyboard.';
+      }
+    } else if (summary.stars === 3) {
       feedbackMsgEl.innerText = '🌟 Outstanding! Flawless pitch accuracy and spot-on rhythm timing with the metronome.';
     } else if (summary.stars === 2) {
       feedbackMsgEl.innerText = '👍 Solid playing! Try locking right onto each metronome click to earn 3 stars.';
@@ -4063,10 +4091,15 @@ class App {
       }
     } else {
       const melody = this.trainer?.currentMelody;
-      if (this.guideModalBadge) this.guideModalBadge.innerText = `PRACTICE • ${melody?.difficulty || 'GENERAL'}`;
+      const isPitchPerfect = this.trainer?.mode === 'pitch_perfect';
+      if (this.guideModalBadge) this.guideModalBadge.innerText = isPitchPerfect ? `PRACTICE • PITCH PERFECT` : `PRACTICE • ${melody?.difficulty || 'GENERAL'}`;
       if (this.guideModalMeta) this.guideModalMeta.innerText = `${melody?.key || 'C Major'} • ${this.trainer?.bpm || 96} BPM`;
       if (this.guideModalTitle) this.guideModalTitle.innerText = melody?.title || 'Sight-Reading Exercise';
-      if (this.guideModalObjective) this.guideModalObjective.innerText = melody?.description || 'Read accurately in rhythm.';
+      if (this.guideModalObjective) {
+        this.guideModalObjective.innerText = isPitchPerfect
+          ? 'Master pitch accuracy: user must play each target pitch correctly before being able to move to the next note.'
+          : (melody?.description || 'Read accurately in rhythm.');
+      }
       if (this.guideModalNeuroscience) this.guideModalNeuroscience.innerText = 'Sight-reading fluency develops when rhythmic pulse takes precedence over stopping to fix mistakes.';
       if (this.guideModalHowTo) {
         this.guideModalHowTo.innerHTML = `
