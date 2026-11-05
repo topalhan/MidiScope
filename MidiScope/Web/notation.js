@@ -1282,7 +1282,10 @@ export class NotationRenderer {
    * Render Live Mode: Active held chord/notes and melodic contour ribbons displayed on Grand Staff
    */
   renderLiveMode(ctx, staffX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp) {
-    const preferFlats = this.options.preferFlats;
+    const melody = this.practiceData?.melody;
+    const activeKey = (melody && melody.key) || this.options.keySignature || 'C Major';
+    const activeKeyDef = MusicTheory.getKeySignature(activeKey);
+    const preferFlats = (activeKeyDef && activeKeyDef.flats && activeKeyDef.flats.length > 0) || this.options.preferFlats;
     const now = performance.now();
 
     // Prune phrase notes older than 3500ms if inactive
@@ -1925,7 +1928,10 @@ export class NotationRenderer {
   renderScrollingMode(ctx, staffX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp) {
     const playheadX = staffX + 110;
     const speed = this.options.scrollSpeed; // px per second
-    const preferFlats = this.options.preferFlats;
+    const melody = this.practiceData?.melody;
+    const activeKey = (melody && melody.key) || this.options.keySignature || 'C Major';
+    const activeKeyDef = MusicTheory.getKeySignature(activeKey);
+    const preferFlats = (activeKeyDef && activeKeyDef.flats && activeKeyDef.flats.length > 0) || this.options.preferFlats;
     const keySig = this.options.keySignature || 'C Major';
 
     ctx.save();
@@ -2046,7 +2052,10 @@ export class NotationRenderer {
    */
   renderRhythmTrainerMode(ctx, staffX, staffWidth, trebleBottomY, bassBottomY, lineSpacing, timestamp) {
     const isDark = this.options.theme === 'dark';
-    const preferFlats = this.options.preferFlats;
+    const melody = this.practiceData?.melody;
+    const activeKey = (melody && melody.key) || this.options.keySignature || 'C Major';
+    const activeKeyDef = MusicTheory.getKeySignature(activeKey);
+    const preferFlats = (activeKeyDef && activeKeyDef.flats && activeKeyDef.flats.length > 0) || this.options.preferFlats;
     const isMobile = this.width < 640;
 
     const trebleTopY = trebleBottomY - lineSpacing * 4;
@@ -2057,8 +2066,6 @@ export class NotationRenderer {
     const timeSig = [beatsPerMeasure, 4];
 
     // 1. Clefs, Key Signature, Time Signature & Divider
-    const activeKey = this.options.keySignature || 'C Major';
-    const activeKeyDef = MusicTheory.getKeySignature(activeKey);
     const keySigAccCount = activeKeyDef ? (activeKeyDef.flats?.length || activeKeyDef.sharps?.length || 0) : 0;
 
     const clefMarginLeft = isMobile ? 12 : 18;
@@ -2209,7 +2216,7 @@ export class NotationRenderer {
 
       // Prepare notes with clef and staff positions
       stroke.notes.forEach(note => {
-        const info = MusicTheory.getNoteInfo(note.midi, preferFlats);
+        const info = MusicTheory.getNoteInfo(note.midi, preferFlats, { ...note, key: activeKey });
         const clef = note.midi >= this.options.splitPoint ? 'treble' : 'bass';
         const staffPos = MusicTheory.getStaffPosition(info.diatonicStep, clef);
 
@@ -2399,7 +2406,10 @@ export class NotationRenderer {
 
     const count = this.activeNotes.size;
     let idx = 0;
-    const preferFlats = this.options.preferFlats;
+    const melody = this.practiceData?.melody;
+    const activeKey = (melody && melody.key) || this.options.keySignature || 'C Major';
+    const activeKeyDef = MusicTheory.getKeySignature(activeKey);
+    const preferFlats = (activeKeyDef && activeKeyDef.flats && activeKeyDef.flats.length > 0) || this.options.preferFlats;
     const stepHeight = lineSpacing * 0.5;
 
     const targetNote = this.practiceData ? (this.practiceData.melody?.notes[this.practiceData.noteIndex] || null) : null;
@@ -3312,7 +3322,7 @@ export class NotationRenderer {
 
     this.noteHitboxes = [];
     const isDark = this.options.theme === 'dark';
-    const melody = this.practiceData.melody;
+    const melody = this.practiceData?.melody;
     const activeKey = (melody && melody.key) || this.options.keySignature || 'C Major';
     const activeKeyDef = MusicTheory.getKeySignature(activeKey);
     const preferFlats = (activeKeyDef && activeKeyDef.flats && activeKeyDef.flats.length > 0) || this.options.preferFlats;
@@ -3380,6 +3390,7 @@ export class NotationRenderer {
     // Map each note to measure, system, and exact x position
     const notePositions = [];
     const noteToSystemMap = [];
+    const scoreAccidentals = MusicTheory.computeMeasureAccidentals(melody.notes, activeKey, beatsPerMeasure);
 
     melody.notes.forEach((note, i) => {
       const startB = noteBeats[i];
@@ -3551,12 +3562,12 @@ export class NotationRenderer {
           if (noteToSystemMap[i] === s && noteToSystemMap[i + 1] === s) {
             const n1 = melody.notes[i];
             const n2 = melody.notes[i + 1];
-            const info1 = MusicTheory.getNoteInfo(n1.midi, preferFlats);
+            const info1 = MusicTheory.getNoteInfo(n1.midi, preferFlats, { ...n1, key: activeKey });
             const clef1 = (showBass && n1.midi < this.options.splitPoint) ? 'bass' : 'treble';
             const pos1 = MusicTheory.getStaffPosition(info1.diatonicStep, clef1);
             const y1 = (clef1 === 'treble' ? sysBottomTrebleY : sysBottomBassY) - pos1 * (vSpacing / 2);
 
-            const info2 = MusicTheory.getNoteInfo(n2.midi, preferFlats);
+            const info2 = MusicTheory.getNoteInfo(n2.midi, preferFlats, { ...n2, key: activeKey });
             const clef2 = (showBass && n2.midi < this.options.splitPoint) ? 'bass' : 'treble';
             const pos2 = MusicTheory.getStaffPosition(info2.diatonicStep, clef2);
             const y2 = (clef2 === 'treble' ? sysBottomTrebleY : sysBottomBassY) - pos2 * (vSpacing / 2);
@@ -3587,7 +3598,7 @@ export class NotationRenderer {
         const pos = notePositions[i];
         const noteX = pos.x;
 
-        const info = MusicTheory.getNoteInfo(note.midi, preferFlats);
+        const info = MusicTheory.getNoteInfo(note.midi, preferFlats, { ...note, key: activeKey });
         const clef = (showBass && note.midi < this.options.splitPoint) ? 'bass' : 'treble';
         const staffPos = MusicTheory.getStaffPosition(info.diatonicStep, clef);
         const bottomY = clef === 'treble' ? sysBottomTrebleY : sysBottomBassY;
@@ -3600,7 +3611,7 @@ export class NotationRenderer {
         const res = results[i] || null;
         const hadMistakes = res && (res.mistakes > 0 || res.status === 'mistake' || res.status === 'missed');
         const wrongMidi = res ? res.lastWrongMidi : null;
-        const wrongInfo = wrongMidi !== null ? MusicTheory.getNoteInfo(wrongMidi, preferFlats) : null;
+        const wrongInfo = wrongMidi !== null ? MusicTheory.getNoteInfo(wrongMidi, preferFlats, { key: activeKey }) : null;
         const wrongName = wrongInfo ? wrongInfo.fullName : '?';
 
         // Hitbox for clicking notes
@@ -3646,6 +3657,7 @@ export class NotationRenderer {
           noteY,
           mIdx: pos.measureIndex,
           info,
+          scoreAcc: (scoreAccidentals && scoreAccidentals[i] !== undefined) ? scoreAccidentals[i] : null,
           clef,
           staffPos,
           bottomY,
@@ -3935,7 +3947,9 @@ export class NotationRenderer {
         }
 
         // Accidental
-        const scoreAcc = MusicTheory.getNoteAccidentalForScore(note.midi, activeKey, note.explicitAccidental);
+        const scoreAcc = (ent.scoreAcc !== undefined && ent.scoreAcc !== null)
+          ? ent.scoreAcc
+          : MusicTheory.getNoteAccidentalForScore(note.midi, activeKey, note.explicitAccidental);
         if (scoreAcc) {
           this.drawAccidental(ctx, { x: noteX, y: noteY, midi: note.midi, info: ent.info, explicitAccidental: note.explicitAccidental, displayAccidental: scoreAcc, active: isTarget || isReviewActive, clef: ent.clef }, vSpacing, 1.0);
         }
@@ -3947,7 +3961,7 @@ export class NotationRenderer {
           const pillH = 15;
           const pillX = noteX - pillW / 2;
           const pillY = sysLabelLaneY;
-          const noteName = (info && info.fullName) ? info.fullName : MusicTheory.getNoteInfo(note.midi, preferFlats).fullName;
+          const noteName = (info && info.fullName) ? info.fullName : MusicTheory.getNoteInfo(note.midi, preferFlats, { ...note, key: activeKey }).fullName;
 
           if (isReviewActive || isTarget) {
             ctx.fillStyle = isReviewActive ? '#f43f5e' : '#38bdf8';
@@ -4216,10 +4230,11 @@ export class NotationRenderer {
 
     this.noteHitboxes = [];
     const isDark = this.options.theme === 'dark';
-    const preferFlats = this.options.preferFlats;
+    const melody = this.practiceData?.melody;
+    const activeKey = (melody && melody.key) || this.options.keySignature || 'C Major';
+    const activeKeyDef = MusicTheory.getKeySignature(activeKey);
+    const preferFlats = (activeKeyDef && activeKeyDef.flats && activeKeyDef.flats.length > 0) || this.options.preferFlats;
     const isMobile = this.width < 640;
-
-    const melody = this.practiceData.melody;
     const currentIdx = this.practiceData.noteIndex;
     const results = this.practiceData.noteResults || [];
     const isFinished = !!this.practiceData.isFinished;
@@ -4341,8 +4356,6 @@ export class NotationRenderer {
     }
 
     // 2. Clefs, Key Signature, Time Signature, and Section Divider
-    const activeKey = (melody && melody.key) || this.options.keySignature || 'C Major';
-    const activeKeyDef = MusicTheory.getKeySignature(activeKey);
     const keySigAccCount = activeKeyDef ? (activeKeyDef.flats?.length || activeKeyDef.sharps?.length || 0) : 0;
 
     const clefMarginLeft = isMobile ? 12 : 18;
@@ -4444,6 +4457,7 @@ export class NotationRenderer {
     ctx.restore();
 
     // 4. Precompute Generous Non-Linear Duration Spacing & Measure Barlines
+    const horizScoreAccidentals = MusicTheory.computeMeasureAccidentals(melody.notes, activeKey, beatsPerMeasure);
     const notesStartX = scoreDividerX + (isMobile ? 18 : 26);
     const availableWidth = staffRightX - notesStartX - 12;
 
@@ -4453,7 +4467,7 @@ export class NotationRenderer {
     let currentMeasureBeats = 0;
 
     melody.notes.forEach((note, i) => {
-      const info = MusicTheory.getNoteInfo(note.midi, preferFlats);
+      const info = MusicTheory.getNoteInfo(note.midi, preferFlats, { ...note, key: activeKey });
 
       if (i > 0) {
         const prevNote = melody.notes[i - 1];
@@ -4586,7 +4600,8 @@ export class NotationRenderer {
     melody.notes.forEach((note) => {
       const clef = (showBass && note.midi < 60) ? 'bass' : 'treble';
       const bottomY = clef === 'bass' ? bassBottomY : trebleBottomY;
-      const staffPos = MusicTheory.getStaffPosition(note.midi, clef, activeKey);
+      const noteInfo = MusicTheory.getNoteInfo(note.midi, preferFlats, { ...note, key: activeKey });
+      const staffPos = MusicTheory.getStaffPosition(noteInfo.diatonicStep, clef);
       const noteY = bottomY - staffPos * (lineSpacing / 2);
       const nhBottom = noteY + lineSpacing * 0.65;
       if (nhBottom > horizContentBottomY) horizContentBottomY = nhBottom;
@@ -4678,12 +4693,12 @@ export class NotationRenderer {
 
         // Only draw for visible notes on screen
         if (x2 >= notesStartX - 40 && x1 <= staffRightX + 40) {
-          const info1 = MusicTheory.getNoteInfo(n1.midi, preferFlats);
+          const info1 = MusicTheory.getNoteInfo(n1.midi, preferFlats, { ...n1, key: activeKey });
           const clef1 = (showBass && n1.midi < this.options.splitPoint) ? 'bass' : 'treble';
           const pos1 = MusicTheory.getStaffPosition(info1.diatonicStep, clef1);
           const y1 = (clef1 === 'treble' ? trebleBottomY : bassBottomY) - pos1 * (lineSpacing / 2);
 
-          const info2 = MusicTheory.getNoteInfo(n2.midi, preferFlats);
+          const info2 = MusicTheory.getNoteInfo(n2.midi, preferFlats, { ...n2, key: activeKey });
           const clef2 = (showBass && n2.midi < this.options.splitPoint) ? 'bass' : 'treble';
           const pos2 = MusicTheory.getStaffPosition(info2.diatonicStep, clef2);
           const y2 = (clef2 === 'treble' ? trebleBottomY : bassBottomY) - pos2 * (lineSpacing / 2);
@@ -4739,7 +4754,7 @@ export class NotationRenderer {
       // Skip notes far off screen
       if (noteX < notesStartX - 60 || noteX > staffRightX + 60) return;
 
-      const info = MusicTheory.getNoteInfo(note.midi, preferFlats);
+      const info = MusicTheory.getNoteInfo(note.midi, preferFlats, { ...note, key: activeKey });
       const clef = (showBass && note.midi < this.options.splitPoint) ? 'bass' : 'treble';
       const staffPos = MusicTheory.getStaffPosition(info.diatonicStep, clef);
       const bottomY = clef === 'treble' ? trebleBottomY : bassBottomY;
@@ -4752,7 +4767,7 @@ export class NotationRenderer {
       const res = results[i] || null;
       const hadMistakes = res && (res.mistakes > 0 || res.status === 'mistake' || res.status === 'missed');
       const wrongMidi = res ? res.lastWrongMidi : null;
-      const wrongInfo = wrongMidi !== null ? MusicTheory.getNoteInfo(wrongMidi, preferFlats) : null;
+      const wrongInfo = wrongMidi !== null ? MusicTheory.getNoteInfo(wrongMidi, preferFlats, { key: activeKey }) : null;
       const wrongName = wrongInfo ? wrongInfo.fullName : '?';
 
       const isHollow = note.duration >= 2;
@@ -5045,7 +5060,9 @@ export class NotationRenderer {
       }
 
       // Accidental
-      const scoreAcc = MusicTheory.getNoteAccidentalForScore(note.midi, activeKey, note.explicitAccidental);
+      const scoreAcc = (horizScoreAccidentals && horizScoreAccidentals[i] !== undefined)
+        ? horizScoreAccidentals[i]
+        : MusicTheory.getNoteAccidentalForScore(note.midi, activeKey, note.explicitAccidental);
       if (scoreAcc) {
         this.drawAccidental(ctx, { x: noteX, y: noteY, midi: note.midi, info, explicitAccidental: note.explicitAccidental, displayAccidental: scoreAcc, active: isTarget || isReviewActive, clef }, lineSpacing, 1.0);
       }
@@ -5057,7 +5074,7 @@ export class NotationRenderer {
         const pillH = 18;
         const pillX = noteX - pillW / 2;
         const pillY = labelBaselineY;
-        const noteName = (info && info.fullName) ? info.fullName : MusicTheory.getNoteInfo(note.midi, preferFlats).fullName;
+        const noteName = (info && info.fullName) ? info.fullName : MusicTheory.getNoteInfo(note.midi, preferFlats, { ...note, key: activeKey }).fullName;
 
         if (isReviewActive) {
           ctx.fillStyle = '#f43f5e'; // Rose 500

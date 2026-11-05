@@ -969,10 +969,15 @@ export class MelodyTrainer {
       this.stats.streak = 0;
       this.previousNoteMissedOrMistake = true;
 
+      const melodyKey = this.currentMelody ? this.currentMelody.key : 'C Major';
+      const melodyKeyDef = MusicTheory.getKeySignature(melodyKey);
+      const melodyPrefersFlats = melodyKeyDef && melodyKeyDef.flats && melodyKeyDef.flats.length > 0;
       const expectedInfo = this.rhythmTapMode && this.expectedTapMidi !== null
-        ? MusicTheory.getNoteInfo(this.expectedTapMidi)
-        : MusicTheory.getNoteInfo(expectedMidi);
-      const playedInfo = MusicTheory.getNoteInfo(midi);
+        ? MusicTheory.getNoteInfo(this.expectedTapMidi, melodyPrefersFlats, { key: melodyKey })
+        : (targetNote && targetNote.name && !targetNote.name.startsWith('Note '))
+          ? { fullName: targetNote.name, displayName: targetNote.name, letter: targetNote.name[0], midi: targetNote.midi }
+          : MusicTheory.getNoteInfo(expectedMidi, melodyPrefersFlats, { ...targetNote, key: melodyKey });
+      const playedInfo = MusicTheory.getNoteInfo(midi, melodyPrefersFlats, { key: melodyKey });
 
       if (isTimeDriven) {
         // IN TIME-DRIVEN (IN-TEMPO / STRICT / FIRST-READ) MODES:
@@ -1248,9 +1253,14 @@ export class MelodyTrainer {
     if (!this.currentMelody || index < 0 || index >= this.currentMelody.notes.length) return null;
     const targetNote = this.currentMelody.notes[index];
     const res = this.noteResults[index] || { mistakes: 0, wrongNotes: [], lastWrongMidi: null };
-    const targetInfo = MusicTheory.getNoteInfo(targetNote.midi, preferFlats);
+    const melodyKey = this.currentMelody.key || 'C Major';
+    const melodyKeyDef = MusicTheory.getKeySignature(melodyKey);
+    const resolvedPreferFlats = (melodyKeyDef && melodyKeyDef.flats && melodyKeyDef.flats.length > 0) || preferFlats;
+    const targetInfo = (targetNote && targetNote.name && !targetNote.name.startsWith('Note '))
+      ? { fullName: targetNote.name, displayName: targetNote.name, letter: targetNote.name[0], midi: targetNote.midi }
+      : MusicTheory.getNoteInfo(targetNote.midi, resolvedPreferFlats, { ...targetNote, key: melodyKey });
     const wrongMidi = res.lastWrongMidi;
-    const wrongInfo = wrongMidi !== null ? MusicTheory.getNoteInfo(wrongMidi, preferFlats) : null;
+    const wrongInfo = wrongMidi !== null ? MusicTheory.getNoteInfo(wrongMidi, resolvedPreferFlats, { key: melodyKey }) : null;
 
     return {
       index,

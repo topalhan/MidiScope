@@ -511,7 +511,9 @@ export function parseMidiFile(arrayBuffer, fileName = 'custom_melody.mid', targe
   const cleanNotes = melodyNotes.map(n => {
     const rawBeats = n.durationTicks / ticksPerQuarter;
     const duration = quantizeDuration(rawBeats);
-    const noteInfo = MusicTheory.getNoteInfo(n.midi, false);
+    const keyDef = MusicTheory.getKeySignature(detectedKey);
+    const preferFlatsInScore = keyDef && keyDef.flats && keyDef.flats.length > 0;
+    const noteInfo = MusicTheory.getNoteInfo(n.midi, preferFlatsInScore, { key: detectedKey });
 
     return {
       midi: n.midi,

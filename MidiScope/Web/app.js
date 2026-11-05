@@ -2077,6 +2077,15 @@ class App {
 
     // Sync Key Signature UI and notation
     if (state.melody.key) {
+      const keyDef = MusicTheory.getKeySignature(state.melody.key);
+      const isFlatKey = keyDef && keyDef.flats && keyDef.flats.length > 0;
+      this.preferFlats = isFlatKey;
+      this.notation.setOption('preferFlats', isFlatKey);
+      this.notation.setOption('keySignature', state.melody.key);
+      const toggleAcc = document.getElementById('toggle-accidentals');
+      if (toggleAcc) toggleAcc.innerText = isFlatKey ? '♭ Flats' : '♯ Sharps';
+      this.updatePianoKeyLabels();
+
       const selectKey = document.getElementById('select-key-signature');
       if (selectKey && selectKey.value !== state.melody.key) {
         let opt = Array.from(selectKey.options).find(o => o.value === state.melody.key);
@@ -2087,7 +2096,6 @@ class App {
           selectKey.appendChild(opt);
         }
         selectKey.value = state.melody.key;
-        this.notation.setOption('keySignature', state.melody.key);
       }
     }
 
@@ -4657,14 +4665,14 @@ class App {
       selectKeySig.addEventListener('change', (e) => {
         const key = e.target.value;
         this.notation.setOption('keySignature', key);
-        // If the key has flats (e.g. F, Bb, Eb, Ab), auto-prefer flats
-        if (key.includes('♭') || key === 'F Major' || key === 'Bb Major' || key === 'Eb Major' || key === 'Ab Major' || key === 'D Minor') {
-          this.preferFlats = true;
-          this.notation.setOption('preferFlats', true);
-          const toggleAcc = document.getElementById('toggle-accidentals');
-          if (toggleAcc) toggleAcc.innerText = '♭ Flats';
-          this.updatePianoKeyLabels();
-        }
+        // Auto-detect flat preference based on key signature definition
+        const keyDef = MusicTheory.getKeySignature(key);
+        const isFlatKey = keyDef && keyDef.flats && keyDef.flats.length > 0;
+        this.preferFlats = isFlatKey;
+        this.notation.setOption('preferFlats', isFlatKey);
+        const toggleAcc = document.getElementById('toggle-accidentals');
+        if (toggleAcc) toggleAcc.innerText = isFlatKey ? '♭ Flats' : '♯ Sharps';
+        this.updatePianoKeyLabels();
         this.reEvaluateFreePlayNotesKeySignature();
         this.showToast(`Key set to ${key}. Scale muscle memory active; deviations trigger Accidental Alert.`, 'info');
       });

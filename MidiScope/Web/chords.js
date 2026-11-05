@@ -108,26 +108,105 @@ export class MusicTheory {
   /**
    * Convert MIDI note number to note details
    * @param {number} midi - 0 to 127
-   * @param {boolean} preferFlats - whether to use flats instead of sharps
+   * @param {boolean|string} preferFlats - whether to use flats instead of sharps, or key signature name string
+   * @param {object|null} noteContext - optional context object (e.g. note with step, alter, name, key)
    */
-  static getNoteInfo(midi, preferFlats = false) {
+  static getNoteInfo(midi, preferFlats = false, noteContext = null) {
     if (typeof midi !== 'number' || isNaN(midi) || !isFinite(midi)) {
       midi = 60;
     }
     const safeMidi = Math.max(0, Math.min(127, Math.round(midi)));
     const pitchClass = ((safeMidi % 12) + 12) % 12;
-    const octave = Math.floor(safeMidi / 12) - 1;
-    const nameMap = preferFlats ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
-    const diatonicMap = preferFlats ? CHROMATIC_TO_DIATONIC_FLAT : CHROMATIC_TO_DIATONIC_SHARP;
+    const defaultOctave = Math.floor(safeMidi / 12) - 1;
 
-    const baseInfo = diatonicMap[pitchClass] || { letter: 'C', acc: '' };
-    const letter = baseInfo.letter || 'C';
-    const accidental = baseInfo.acc || '';
-    const fullName = `${nameMap[pitchClass] || 'C'}${octave}`;
-    const displayName = `${nameMap[pitchClass] || 'C'}`;
+    // Resolve key signature and flat preference
+    let keyName = null;
+    let keyDef = null;
+    let resolvedPreferFlats = false;
+
+    if (typeof preferFlats === 'string') {
+      keyName = preferFlats;
+      keyDef = this.getKeySignature(keyName);
+      resolvedPreferFlats = keyDef && keyDef.flats && keyDef.flats.length > 0;
+    } else {
+      resolvedPreferFlats = !!preferFlats;
+      if (noteContext) {
+        if (typeof noteContext === 'string') {
+          keyName = noteContext;
+          keyDef = this.getKeySignature(keyName);
+        } else if (noteContext.key || noteContext.keySignature) {
+          keyName = noteContext.key || noteContext.keySignature;
+          keyDef = this.getKeySignature(keyName);
+        }
+      }
+      if (keyDef && keyDef.flats && keyDef.flats.length > 0) {
+        resolvedPreferFlats = true;
+      }
+    }
+
+    let letter = null;
+    let accidental = null;
+    let octave = defaultOctave;
+
+    // 1. Check if noteContext provides explicit step or name (e.g. from MusicXML or drill)
+    if (noteContext && typeof noteContext === 'object') {
+      if (noteContext.step) {
+        letter = String(noteContext.step).trim().toUpperCase();
+        if (noteContext.octave !== undefined && !isNaN(noteContext.octave)) {
+          octave = parseInt(noteContext.octave, 10);
+        }
+        if (noteContext.alter !== undefined && noteContext.alter !== null && !isNaN(noteContext.alter)) {
+          const alterVal = Math.round(parseFloat(noteContext.alter));
+          accidental = alterVal === 1 ? '#' : alterVal === -1 ? 'b' : alterVal === 2 ? '##' : alterVal === -2 ? 'bb' : '';
+        }
+      } else if (noteContext.name && typeof noteContext.name === 'string' && !noteContext.name.startsWith('Note ')) {
+        const m = noteContext.name.trim().match(/^([A-Ga-g])([#b♯♭♮]*)(-?\d+)?$/);
+        if (m) {
+          letter = m[1].toUpperCase();
+          accidental = m[2].replace(/♯/g, '#').replace(/♭/g, 'b');
+          if (m[3] !== undefined) octave = parseInt(m[3], 10);
+        }
+      }
+    }
+
+    // 2. Harmonic / Melodic minor leading tones and key-specific diatonic spellings
+    if (!letter && keyDef) {
+      if (keyDef.name === 'G Minor' && pitchClass === 6) { // F#
+        letter = 'F'; accidental = '#';
+      } else if (keyDef.name === 'D Minor' && pitchClass === 1) { // C#
+        letter = 'C'; accidental = '#';
+      } else if (keyDef.name === 'C Minor' && pitchClass === 11) { // B natural
+        letter = 'B'; accidental = '';
+      } else if (keyDef.name === 'F Minor' && pitchClass === 4) { // E natural
+        letter = 'E'; accidental = '';
+      } else if (keyDef.name === 'Bb Minor' && pitchClass === 9) { // A natural
+        letter = 'A'; accidental = '';
+      } else if (keyDef.name === 'A Minor' && pitchClass === 8) { // G#
+        letter = 'G'; accidental = '#';
+      } else if (keyDef.name === 'E Minor' && pitchClass === 3) { // D#
+        letter = 'D'; accidental = '#';
+      } else if (keyDef.name === 'B Minor' && pitchClass === 10) { // A#
+        letter = 'A'; accidental = '#';
+      }
+    }
+
+    // 3. Fallback to standard chromatic-to-diatonic mapping
+    if (!letter) {
+      const diatonicMap = resolvedPreferFlats ? CHROMATIC_TO_DIATONIC_FLAT : CHROMATIC_TO_DIATONIC_SHARP;
+      const baseInfo = diatonicMap[pitchClass] || { letter: 'C', acc: '' };
+      letter = baseInfo.letter || 'C';
+      if (accidental === null) accidental = baseInfo.acc || '';
+    } else if (accidental === null) {
+      const stepOffset = DIATONIC_STEPS[letter] !== undefined ? DIATONIC_STEPS[letter] : 0;
+      const naturalPitchClass = [0, 2, 4, 5, 7, 9, 11][stepOffset];
+      const diff = ((pitchClass - naturalPitchClass + 18) % 12) - 6;
+      accidental = diff === 1 ? '#' : diff === -1 ? 'b' : diff === 2 ? '##' : diff === -2 ? 'bb' : '';
+    }
+
+    const fullName = `${letter}${accidental}${octave}`;
+    const displayName = `${letter}${accidental}`;
 
     // Calculate total diatonic step index (C0 = 0)
-    // C0 is octave 0, step 0.
     const stepOffset = DIATONIC_STEPS[letter] !== undefined ? DIATONIC_STEPS[letter] : 0;
     const diatonicStep = octave * 7 + stepOffset;
 
@@ -292,7 +371,7 @@ export class MusicTheory {
    * If the note is already altered by the Key Signature (e.g. Bb in Bb Major or G Minor),
    * no accidental is printed (returns null).
    */
-  static getNoteAccidentalForScore(midi, keySignatureName = 'C Major', explicitAccidental = null) {
+  static getNoteAccidentalForScore(midi, keySignatureName = 'C Major', explicitAccidental = null, currentMeasureAlteration = undefined) {
     if (explicitAccidental) {
       if (explicitAccidental === 'sharp') return '#';
       if (explicitAccidental === 'flat') return 'b';
@@ -311,20 +390,18 @@ export class MusicTheory {
     const pc = ((safeMidi % 12) + 12) % 12;
 
     // Special harmonic minor leading tone handling:
-    // In G Minor (fifths -2), F# (pc 6) is written as F# (not Gb)
+    let specialAcc = null;
     if (key.name === 'G Minor' && pc === 6) {
-      return '#';
-    }
-    if (key.name === 'D Minor' && pc === 1) { // C#
-      return '#';
-    }
-    if (key.name === 'C Minor' && pc === 11) { // B natural
-      return '♮';
+      specialAcc = '#';
+    } else if (key.name === 'D Minor' && pc === 1) { // C#
+      specialAcc = '#';
+    } else if (key.name === 'C Minor' && pc === 11) { // B natural
+      specialAcc = '♮';
     }
 
     const info = this.getNoteInfo(safeMidi, preferFlats);
     const letter = info.letter;
-    const noteAcc = info.accidental || '';
+    const noteAcc = specialAcc !== null ? (specialAcc === '♮' ? '' : specialAcc) : (info.accidental || '');
 
     let keyAlt = '';
     if (key.flats && key.flats.some(f => f.startsWith(letter))) {
@@ -333,17 +410,83 @@ export class MusicTheory {
       keyAlt = '#';
     }
 
-    // If note's accidental matches the key signature alteration, no accidental is printed!
-    if (noteAcc === keyAlt) {
+    const activeAlt = (currentMeasureAlteration !== undefined && currentMeasureAlteration !== null)
+      ? currentMeasureAlteration
+      : keyAlt;
+
+    // If note's accidental matches the active alteration in effect, no accidental is printed!
+    if (noteAcc === activeAlt) {
       return null;
     }
 
-    // If note is natural, but key signature altered this letter, a natural (♮) must be printed
+    // If note is natural, but active alteration was not natural, a natural (♮) must be printed
     if (noteAcc === '') {
       return '♮';
     }
 
     return noteAcc;
+  }
+
+  /**
+   * Pre-compute score accidentals for a sequence of notes according to standard engraving rules:
+   * 1. Start each measure with accidentals set by key signature.
+   * 2. Within a measure, an accidental on a note alters that pitch letter for the rest of the measure.
+   * 3. Subsequent notes with the same alteration in the same measure do not repeat the accidental.
+   * 4. Returning to key signature or natural within the same measure displays a natural sign (♮).
+   * 5. Barlines reset all alterations back to the key signature.
+   */
+  static computeMeasureAccidentals(notes, keySignatureName = 'C Major', beatsPerMeasure = 4) {
+    if (!Array.isArray(notes)) return [];
+    const key = this.getKeySignature(keySignatureName);
+    const getKeyAlt = (letter) => {
+      if (key.flats && key.flats.some(f => f.startsWith(letter))) return 'b';
+      if (key.sharps && key.sharps.some(s => s.startsWith(letter))) return '#';
+      return '';
+    };
+
+    let curMeasure = -1;
+    let measureAlts = {};
+
+    let curBeat = 0;
+    return notes.map((note) => {
+      const duration = (typeof note.duration === 'number' && note.duration > 0) ? note.duration : 1;
+      const mIdx = note.measureIndex !== undefined
+        ? note.measureIndex
+        : Math.floor((curBeat + 0.001) / beatsPerMeasure);
+      curBeat += duration;
+
+      if (mIdx !== curMeasure) {
+        curMeasure = mIdx;
+        measureAlts = {
+          'C': getKeyAlt('C'),
+          'D': getKeyAlt('D'),
+          'E': getKeyAlt('E'),
+          'F': getKeyAlt('F'),
+          'G': getKeyAlt('G'),
+          'A': getKeyAlt('A'),
+          'B': getKeyAlt('B')
+        };
+      }
+
+      const preferFlats = key.flats && key.flats.length > 0;
+      const info = this.getNoteInfo(note.midi, preferFlats, note);
+      const letter = info.letter || 'C';
+      const currentAlt = measureAlts[letter] !== undefined ? measureAlts[letter] : getKeyAlt(letter);
+
+      const scoreAcc = this.getNoteAccidentalForScore(note.midi, keySignatureName, note.explicitAccidental, currentAlt);
+
+      // Update measure alteration state
+      if (note.explicitAccidental) {
+        if (note.explicitAccidental === 'sharp') measureAlts[letter] = '#';
+        else if (note.explicitAccidental === 'flat') measureAlts[letter] = 'b';
+        else if (note.explicitAccidental === 'natural') measureAlts[letter] = '';
+      } else {
+        const noteAcc = info.accidental || '';
+        measureAlts[letter] = noteAcc;
+      }
+
+      return scoreAcc;
+    });
   }
 
   /**
